@@ -19,6 +19,18 @@
       "skillPath": "skills/algorithmic-art/SKILL.md",
       "computedHash": "987b24aa98171a0d3690420173b2cdb6eaafd57981ed716b5d50371affa82ea3"
     },
+    "api-security-testing": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/api-security-testing/SKILL.md",
+      "computedHash": "f1ae8b66cf139807a78dde2b50167ae628635a6c026c17edd864b6c6a65cec5c"
+    },
+    "application-security-testing": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/application-security-testing/SKILL.md",
+      "computedHash": "3869b05bff8e91d2eee9ec98845e5a0fe0a73cca74ceef8c80b7dadc011431ff"
+    },
     "brand-guidelines": {
       "source": "anthropics/skills",
       "sourceType": "github",
@@ -31,11 +43,23 @@
       "skillPath": "skills/canvas-design/SKILL.md",
       "computedHash": "4e8bbc31d3b159efdd32d31a63ba8cd5a44d84911e924c1f2c709c50cbcdd0ec"
     },
+    "ci-security-scanning-with-strix": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/ci-security-scanning-with-strix/SKILL.md",
+      "computedHash": "ac3b8d18690ee68dcf178f3156caac1006da4377f4e3a02a55cb7ebe99566d9f"
+    },
     "claude-api": {
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "skills/claude-api/SKILL.md",
       "computedHash": "4bad6e67793b8935e5934ab153dc950d436510f8a85d9b50a7baf7c76716ce14"
+    },
+    "diagram-design": {
+      "source": "cathrynlavery/diagram-design",
+      "sourceType": "github",
+      "skillPath": "skills/diagram-design/SKILL.md",
+      "computedHash": "8660190e26f771369f22a031cbe0391d211287740b7b5ee14d13509170a13c63"
     },
     "discernment-nudge": {
       "source": "anthropics/skills",
@@ -61,17 +85,41 @@
       "skillPath": "plugins/developer-essentials/skills/e2e-testing-patterns/SKILL.md",
       "computedHash": "20a171bc2e543efec9d7158e06d6ee66e7dbd5205a7ebe1aa89cea90ef508cd8"
     },
+    "find-security-vulnerabilities-in-code": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/find-security-vulnerabilities-in-code/SKILL.md",
+      "computedHash": "b9aaebedb74653bed108ad54790be164fc70e60ca6fbca844e379cb0408498cf"
+    },
     "find-skills": {
       "source": "vercel-labs/skills",
       "sourceType": "github",
       "skillPath": "skills/find-skills/SKILL.md",
       "computedHash": "b146008599c31057cef1c145774cea5d5afb30e8f43fa802e47a4b461419aaaf"
     },
+    "fix-security-vulnerabilities-with-strix": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/fix-security-vulnerabilities-with-strix/SKILL.md",
+      "computedHash": "1f91d165671877f77b0c23f34a4596375dc425de388f5b17d2a4742194a8bfb8"
+    },
     "frontend-design": {
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "skills/frontend-design/SKILL.md",
       "computedHash": "106acf230014cbb43ca34e6410371321b56ca742f9ee0442e8ec05bf02eb0384"
+    },
+    "gstack": {
+      "source": "garrytan/gstack",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "14f3501d0258bc4d216c1d9f0f391439b4c8c50acc490c45552019c1f6047d19"
+    },
+    "harness-creator": {
+      "source": "walkinglabs/learn-harness-engineering",
+      "sourceType": "github",
+      "skillPath": "skills/harness-creator/SKILL.md",
+      "computedHash": "99c43ad6e27172aa8951fa33cacc2413ec69bf9040eeeb7f96c3198af13109be"
     },
     "internal-comms": {
       "source": "anthropics/skills",
@@ -103,6 +151,12 @@
       "skillPath": "skills/llm-security/SKILL.md",
       "computedHash": "1337a5c37c75d205a0cb0e9d7d0dc2aaed3d1040f4d7e4edc56e71bed6de8b02"
     },
+    "managed-pentesting-with-strix": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/managed-pentesting-with-strix/SKILL.md",
+      "computedHash": "64c0544b9c50750f3d417cae3fdc5cb8710ca0a0d6ac29ed3b81807e37d63ee1"
+    },
     "mcp-builder": {
       "source": "anthropics/skills",
       "sourceType": "github",
@@ -115,11 +169,23 @@
       "skillPath": "skills/owasp-security/SKILL.md",
       "computedHash": "880d7aa73b001e7e28b9562639defeff11c073d958fe5a253eeea572539439a2"
     },
+    "owasp-top-10-testing": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/owasp-top-10-testing/SKILL.md",
+      "computedHash": "82a5e167fd58e3641e61097f9206c8ecaab30e18bbf932499c85a4f58a6a49ba"
+    },
     "pdf": {
       "source": "anthropics/skills",
       "sourceType": "github",
       "skillPath": "skills/pdf/SKILL.md",
       "computedHash": "37226d4220d844377e6b2a386c51a011df4cd130855ff0b80bcc22f9c28abd57"
+    },
+    "penetration-testing-with-strix": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/penetration-testing-with-strix/SKILL.md",
+      "computedHash": "a765131ca550714b55260cca234eeb5e09ae5dc32412d0aa6fc5d03860c13667"
     },
     "postgresql-best-practices": {
       "source": "microsoft/postgres-skills",
@@ -138,6 +204,12 @@
       "sourceType": "github",
       "skillPath": "skills/pptx/SKILL.md",
       "computedHash": "d6198c2f85d5d1c737d451b98ebacc3bbc187730c9a79252aa738ddb8d818455"
+    },
+    "prompt-master": {
+      "source": "nidhinjs/prompt-master",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "8e0f826023d036d462e7db6bab2ffca145325ae8e6fbfbf35b98bc04f154e4e9"
     },
     "skill-creator": {
       "source": "anthropics/skills",
@@ -192,6 +264,12 @@
       "sourceType": "github",
       "skillPath": "skills/react-best-practices/SKILL.md",
       "computedHash": "ca7b0c0c6e5f2750043f7f0cd72d16ac4e2abc48f9b5500d047a4b77a2506212"
+    },
+    "web-app-penetration-testing": {
+      "source": "usestrix/strix",
+      "sourceType": "github",
+      "skillPath": "skills/web-app-penetration-testing/SKILL.md",
+      "computedHash": "4a26881a2e8d289611e12557aea27f729facfa4aef777ddcb43a6b6f7d6fe2ee"
     },
     "web-artifacts-builder": {
       "source": "anthropics/skills",

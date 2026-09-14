@@ -13,7 +13,7 @@ pnpm-debug.log*
 target/
 *.class
 
-# Build / IDE
+# IDE
 .idea/
 .vscode/
 *.iml
