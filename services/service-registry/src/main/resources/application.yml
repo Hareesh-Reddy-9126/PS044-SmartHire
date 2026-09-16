@@ -1,0 +1,24 @@
+spring:
+  application:
+    name: service-registry
+
+server:
+  port: 8761
+
+# A standalone registry does not register with or fetch from itself.
+eureka:
+  client:
+    register-with-eureka: false
+    fetch-registry: false
+  instance:
+    hostname: ${EUREKA_INSTANCE_HOSTNAME:localhost}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

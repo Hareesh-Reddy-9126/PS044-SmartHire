@@ -1,0 +1,31 @@
+# Build output
+**/target/
+
+# Git & docs (not needed in image build context)
+.git
+.gitignore
+docs
+
+# Bundled agent tooling
+.claude
+.agents
+skills-lock.json
+
+# IDE
+.idea
+.vscode
+*.iml
+
+# Node (frontend added at Inc 5)
+node_modules
+
+# Secrets / env (never copy into an image)
+.env
+.env.*
+!.env.example
+
+# Logs / OS
+*.log
+.DS_Store
+Thumbs.db
+

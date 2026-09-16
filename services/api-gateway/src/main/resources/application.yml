@@ -1,0 +1,43 @@
+spring:
+  application:
+    name: api-gateway
+  cloud:
+    gateway:
+      # Deny-by-default: no automatic discovery routes; only the explicit routes below are exposed
+      # (architecture §3).
+      discovery:
+        locator:
+          enabled: false
+      # Built-in hardening: adds X-Content-Type-Options, X-Frame-Options, HSTS, etc. to responses.
+      default-filters:
+        - SecureHeaders
+      routes:
+        - id: job-service
+          uri: lb://JOB-SERVICE
+          predicates:
+            - Path=/api/v1/jobs/**
+      globalcors:
+        cors-configurations:
+          '[/**]':
+            allowedOrigins: ${GATEWAY_CORS_ALLOWED_ORIGINS:http://localhost:5173}
+            allowedMethods: [GET, POST, PUT, PATCH, DELETE, OPTIONS]
+            allowedHeaders: '*'
+            maxAge: 3600
+
+server:
+  port: 8080
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true
