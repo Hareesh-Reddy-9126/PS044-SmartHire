@@ -1,8 +1,9 @@
 # Phase 6 — AI Development Strategy — PS044-SmartHire
 
 _How AI is used to **build** and **verify** SmartHire, and how SmartHire's **own R2 AI feature** is
-governed. **Planning/governance only — no application code, no services, no skeleton, no
-dependencies, Inc 0 not started.** Authoritative inputs: approved Phases 3–5 + `CLAUDE.md` +
+governed. **Governance/strategy only — this document introduces no application code. Project status:
+Increment 0 (skeleton) is implemented and verified locally, awaiting owner approval and not
+merged; later increments are not started.** Authoritative inputs: approved Phases 3–5 + `CLAUDE.md` +
 `../traceability-matrix.md`. This document **operationalizes** governance §40–44; it introduces no
 new architecture and changes no approved decision._
 
