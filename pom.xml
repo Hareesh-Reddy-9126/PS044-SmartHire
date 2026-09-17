@@ -1,0 +1,196 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0"
+         xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+
+  <!-- Spring Boot parent: dependency + plugin management, sensible defaults (ADR-0002). -->
+  <parent>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-starter-parent</artifactId>
+    <version>3.4.1</version>
+    <relativePath/>
+  </parent>
+
+  <groupId>com.smarthire</groupId>
+  <artifactId>smarthire-parent</artifactId>
+  <version>0.0.1-SNAPSHOT</version>
+  <packaging>pom</packaging>
+  <name>SmartHire :: Parent</name>
+  <description>Aggregator + dependency/plugin management for the SmartHire microservices (ADR-0003).</description>
+
+  <!-- Maven multi-module monorepo (ADR-0003). Modules added per increment; Inc 0 = the skeleton. -->
+  <modules>
+    <module>common</module>
+    <module>services/service-registry</module>
+    <module>services/api-gateway</module>
+    <module>services/job-service</module>
+  </modules>
+
+  <properties>
+    <!-- Approved stack: Java 21 LTS (ADR-0002). Bytecode/language level pinned to 21 regardless
+         of the local build JVM, so artifacts stay on the approved LTS. -->
+    <java.version>21</java.version>
+    <maven.compiler.release>21</maven.compiler.release>
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+
+    <!-- Spring Cloud release train aligned to Boot 3.4.x (Moorgate). -->
+    <spring-cloud.version>2024.0.0</spring-cloud.version>
+
+    <!-- Tooling versions pinned (no floating versions, governance §28). -->
+    <archunit.version>1.3.0</archunit.version>
+    <spotless.version>2.43.0</spotless.version>
+    <google-java-format.version>1.22.0</google-java-format.version>
+    <spotbugs-plugin.version>4.8.6.4</spotbugs-plugin.version>
+    <dependency-check.version>10.0.4</dependency-check.version>
+  </properties>
+
+  <dependencyManagement>
+    <dependencies>
+      <!-- Spring Cloud BOM governs Eureka / Gateway / LoadBalancer / OpenFeign versions. -->
+      <dependency>
+        <groupId>org.springframework.cloud</groupId>
+        <artifactId>spring-cloud-dependencies</artifactId>
+        <version>${spring-cloud.version}</version>
+        <type>pom</type>
+        <scope>import</scope>
+      </dependency>
+      <!-- Shared library module, version-managed centrally. -->
+      <dependency>
+        <groupId>com.smarthire</groupId>
+        <artifactId>smarthire-common</artifactId>
+        <version>${project.version}</version>
+      </dependency>
+      <!-- ArchUnit is not in the Spring BOM; pin it here (governance §46). -->
+      <dependency>
+        <groupId>com.tngtech.archunit</groupId>
+        <artifactId>archunit-junit5</artifactId>
+        <version>${archunit.version}</version>
+        <scope>test</scope>
+      </dependency>
+    </dependencies>
+  </dependencyManagement>
+
+  <build>
+    <pluginManagement>
+      <plugins>
+        <!-- Spotless + Google Java Format (governance §4/§29): formatting is a hard gate. -->
+        <plugin>
+          <groupId>com.diffplug.spotless</groupId>
+          <artifactId>spotless-maven-plugin</artifactId>
+          <version>${spotless.version}</version>
+          <configuration>
+            <java>
+              <googleJavaFormat>
+                <version>${google-java-format.version}</version>
+              </googleJavaFormat>
+              <removeUnusedImports/>
+              <trimTrailingWhitespace/>
+              <endWithNewline/>
+            </java>
+          </configuration>
+          <executions>
+            <execution>
+              <id>spotless-check</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+
+        <!-- SpotBugs static analysis (governance §29). High-severity findings fail the build. -->
+        <plugin>
+          <groupId>com.github.spotbugs</groupId>
+          <artifactId>spotbugs-maven-plugin</artifactId>
+          <version>${spotbugs-plugin.version}</version>
+          <configuration>
+            <effort>Max</effort>
+            <threshold>Medium</threshold>
+            <failOnError>true</failOnError>
+          </configuration>
+          <executions>
+            <execution>
+              <id>spotbugs-check</id>
+              <phase>verify</phase>
+              <goals>
+                <goal>check</goal>
+              </goals>
+            </execution>
+          </executions>
+        </plugin>
+      </plugins>
+    </pluginManagement>
+
+    <plugins>
+      <!-- Apply the managed quality plugins to every module. -->
+      <plugin>
+        <groupId>com.diffplug.spotless</groupId>
+        <artifactId>spotless-maven-plugin</artifactId>
+      </plugin>
+      <plugin>
+        <groupId>com.github.spotbugs</groupId>
+        <artifactId>spotbugs-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Surefire (unit) + Failsafe (integration, *IT) with ByteBuddy experimental flag so
+           Hibernate/ByteBuddy tolerate the local JDK 24 runtime while targeting Java 21 bytecode. -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-surefire-plugin</artifactId>
+        <configuration>
+          <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+        </configuration>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-failsafe-plugin</artifactId>
+        <configuration>
+          <argLine>-Dnet.bytebuddy.experimental=true</argLine>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>integration-test</goal>
+              <goal>verify</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+
+  <profiles>
+    <!-- OWASP Dependency-Check (governance §29). Profile-gated: it downloads the NVD data set,
+         which is slow/network-bound, so it is opt-in locally and wired into CI at Inc 6 (OQ-CI).
+         Run: mvn -Psecurity-scan verify -->
+    <profile>
+      <id>security-scan</id>
+      <build>
+        <plugins>
+          <plugin>
+            <groupId>org.owasp</groupId>
+            <artifactId>dependency-check-maven</artifactId>
+            <version>${dependency-check.version}</version>
+            <configuration>
+              <failBuildOnCVSS>7</failBuildOnCVSS>
+              <formats>
+                <format>HTML</format>
+                <format>JSON</format>
+              </formats>
+            </configuration>
+            <executions>
+              <execution>
+                <goals>
+                  <goal>aggregate</goal>
+                </goals>
+              </execution>
+            </executions>
+          </plugin>
+        </plugins>
+      </build>
+    </profile>
+  </profiles>
+
+</project>
