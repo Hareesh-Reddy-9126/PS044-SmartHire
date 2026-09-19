@@ -20,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.env.Environment;
+import org.springframework.core.env.Profiles;
 import org.springframework.security.oauth2.core.DelegatingOAuth2TokenValidator;
 import org.springframework.security.oauth2.core.OAuth2TokenValidator;
 import org.springframework.security.oauth2.jwt.Jwt;
@@ -45,15 +47,21 @@ public class JwtKeyConfig {
   private static final int EPHEMERAL_KEY_SIZE = 2048;
 
   private final JwtProperties props;
+  private final Environment environment;
 
-  public JwtKeyConfig(JwtProperties props) {
+  public JwtKeyConfig(JwtProperties props, Environment environment) {
     this.props = props;
+    this.environment = environment;
   }
 
   @Bean
   public RSAKey rsaKey() throws Exception {
     RSAPrivateKey privateKey;
     if (props.privateKey() == null || props.privateKey().isBlank()) {
+      if (!environment.acceptsProfiles(Profiles.of("local"))) {
+        throw new IllegalStateException(
+            "AUTH_JWT_PRIVATE_KEY must be configured outside the local profile");
+      }
       log.warn(
           "smarthire.jwt.private-key is not set — generating an EPHEMERAL RSA keypair. "
               + "Issued tokens will not survive a restart. Set AUTH_JWT_PRIVATE_KEY for stable keys.");

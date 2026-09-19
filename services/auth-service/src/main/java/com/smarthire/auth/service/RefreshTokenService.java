@@ -29,11 +29,17 @@ public class RefreshTokenService {
   private static final int TOKEN_BYTES = 32;
 
   private final RefreshTokenRepository repository;
+  private final RefreshTokenFamilyRevocationService familyRevocationService;
   private final JwtProperties props;
   private final Clock clock;
 
-  public RefreshTokenService(RefreshTokenRepository repository, JwtProperties props, Clock clock) {
+  public RefreshTokenService(
+      RefreshTokenRepository repository,
+      RefreshTokenFamilyRevocationService familyRevocationService,
+      JwtProperties props,
+      Clock clock) {
     this.repository = repository;
+    this.familyRevocationService = familyRevocationService;
     this.props = props;
     this.clock = clock;
   }
@@ -53,12 +59,12 @@ public class RefreshTokenService {
   public RotationResult rotate(String rawToken) {
     RefreshToken current =
         repository
-            .findByTokenHash(sha256(rawToken))
+            .findByTokenHashForUpdate(sha256(rawToken))
             .orElseThrow(() -> new InvalidTokenException("Unknown refresh token"));
 
     if (current.isRevoked()) {
       // Reuse of a rotated/revoked token: assume compromise, revoke the entire family.
-      repository.revokeFamily(current.getFamilyId());
+      familyRevocationService.revokeFamily(current.getFamilyId());
       throw new InvalidTokenException("Refresh token reuse detected");
     }
     if (current.isExpired(Instant.now(clock))) {

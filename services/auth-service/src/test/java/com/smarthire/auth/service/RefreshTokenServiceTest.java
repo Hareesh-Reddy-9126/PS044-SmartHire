@@ -37,12 +37,15 @@ class RefreshTokenServiceTest {
       new JwtProperties("iss", "aud", Duration.ofMinutes(15), Duration.ofDays(7), "");
 
   @Mock private RefreshTokenRepository repository;
+  @Mock private RefreshTokenFamilyRevocationService familyRevocationService;
 
   private RefreshTokenService service;
 
   @BeforeEach
   void setUp() {
-    service = new RefreshTokenService(repository, PROPS, Clock.fixed(NOW, ZoneOffset.UTC));
+    service =
+        new RefreshTokenService(
+            repository, familyRevocationService, PROPS, Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
   private RefreshToken token(UUID userId, UUID familyId, Instant expiresAt) {
@@ -54,7 +57,7 @@ class RefreshTokenServiceTest {
   void rotateIssuesANewTokenAndRevokesThePresentedOne() {
     UUID userId = UUID.randomUUID();
     RefreshToken current = token(userId, UUID.randomUUID(), NOW.plus(Duration.ofDays(7)));
-    when(repository.findByTokenHash(anyString())).thenReturn(Optional.of(current));
+    when(repository.findByTokenHashForUpdate(anyString())).thenReturn(Optional.of(current));
     when(repository.save(any(RefreshToken.class))).thenAnswer(inv -> inv.getArgument(0));
 
     RefreshTokenService.RotationResult result = service.rotate("raw-token");
@@ -63,6 +66,7 @@ class RefreshTokenServiceTest {
     assertThat(result.refreshToken()).isNotBlank();
     assertThat(current.isRevoked()).isTrue();
     verify(repository).save(any(RefreshToken.class));
+    verify(repository).findByTokenHashForUpdate(anyString());
   }
 
   @Test
@@ -70,20 +74,20 @@ class RefreshTokenServiceTest {
     UUID familyId = UUID.randomUUID();
     RefreshToken revoked = token(UUID.randomUUID(), familyId, NOW.plus(Duration.ofDays(7)));
     revoked.revoke(UUID.randomUUID());
-    when(repository.findByTokenHash(anyString())).thenReturn(Optional.of(revoked));
+    when(repository.findByTokenHashForUpdate(anyString())).thenReturn(Optional.of(revoked));
 
     assertThatThrownBy(() -> service.rotate("raw-token"))
         .isInstanceOf(InvalidTokenException.class)
         .hasMessage("Refresh token reuse detected");
 
-    verify(repository).revokeFamily(familyId);
+    verify(familyRevocationService).revokeFamily(familyId);
     verify(repository, never()).save(any());
   }
 
   @Test
   void rotateRejectsAnExpiredToken() {
     RefreshToken expired = token(UUID.randomUUID(), UUID.randomUUID(), NOW.minusSeconds(1));
-    when(repository.findByTokenHash(anyString())).thenReturn(Optional.of(expired));
+    when(repository.findByTokenHashForUpdate(anyString())).thenReturn(Optional.of(expired));
 
     assertThatThrownBy(() -> service.rotate("raw-token"))
         .isInstanceOf(InvalidTokenException.class)
@@ -94,7 +98,7 @@ class RefreshTokenServiceTest {
 
   @Test
   void rotateRejectsAnUnknownToken() {
-    when(repository.findByTokenHash(anyString())).thenReturn(Optional.empty());
+    when(repository.findByTokenHashForUpdate(anyString())).thenReturn(Optional.empty());
 
     assertThatThrownBy(() -> service.rotate("raw-token"))
         .isInstanceOf(InvalidTokenException.class)

@@ -31,7 +31,7 @@ public class AuthExceptionHandler {
 
   @ExceptionHandler(InvalidTokenException.class)
   public ProblemDetail handleInvalidToken(InvalidTokenException ex) {
-    return problem(HttpStatus.UNAUTHORIZED, "Invalid token", ex.getMessage());
+    return problem(HttpStatus.UNAUTHORIZED, "Invalid token", "The supplied token is invalid.");
   }
 
   private static ProblemDetail problem(HttpStatus status, String title, String detail) {

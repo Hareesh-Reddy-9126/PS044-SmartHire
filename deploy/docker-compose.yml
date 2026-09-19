@@ -87,12 +87,11 @@ services:
       AUTH_SVC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
       REDIS_HOST: redis
       EUREKA_SERVER_URL: http://service-registry:8761/eureka
-      # RS256 signing key (PKCS#8 PEM). Blank => an ephemeral dev keypair is generated at startup;
-      # the gateway verifies against the live JWKS, so no key needs to be committed (decision 8/9).
+      # Local profile explicitly permits an ephemeral dev keypair; production requires a key.
       AUTH_JWT_PRIVATE_KEY: ${AUTH_JWT_PRIVATE_KEY:-}
       # "seed" activates the RECRUITER/ADMIN seeder; it only creates an account when both the email
       # and password below are supplied via deploy/.env (blank => that account is skipped).
-      SPRING_PROFILES_ACTIVE: seed
+      SPRING_PROFILES_ACTIVE: local,seed
       AUTH_SEED_RECRUITER_EMAIL: ${AUTH_SEED_RECRUITER_EMAIL:-}
       AUTH_SEED_RECRUITER_PASSWORD: ${AUTH_SEED_RECRUITER_PASSWORD:-}
       AUTH_SEED_ADMIN_EMAIL: ${AUTH_SEED_ADMIN_EMAIL:-}

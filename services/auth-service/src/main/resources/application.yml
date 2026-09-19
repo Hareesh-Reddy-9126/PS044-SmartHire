@@ -37,9 +37,8 @@ smarthire:
     access-token-ttl: PT15M
     refresh-token-ttl: P7D
     # PKCS#8 PEM RSA private key. SECRET — supplied only via the environment (governance §17).
-    # Blank => an ephemeral dev keypair is generated at startup (tokens do not survive a restart);
-    # the gateway still verifies against the live JWKS, so no key needs to be committed.
-    private-key: ${AUTH_JWT_PRIVATE_KEY:}
+    # Production/default deployments must provide the PKCS#8 PEM signing key.
+    private-key: ${AUTH_JWT_PRIVATE_KEY}
   # Development seeding of the non-self-service accounts (RECRUITER, ADMIN) — decision 7.
   # Active only under the "seed" profile AND when the credentials are supplied via the environment
   # (decision 8: no known/reusable demo password in git). Blank => that account is not seeded.

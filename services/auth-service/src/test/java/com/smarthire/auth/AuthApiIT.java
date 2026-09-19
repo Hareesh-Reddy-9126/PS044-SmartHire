@@ -3,9 +3,9 @@ package com.smarthire.auth;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.smarthire.auth.api.dto.LoginRequest;
-import com.smarthire.auth.api.dto.RefreshRequest;
 import com.smarthire.auth.api.dto.RegisterRequest;
 import com.smarthire.auth.api.dto.TokenResponse;
+import com.smarthire.auth.infra.RefreshTokenRepository;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -60,6 +60,7 @@ class AuthApiIT {
   }
 
   @Autowired private TestRestTemplate rest;
+  @Autowired private RefreshTokenRepository refreshTokenRepository;
 
   @Test
   void registerLoginMeRefreshRotationAndReuseRejection() {
@@ -78,7 +79,8 @@ class AuthApiIT {
     TokenResponse tokens = login.getBody();
     assertThat(tokens).isNotNull();
     assertThat(tokens.accessToken()).isNotBlank();
-    assertThat(tokens.refreshToken()).isNotBlank();
+    String refreshCookie = login.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+    assertThat(refreshCookie).contains("HttpOnly", "Secure", "SameSite=Strict");
 
     // Authenticated identity endpoint: email is DB-sourced, not a token claim (ADR-0009).
     HttpHeaders bearer = new HttpHeaders();
@@ -89,17 +91,29 @@ class AuthApiIT {
     assertThat(me.getBody()).contains(email);
 
     // Rotation issues a different refresh token...
+    HttpHeaders refreshHeaders = new HttpHeaders();
+    refreshHeaders.add(HttpHeaders.COOKIE, refreshCookie.split(";", 2)[0]);
     ResponseEntity<TokenResponse> rotated =
-        rest.postForEntity(
-            "/api/v1/auth/refresh", new RefreshRequest(tokens.refreshToken()), TokenResponse.class);
+        rest.exchange(
+            "/api/v1/auth/refresh",
+            HttpMethod.POST,
+            new HttpEntity<>(refreshHeaders),
+            TokenResponse.class);
     assertThat(rotated.getStatusCode()).isEqualTo(HttpStatus.OK);
     assertThat(rotated.getBody()).isNotNull();
-    assertThat(rotated.getBody().refreshToken()).isNotEqualTo(tokens.refreshToken());
+    String rotatedCookie = rotated.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+    assertThat(rotatedCookie).contains("HttpOnly", "Secure", "SameSite=Strict");
 
     // ...and reusing the now-revoked original is rejected as theft.
     ResponseEntity<String> reuse =
-        rest.postForEntity(
-            "/api/v1/auth/refresh", new RefreshRequest(tokens.refreshToken()), String.class);
+        rest.exchange(
+            "/api/v1/auth/refresh",
+            HttpMethod.POST,
+            new HttpEntity<>(refreshHeaders),
+            String.class);
     assertThat(reuse.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertThat(refreshTokenRepository.findAll())
+        .isNotEmpty()
+        .allMatch(com.smarthire.auth.domain.RefreshToken::isRevoked);
   }
 }

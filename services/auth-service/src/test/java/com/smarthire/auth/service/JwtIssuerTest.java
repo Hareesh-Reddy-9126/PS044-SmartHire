@@ -1,6 +1,7 @@
 package com.smarthire.auth.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -18,6 +19,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.UUID;
 import org.junit.jupiter.api.Test;
+import org.springframework.mock.env.MockEnvironment;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtEncoder;
@@ -43,7 +45,9 @@ class JwtIssuerTest {
 
   /** Builds the full issuer→decoder chain over a fresh ephemeral key and a fixed clock. */
   private static Wiring wire() throws Exception {
-    JwtKeyConfig keyConfig = new JwtKeyConfig(PROPS);
+    MockEnvironment environment = new MockEnvironment();
+    environment.setActiveProfiles("local");
+    JwtKeyConfig keyConfig = new JwtKeyConfig(PROPS, environment);
     RSAKey rsaKey = keyConfig.rsaKey();
     JWKSource<SecurityContext> jwkSource = keyConfig.jwkSource(rsaKey);
     JwtEncoder encoder = keyConfig.jwtEncoder(jwkSource);
@@ -54,6 +58,13 @@ class JwtIssuerTest {
 
     Clock clock = Clock.fixed(Instant.now().truncatedTo(ChronoUnit.SECONDS), ZoneOffset.UTC);
     return new Wiring(new JwtIssuer(encoder, PROPS, clock), decoder, rsaKey);
+  }
+
+  @Test
+  void rejectsAnUnconfiguredKeyOutsideTheLocalProfile() {
+    assertThatThrownBy(() -> new JwtKeyConfig(PROPS, new MockEnvironment()).rsaKey())
+        .isInstanceOf(IllegalStateException.class)
+        .hasMessage("AUTH_JWT_PRIVATE_KEY must be configured outside the local profile");
   }
 
   @Test

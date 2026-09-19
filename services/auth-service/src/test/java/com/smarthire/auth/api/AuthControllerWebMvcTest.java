@@ -2,12 +2,14 @@ package com.smarthire.auth.api;
 
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.smarthire.auth.config.SecurityConfig;
 import com.smarthire.auth.service.AuthService;
+import com.smarthire.auth.service.AuthTokens;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -15,6 +17,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -83,10 +86,49 @@ class AuthControllerWebMvcTest {
         .thenReturn(
             new AuthService.Profile(
                 UUID.fromString(ADMIN_ID), "admin@example.com", List.of("ADMIN"), null));
+    when(authService.isAdmin(UUID.fromString(ADMIN_ID))).thenReturn(true);
 
     mvc.perform(get("/api/v1/auth/admin/whoami").header("Authorization", "Bearer admin-token"))
         .andExpect(status().isOk())
         .andExpect(jsonPath("$.roles[0]").value("ADMIN"));
+  }
+
+  @Test
+  void demotedAdminIsRejectedDespiteAnOldAdminToken() throws Exception {
+    when(jwtDecoder.decode("admin-token")).thenReturn(jwt(ADMIN_ID, List.of("ADMIN")));
+    when(authService.isAdmin(UUID.fromString(ADMIN_ID))).thenReturn(false);
+
+    mvc.perform(get("/api/v1/auth/admin/whoami").header("Authorization", "Bearer admin-token"))
+        .andExpect(status().isForbidden());
+  }
+
+  @Test
+  void loginReturnsAccessTokenAndSecureRefreshCookie() throws Exception {
+    when(authService.login("ada@example.com", "secret-password"))
+        .thenReturn(new AuthTokens("access", Instant.now().plusSeconds(900), "refresh"));
+
+    mvc.perform(
+            post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"email\":\"ada@example.com\",\"password\":\"secret-password\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.accessToken").value("access"))
+        .andExpect(jsonPath("$.refreshToken").doesNotExist())
+        .andExpect(
+            result ->
+                org.assertj.core.api.Assertions.assertThat(
+                        result.getResponse().getHeader(HttpHeaders.SET_COOKIE))
+                    .contains("HttpOnly", "Secure", "SameSite=Strict"));
+  }
+
+  @Test
+  void oversizedLoginEmailIsRejected() throws Exception {
+    mvc.perform(
+            post("/api/v1/auth/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    "{\"email\":\"" + "a".repeat(256) + "@example.com\",\"password\":\"short\"}"))
+        .andExpect(status().isBadRequest());
   }
 
   @Test

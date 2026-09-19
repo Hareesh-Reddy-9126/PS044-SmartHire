@@ -24,6 +24,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 /**
@@ -61,12 +62,12 @@ class AuthServiceTest {
   void registerCreatesACandidateWithNormalizedEmailAndHashedPassword() {
     when(userRepository.existsByEmail("ada@example.com")).thenReturn(false);
     when(passwordEncoder.encode("secret-password")).thenReturn("HASHED");
-    when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
+    when(userRepository.saveAndFlush(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
 
     UUID id = service.register("  Ada@Example.COM  ", "secret-password");
 
     ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
-    verify(userRepository).save(saved.capture());
+    verify(userRepository).saveAndFlush(saved.capture());
     assertThat(saved.getValue().getEmail()).isEqualTo("ada@example.com");
     assertThat(saved.getValue().getRole()).isEqualTo(Role.CANDIDATE);
     assertThat(saved.getValue().getPasswordHash()).isEqualTo("HASHED");
@@ -82,16 +83,32 @@ class AuthServiceTest {
         .isInstanceOf(EmailAlreadyExistsException.class)
         .hasMessage("Email already registered");
 
-    verify(userRepository, never()).save(any());
+    verify(userRepository, never()).saveAndFlush(any());
+  }
+
+  @Test
+  void registerTranslatesAConcurrentDuplicateEmail() {
+    when(userRepository.existsByEmail("ada@example.com")).thenReturn(false);
+    when(passwordEncoder.encode("secret-password")).thenReturn("HASHED");
+    when(userRepository.saveAndFlush(any(User.class)))
+        .thenThrow(new DataIntegrityViolationException("duplicate email"));
+
+    assertThatThrownBy(() -> service.register("Ada@Example.com", "secret-password"))
+        .isInstanceOf(EmailAlreadyExistsException.class)
+        .hasMessage("Email already registered");
   }
 
   @Test
   void loginRejectsAnUnknownEmailWithoutRevealingIt() {
     when(userRepository.findByEmail("ghost@example.com")).thenReturn(Optional.empty());
+    when(passwordEncoder.matches("whatever-password", AuthService.DUMMY_PASSWORD_HASH))
+        .thenReturn(false);
 
     assertThatThrownBy(() -> service.login("ghost@example.com", "whatever-password"))
         .isInstanceOf(InvalidCredentialsException.class)
         .hasMessage("Invalid email or password");
+
+    verify(passwordEncoder).matches("whatever-password", AuthService.DUMMY_PASSWORD_HASH);
   }
 
   @Test
@@ -148,6 +165,16 @@ class AuthServiceTest {
     assertThatThrownBy(() -> service.me(userId))
         .isInstanceOf(InvalidTokenException.class)
         .hasMessage("Unknown user");
+  }
+
+  @Test
+  void isAdminReadsTheCurrentDatabaseRole() {
+    UUID userId = UUID.randomUUID();
+    when(userRepository.findById(userId))
+        .thenReturn(
+            Optional.of(new User(userId, "ada@example.com", "HASHED", Role.CANDIDATE, null, NOW)));
+
+    assertThat(service.isAdmin(userId)).isFalse();
   }
 
   @Test

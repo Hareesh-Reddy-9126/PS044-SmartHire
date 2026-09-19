@@ -7,6 +7,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -18,6 +19,9 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class AuthService {
+
+  static final String DUMMY_PASSWORD_HASH =
+      "$2a$12$aIBWy02mSzSW3ybBC41KCOHoLO.xaC69G3HyqXv1PTGsOrfGKfeZG";
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
@@ -56,16 +60,18 @@ public class AuthService {
             Role.CANDIDATE,
             null,
             Instant.now(clock));
-    return userRepository.save(user).getId();
+    try {
+      return userRepository.saveAndFlush(user).getId();
+    } catch (DataIntegrityViolationException ex) {
+      throw new EmailAlreadyExistsException("Email already registered");
+    }
   }
 
   @Transactional
   public AuthTokens login(String email, String rawPassword) {
-    User user =
-        userRepository
-            .findByEmail(email.trim().toLowerCase())
-            .orElseThrow(() -> new InvalidCredentialsException("Invalid email or password"));
-    if (!passwordEncoder.matches(rawPassword, user.getPasswordHash())) {
+    User user = userRepository.findByEmail(email.trim().toLowerCase()).orElse(null);
+    String passwordHash = user == null ? DUMMY_PASSWORD_HASH : user.getPasswordHash();
+    if (!passwordEncoder.matches(rawPassword, passwordHash) || user == null) {
       throw new InvalidCredentialsException("Invalid email or password");
     }
     return issueFor(user);
@@ -73,6 +79,9 @@ public class AuthService {
 
   @Transactional
   public AuthTokens refresh(String refreshToken) {
+    if (refreshToken == null || refreshToken.isBlank()) {
+      throw new InvalidTokenException("Missing refresh token");
+    }
     RefreshTokenService.RotationResult rotation = refreshTokenService.rotate(refreshToken);
     User user =
         userRepository
@@ -106,6 +115,11 @@ public class AuthService {
             .findById(userId)
             .orElseThrow(() -> new InvalidTokenException("Unknown user"));
     return new Profile(user.getId(), user.getEmail(), roles(user), user.getOrgId());
+  }
+
+  @Transactional(readOnly = true)
+  public boolean isAdmin(UUID userId) {
+    return userRepository.findById(userId).map(user -> user.getRole() == Role.ADMIN).orElse(false);
   }
 
   private AuthTokens issueFor(User user) {
