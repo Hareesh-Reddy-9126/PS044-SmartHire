@@ -25,6 +25,7 @@
     <module>services/service-registry</module>
     <module>services/api-gateway</module>
     <module>services/job-service</module>
+    <module>services/auth-service</module>
   </modules>
 
   <properties>
@@ -42,6 +43,9 @@
     <spotless.version>2.43.0</spotless.version>
     <google-java-format.version>1.22.0</google-java-format.version>
     <spotbugs-plugin.version>4.8.6.4</spotbugs-plugin.version>
+    <!-- SpotBugs annotations track the SpotBugs CORE version (4.8.6), which the 4.8.6.4 Maven
+         plugin bundles; used for targeted @SuppressFBWarnings (compile-only, provided scope). -->
+    <spotbugs-annotations.version>4.8.6</spotbugs-annotations.version>
     <dependency-check.version>10.0.4</dependency-check.version>
   </properties>
 
@@ -70,6 +74,20 @@
       </dependency>
     </dependencies>
   </dependencyManagement>
+
+  <!-- Inherited by every module (governance §29). SpotBugs annotations enable targeted, justified
+       @SuppressFBWarnings for accepted false positives — chiefly EI_EXPOSE_REP2 on the mandatory
+       Spring constructor injection of application-scoped singleton beans (e.g. ObjectMapper,
+       RedisTemplate). PROVIDED scope keeps them compile-only, so nothing ships at runtime and the
+       detector stays at full strength everywhere else. -->
+  <dependencies>
+    <dependency>
+      <groupId>com.github.spotbugs</groupId>
+      <artifactId>spotbugs-annotations</artifactId>
+      <version>${spotbugs-annotations.version}</version>
+      <scope>provided</scope>
+    </dependency>
+  </dependencies>
 
   <build>
     <pluginManagement>

@@ -40,9 +40,9 @@ governance changes._
 **Gate rule:** R1 is Done only when **every row above is implemented and its Tests column is green**,
 demonstrable **without any AI feature** (governance §49, D8).
 
-**Increment status (Inc 0 — skeleton, verified locally; not owner-approved, not merged):** first
-vertical slices have landed for a subset of these rows. They are **not** Done — the gate rule above
-is unchanged and **not yet satisfied**. Delivered and locally verified at Inc 0:
+**Increment status (Inc 0 and Inc 1 — verified locally; not owner-approved, not merged):** vertical
+slices have landed for a subset of these rows. They are **not** Done — the gate rule above is
+unchanged and **not yet satisfied**. Delivered and locally verified:
 
 | Row | Inc 0 slice delivered | Verification that actually ran |
 |---|---|---|
@@ -51,8 +51,9 @@ is unchanged and **not yet satisfied**. Delivered and locally verified at Inc 0:
 | C3 / R8 | Eureka server (8761); gateway + job-service register and route via discovery | live end-to-end (docker compose): gateway → Eureka → job-service |
 | C7 | **Job** entity + Flyway schema `job_svc` only (Application/Recruitment deferred) | JobApiIT (I, Testcontainers) — runs on CI; **skipped** Docker-less locally |
 | C8 / R11 | JUnit 5 unit slice + Testcontainers integration foundation | **11 unit tests green (0 failures)**; JobApiIT skipped locally |
+| C6 / R6 | Inc 1 auth-service issues RS256 access tokens and JWKS; gateway validates JWTs with issuer/audience checks and deny-by-default; CANDIDATE/RECRUITER/ADMIN RBAC; Redis revocation/rate limiting; refresh rotation/reuse detection; RFC 9457 security errors | JDK 21 `mvn clean verify`: **65 tests passed**, Spotless PASS, SpotBugs PASS with **0 findings**; AuthApiIT and JobApiIT skipped because Docker is unavailable locally |
 
-Rows C4–C6, C9, R1–R5 and every §3 business rule remain unimplemented (later increments).
+Rows C4–C5, C9, R1–R5 and every §3 business rule remain unimplemented (later increments).
 
 ## 2. Approved enhancements (🟩) — additive, must not obscure §1
 

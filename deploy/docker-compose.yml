@@ -1,11 +1,13 @@
-# SmartHire Inc 0 — local demonstration stack.
-# Proves: client → API gateway (8080) → Eureka discovery → job-service → GET /api/v1/jobs.
+# SmartHire Inc 0 + Inc 1 — local demonstration stack.
+# Inc 0 proves: client → API gateway (8080) → Eureka discovery → job-service → GET /api/v1/jobs.
+# Inc 1 adds: auth-service (JWT issuance + JWKS) and Redis (refresh-token store + jti denylist),
+# with the gateway enforcing edge authentication, revocation and rate limiting (AC-1).
 #
 # Run from the repository root:
 #   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up --build
 #
 # Secrets come from deploy/.env (git-ignored). Required vars fail fast if unset (${VAR:?...}).
-name: smarthire-inc0
+name: smarthire
 
 services:
   postgres:
@@ -21,6 +23,18 @@ services:
       timeout: 5s
       retries: 5
       start_period: 20s
+
+  redis:
+    image: redis:7-alpine
+    # Inc 1: backs the refresh-token store and the shared JWT jti denylist (revoked:jti:*).
+    # Not published to the host: reached only by auth-service and the gateway on the internal
+    # network. Local demo runs without a Redis password; hardening is deferred with the DB users.
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   service-registry:
     build:
@@ -61,6 +75,44 @@ services:
       retries: 5
       start_period: 60s
 
+  auth-service:
+    build:
+      context: ..
+      dockerfile: services/auth-service/Dockerfile
+    environment:
+      # Inc-1 simplification: auth-service uses the shared Postgres app user and creates its own
+      # auth_svc schema via Flyway. Per-schema least-privilege DB users are deferred to Inc 3.
+      AUTH_SVC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-smarthire}
+      AUTH_SVC_DB_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in deploy/.env}
+      AUTH_SVC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
+      REDIS_HOST: redis
+      EUREKA_SERVER_URL: http://service-registry:8761/eureka
+      # RS256 signing key (PKCS#8 PEM). Blank => an ephemeral dev keypair is generated at startup;
+      # the gateway verifies against the live JWKS, so no key needs to be committed (decision 8/9).
+      AUTH_JWT_PRIVATE_KEY: ${AUTH_JWT_PRIVATE_KEY:-}
+      # "seed" activates the RECRUITER/ADMIN seeder; it only creates an account when both the email
+      # and password below are supplied via deploy/.env (blank => that account is skipped).
+      SPRING_PROFILES_ACTIVE: seed
+      AUTH_SEED_RECRUITER_EMAIL: ${AUTH_SEED_RECRUITER_EMAIL:-}
+      AUTH_SEED_RECRUITER_PASSWORD: ${AUTH_SEED_RECRUITER_PASSWORD:-}
+      AUTH_SEED_ADMIN_EMAIL: ${AUTH_SEED_ADMIN_EMAIL:-}
+      AUTH_SEED_ADMIN_PASSWORD: ${AUTH_SEED_ADMIN_PASSWORD:-}
+    # Not published to the host: reachable only via the gateway. The gateway fetches JWKS over the
+    # internal network (GATEWAY_JWK_SET_URI below), not through a published port.
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8082/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
   api-gateway:
     build:
       context: ..
@@ -68,12 +120,20 @@ services:
     environment:
       EUREKA_SERVER_URL: http://service-registry:8761/eureka
       GATEWAY_CORS_ALLOWED_ORIGINS: ${GATEWAY_CORS_ALLOWED_ORIGINS:-http://localhost:5173}
+      # Inc 1: edge revocation reads the shared denylist from Redis; the reactive JWT decoder
+      # fetches auth-service's JWKS directly over the internal network (a plain URL, not lb://).
+      REDIS_HOST: redis
+      GATEWAY_JWK_SET_URI: http://auth-service:8082/oauth2/jwks
     ports:
       - "8080:8080" # the single public entry point
     depends_on:
       service-registry:
         condition: service_healthy
       job-service:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      auth-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]

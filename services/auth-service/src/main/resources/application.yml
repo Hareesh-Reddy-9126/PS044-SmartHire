@@ -1,0 +1,65 @@
+spring:
+  application:
+    name: auth-service
+  datasource:
+    url: ${AUTH_SVC_DB_URL:jdbc:postgresql://localhost:5432/smarthire}
+    username: ${AUTH_SVC_DB_USER:smarthire}
+    # No default: the password must be supplied via the environment (governance §17 — no secrets in config).
+    password: ${AUTH_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: auth_svc
+  flyway:
+    enabled: true
+    schemas: auth_svc
+    default-schema: auth_svc
+    create-schemas: true
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8082
+
+# JWT issuance / verification (ADR-0009). TTLs are the approved values: access 15m, refresh 7d.
+smarthire:
+  jwt:
+    issuer: ${AUTH_JWT_ISSUER:https://smarthire.local/auth}
+    audience: ${AUTH_JWT_AUDIENCE:smarthire}
+    access-token-ttl: PT15M
+    refresh-token-ttl: P7D
+    # PKCS#8 PEM RSA private key. SECRET — supplied only via the environment (governance §17).
+    # Blank => an ephemeral dev keypair is generated at startup (tokens do not survive a restart);
+    # the gateway still verifies against the live JWKS, so no key needs to be committed.
+    private-key: ${AUTH_JWT_PRIVATE_KEY:}
+  # Development seeding of the non-self-service accounts (RECRUITER, ADMIN) — decision 7.
+  # Active only under the "seed" profile AND when the credentials are supplied via the environment
+  # (decision 8: no known/reusable demo password in git). Blank => that account is not seeded.
+  seed:
+    recruiter-email: ${AUTH_SEED_RECRUITER_EMAIL:}
+    recruiter-password: ${AUTH_SEED_RECRUITER_PASSWORD:}
+    admin-email: ${AUTH_SEED_ADMIN_EMAIL:}
+    admin-password: ${AUTH_SEED_ADMIN_PASSWORD:}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

@@ -1,10 +1,14 @@
 spring:
   application:
     name: api-gateway
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
   cloud:
     gateway:
       # Deny-by-default: no automatic discovery routes; only the explicit routes below are exposed
-      # (architecture §3).
+      # (architecture §3). Edge authentication/authorization is enforced by GatewaySecurityConfig.
       discovery:
         locator:
           enabled: false
@@ -16,6 +20,20 @@ spring:
           uri: lb://JOB-SERVICE
           predicates:
             - Path=/api/v1/jobs/**
+        # Auth-service route. GatewaySecurityConfig keeps register/login/refresh anonymous while
+        # requiring a valid token for /me, /admin/whoami and /logout (deny-by-default, decision 6).
+        # RequestRateLimiter throttles per client IP to blunt credential stuffing (decision 4).
+        - id: auth-service
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/auth/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                key-resolver: "#{@ipKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
       globalcors:
         cors-configurations:
           '[/**]':
@@ -41,3 +59,13 @@ management:
     health:
       probes:
         enabled: true
+
+# Edge JWT verification (GatewaySecurityConfig). jwk-set-uri is a direct HTTP URL to the
+# auth-service JWKS — deliberately NOT lb://, since the reactive decoder's key fetch bypasses the
+# gateway's load-balancer filter. issuer/audience mirror the values auth-service signs (ADR-0009).
+smarthire:
+  gateway:
+    jwt:
+      jwk-set-uri: ${GATEWAY_JWK_SET_URI:http://localhost:8082/oauth2/jwks}
+      issuer: ${AUTH_JWT_ISSUER:https://smarthire.local/auth}
+      audience: ${AUTH_JWT_AUDIENCE:smarthire}

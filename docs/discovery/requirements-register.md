@@ -9,7 +9,13 @@ questions (OQ-AI1, OQ-CI, OQ-KEY, OQ7 cloud target, OQ9 rubric, OQ-PKG) are Phas
 scheduled into roadmap increments, **not** implementation blockers. **Increment 0 (skeleton)
 implemented and verified locally** (Maven multi-module; Eureka registry + Spring Cloud Gateway +
 job-service; `GET /api/v1/jobs`; CLIENT → GATEWAY → EUREKA → JOB-SERVICE proven live at HTTP 200;
-`mvn clean verify` green on JDK 21). **Awaiting owner approval of Inc 0; not merged.**
+`mvn clean verify` green on JDK 21). **Increment 1 (authentication and authorization) is
+implemented and verified locally**: RS256/JWKS authentication, gateway JWT validation and
+deny-by-default, CANDIDATE/RECRUITER/ADMIN RBAC, Redis revocation and rate limiting, refresh-token
+rotation/reuse detection, and RFC 9457 security errors. The final JDK 21 `mvn clean verify` passed
+65 tests with Spotless PASS and SpotBugs PASS (0 findings); 2 Testcontainers integration tests were
+skipped because Docker is unavailable in the local environment. **Awaiting owner approval of Inc 0
+and Inc 1; not merged.**
 
 ---
 
