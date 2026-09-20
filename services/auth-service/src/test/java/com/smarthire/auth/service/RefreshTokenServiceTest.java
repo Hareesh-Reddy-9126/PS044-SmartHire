@@ -22,6 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Refresh-token rotation with reuse-detection (ADR-0009). Each rotation revokes the presented token
@@ -124,5 +125,36 @@ class RefreshTokenServiceTest {
     service.revoke("raw-token");
 
     verify(repository).revokeFamily(familyId);
+  }
+
+  @Test
+  void rotateTransactionDoesNotRollbackOnInvalidTokenException() throws Exception {
+    Transactional annotation =
+        RefreshTokenService.class
+            .getMethod("rotate", String.class)
+            .getAnnotation(Transactional.class);
+
+    assertThat(annotation).isNotNull();
+    assertThat(annotation.noRollbackFor()).contains(InvalidTokenException.class);
+  }
+
+  @Test
+  void subsequentOrConcurrentRotationOfSameTokenDetectsReuseAndRevokesFamily() {
+    UUID userId = UUID.randomUUID();
+    UUID familyId = UUID.randomUUID();
+    RefreshToken token = token(userId, familyId, NOW.plus(Duration.ofDays(7)));
+
+    when(repository.findByTokenHashForUpdate(anyString())).thenReturn(Optional.of(token));
+    when(repository.save(any(RefreshToken.class))).thenAnswer(inv -> inv.getArgument(0));
+
+    RefreshTokenService.RotationResult first = service.rotate("raw-token");
+    assertThat(first.userId()).isEqualTo(userId);
+    assertThat(token.isRevoked()).isTrue();
+
+    assertThatThrownBy(() -> service.rotate("raw-token"))
+        .isInstanceOf(InvalidTokenException.class)
+        .hasMessage("Refresh token reuse detected");
+
+    verify(familyRevocationService).revokeFamily(familyId);
   }
 }

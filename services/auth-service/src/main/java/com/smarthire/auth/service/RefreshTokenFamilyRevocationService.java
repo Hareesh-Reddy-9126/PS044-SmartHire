@@ -3,10 +3,13 @@ package com.smarthire.auth.service;
 import com.smarthire.auth.infra.RefreshTokenRepository;
 import java.util.UUID;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
-/** Commits refresh-token family revocation independently of the failed refresh request. */
+/**
+ * Revokes all active refresh tokens in a family upon detected reuse or logout. Participates in the
+ * caller's transaction so family revocation is committed alongside the failure handling without
+ * relying on a nested transaction.
+ */
 @Service
 public class RefreshTokenFamilyRevocationService {
 
@@ -16,7 +19,7 @@ public class RefreshTokenFamilyRevocationService {
     this.repository = repository;
   }
 
-  @Transactional(propagation = Propagation.REQUIRES_NEW)
+  @Transactional
   public void revokeFamily(UUID familyId) {
     repository.revokeFamily(familyId);
   }

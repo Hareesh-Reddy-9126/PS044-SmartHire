@@ -26,6 +26,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Authentication use-cases with collaborators mocked. Pins the security-relevant behaviours:
@@ -213,5 +214,24 @@ class AuthServiceTest {
 
     verify(refreshTokenService, never()).revoke(anyString());
     verify(revocationService).revoke("access-jti", exp);
+  }
+
+  @Test
+  void refreshTransactionDoesNotRollbackOnInvalidTokenException() throws Exception {
+    Transactional annotation =
+        AuthService.class.getMethod("refresh", String.class).getAnnotation(Transactional.class);
+
+    assertThat(annotation).isNotNull();
+    assertThat(annotation.noRollbackFor()).contains(InvalidTokenException.class);
+  }
+
+  @Test
+  void refreshPropagatesReuseFailure() {
+    when(refreshTokenService.rotate("reused-token"))
+        .thenThrow(new InvalidTokenException("Refresh token reuse detected"));
+
+    assertThatThrownBy(() -> service.refresh("reused-token"))
+        .isInstanceOf(InvalidTokenException.class)
+        .hasMessage("Refresh token reuse detected");
   }
 }

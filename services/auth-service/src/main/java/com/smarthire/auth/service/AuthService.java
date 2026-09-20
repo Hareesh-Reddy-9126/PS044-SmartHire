@@ -77,7 +77,7 @@ public class AuthService {
     return issueFor(user);
   }
 
-  @Transactional
+  @Transactional(noRollbackFor = InvalidTokenException.class)
   public AuthTokens refresh(String refreshToken) {
     if (refreshToken == null || refreshToken.isBlank()) {
       throw new InvalidTokenException("Missing refresh token");

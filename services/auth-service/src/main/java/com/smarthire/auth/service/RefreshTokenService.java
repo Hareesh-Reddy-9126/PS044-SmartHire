@@ -55,7 +55,7 @@ public class RefreshTokenService {
    *
    * @throws InvalidTokenException if the token is unknown, expired, or already revoked (reuse)
    */
-  @Transactional
+  @Transactional(noRollbackFor = InvalidTokenException.class)
   public RotationResult rotate(String rawToken) {
     RefreshToken current =
         repository

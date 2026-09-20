@@ -6,6 +6,12 @@ import com.smarthire.auth.api.dto.LoginRequest;
 import com.smarthire.auth.api.dto.RegisterRequest;
 import com.smarthire.auth.api.dto.TokenResponse;
 import com.smarthire.auth.infra.RefreshTokenRepository;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -129,5 +135,48 @@ class AuthApiIT {
             "/api/v1/auth/login", new LoginRequest(unknownEmail, anyPassword), String.class);
     assertThat(login.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
     assertThat(login.getBody()).contains("Invalid email or password");
+  }
+
+  @Test
+  void concurrentRefreshAllowsOneRotationAndRevokesTheFamilyOnReuse() throws Exception {
+    String email = "concurrent-" + System.nanoTime() + "@example.com";
+    String password = "sufficiently-long-password";
+    rest.postForEntity("/api/v1/auth/register", new RegisterRequest(email, password), Void.class);
+    ResponseEntity<TokenResponse> login =
+        rest.postForEntity(
+            "/api/v1/auth/login", new LoginRequest(email, password), TokenResponse.class);
+    String refreshCookie = login.getHeaders().getFirst(HttpHeaders.SET_COOKIE);
+    CountDownLatch ready = new CountDownLatch(2);
+    CountDownLatch start = new CountDownLatch(1);
+    ExecutorService executor = Executors.newFixedThreadPool(2);
+
+    try {
+      Callable<ResponseEntity<String>> refresh =
+          () -> {
+            ready.countDown();
+            start.await();
+            HttpHeaders headers = new HttpHeaders();
+            headers.add(HttpHeaders.COOKIE, refreshCookie.split(";", 2)[0]);
+            return rest.exchange(
+                "/api/v1/auth/refresh", HttpMethod.POST, new HttpEntity<>(headers), String.class);
+          };
+      Future<ResponseEntity<String>> first = executor.submit(refresh);
+      Future<ResponseEntity<String>> second = executor.submit(refresh);
+      assertThat(ready.await(5, TimeUnit.SECONDS)).isTrue();
+      start.countDown();
+
+      ResponseEntity<String> firstResult = first.get(10, TimeUnit.SECONDS);
+      ResponseEntity<String> secondResult = second.get(10, TimeUnit.SECONDS);
+      assertThat(
+              java.util.stream.Stream.of(firstResult, secondResult)
+                  .map(ResponseEntity::getStatusCode)
+                  .toList())
+          .containsExactlyInAnyOrder(HttpStatus.OK, HttpStatus.UNAUTHORIZED);
+      assertThat(refreshTokenRepository.findAll())
+          .isNotEmpty()
+          .allMatch(com.smarthire.auth.domain.RefreshToken::isRevoked);
+    } finally {
+      executor.shutdownNow();
+    }
   }
 }
