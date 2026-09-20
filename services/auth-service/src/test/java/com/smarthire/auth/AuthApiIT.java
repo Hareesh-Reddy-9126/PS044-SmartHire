@@ -35,7 +35,9 @@ import org.testcontainers.junit.jupiter.Testcontainers;
  * via {@code docker compose up} + curl through the gateway. Rate limiting is enforced at the
  * gateway (decision 4), not this service, so it is not exercised here.
  */
-@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
+@SpringBootTest(
+    webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT,
+    properties = "spring.profiles.active=local")
 @Testcontainers(disabledWithoutDocker = true)
 class AuthApiIT {
 
@@ -115,5 +117,17 @@ class AuthApiIT {
     assertThat(refreshTokenRepository.findAll())
         .isNotEmpty()
         .allMatch(com.smarthire.auth.domain.RefreshToken::isRevoked);
+  }
+
+  @Test
+  void loginWithUnknownEmailReturnsUnauthorizedWithoutServerError() {
+    String unknownEmail = "unknown@example.com";
+    String anyPassword = "some-password-123";
+
+    ResponseEntity<String> login =
+        rest.postForEntity(
+            "/api/v1/auth/login", new LoginRequest(unknownEmail, anyPassword), String.class);
+    assertThat(login.getStatusCode()).isEqualTo(HttpStatus.UNAUTHORIZED);
+    assertThat(login.getBody()).contains("Invalid email or password");
   }
 }

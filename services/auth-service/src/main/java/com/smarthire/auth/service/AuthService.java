@@ -21,7 +21,7 @@ import org.springframework.transaction.annotation.Transactional;
 public class AuthService {
 
   static final String DUMMY_PASSWORD_HASH =
-      "$2a$12$aIBWy02mSzSW3ybBC41KCOHoLO.xaC69G3HyqXv1PTGsOrfGKfeZG";
+      "{bcrypt}$2a$12$aIBWy02mSzSW3ybBC41KCOHoLO.xaC69G3HyqXv1PTGsOrfGKfeZG";
 
   private final UserRepository userRepository;
   private final PasswordEncoder passwordEncoder;
