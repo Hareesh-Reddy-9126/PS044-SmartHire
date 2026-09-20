@@ -1,0 +1,4 @@
+smarthire:
+  jwt:
+    # Explicit local profile only: local tokens use an ephemeral key and do not survive restart.
+    private-key: ${AUTH_JWT_PRIVATE_KEY:}

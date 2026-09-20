@@ -30,6 +30,18 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- Edge JWT verification: offline RS256 validation against the auth-service JWKS (ADR-0009,
+         decision 9). Brings reactive Spring Security (@EnableWebFluxSecurity) + oauth2-jose. -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
+    </dependency>
+    <!-- Reactive Redis: reads the shared jti denylist for edge revocation and backs the
+         RequestRateLimiter's RedisRateLimiter on the auth route (decision 4). -->
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-data-redis-reactive</artifactId>
+    </dependency>
 
     <!-- Verifies the route table wired from application.yml (predicate + lb:// target). Test scope,
          version managed by the Spring Boot parent BOM. -->

@@ -71,7 +71,16 @@ seam — documented; promote to database-per-service when a service needs indepe
 **Decision:** `auth-service` issues short-lived access tokens (JWT, **RS256**) + refresh
 tokens. Resource services are stateless OAuth2 resource servers verifying via the public key
 (JWKS). Claims include `sub`, `roles`, `orgId`.
-**Consequences:** No shared secret sprawl; services verify offline. Refresh handling + revocation via Redis (ADR-0011).
+**Inc 1 lock-in (implemented):** access-token TTL **15 min**, refresh-token TTL **7 days**
+(rotated on use). Claims are `sub`, `roles` (List), `orgId` (optional), `iss`, `aud` (List),
+`exp`, `iat`, `jti`; `email` is deliberately **not** a claim (looked up from the DB), so a
+role or email change never rides on a stale token. Signing uses **Nimbus JOSE + JWT directly**
+(RS256), **not** Spring Authorization Server, which is unnecessary for pure JWT issuance
+(decision 9); the JWKS is published at `GET /oauth2/jwks` with `kid` = the key's RFC 7638
+JWK thumbprint.
+**Consequences:** No shared secret sprawl; services verify offline against the JWKS. Refresh
+handling + `jti` revocation via Redis (ADR-0011). One small dependency (Nimbus, already transitive
+through Spring Security) instead of the full authorization-server machinery.
 
 ### ADR-0010 — RBAC + object-level ownership
 **Status:** Accepted · **Class:** 🟦(roles)/🟩(org)→✅ (resolves OQ2)
@@ -84,6 +93,11 @@ applications of their `orgId`; a candidate only on their own applications/résum
 **Status:** Accepted · **Class:** 🟩→✅
 **Decision:** R1 uses Redis for gateway rate limiting and a refresh-token/JWT denylist
 (logout/revocation). Caching of hot reads (job listings/reference data) is opportunistic.
+**Inc 1 lock-in (implemented):** revocation is enforced **at the API Gateway** against the shared
+Redis denylist (key `revoked:jti:<jti>`), with **defense-in-depth** re-validation in auth-service
+(decision 4). Gateway rate limiting uses Spring Cloud Gateway's `RequestRateLimiter` +
+`RedisRateLimiter` (token bucket), keyed per client IP on the auth endpoints (`/api/v1/auth/**`):
+replenish 10/s, burst 20 — exhaustion returns 429.
 **Consequences:** Justified security/ops value now; avoids premature caching complexity.
 
 ### ADR-0012 — Async domain events via Redis Streams + transactional outbox
@@ -157,3 +171,15 @@ saga only if/when a true multi-service write transaction appears.
 **Decision (pending OQ-CI):** CI on GitHub Actions: build → unit+integration (Testcontainers)
 → dependency + SAST + secret scanning → build images. Confirm the CI platform.
 **Consequences:** Automated quality/security gates. 🟥 confirm platform before wiring.
+
+### ADR-0020 — Password hashing: BCrypt via Spring `DelegatingPasswordEncoder`
+**Status:** Accepted · **Class:** ✅ (Inc 1; decision 1)
+**Context:** auth-service stores candidate/recruiter/admin credentials. The source mandates JWT
+auth but not a hashing scheme, so the algorithm is our security decision.
+**Decision:** Hash with **BCrypt at strength 12**, wrapped in Spring Security's
+`DelegatingPasswordEncoder` so every stored hash carries a `{bcrypt}` prefix. The prefix lets the
+encoder verify — and later transparently re-encode to — other algorithms without a data migration.
+**Consequences:** Industry-standard adaptive hashing with a clean upgrade path (raise the strength,
+or make `{argon2}` the default id, and existing `{bcrypt}` hashes still verify). Strength 12 is a
+deliberate cost/latency trade-off — revisit if login latency or hardware changes. No plaintext or
+reversible credential is ever stored or committed (decision 8, governance §17).
