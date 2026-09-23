@@ -33,7 +33,18 @@ spring:
                 key-resolver: "#{@ipKeyResolver}"
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
+                redis-rate-limiter.requestedTokens: 1        # Application-service route. All application endpoints require authentication (enforced by
+        # GatewaySecurityConfig deny-by-default). No rate limiting for now — can be added later.
+        - id: application-service
+          uri: lb://APPLICATION-SERVICE
+          predicates:
+            - Path=/api/v1/applications/**
+        # Recruitment-service route. All recruitment endpoints require authentication (enforced by
+        # GatewaySecurityConfig deny-by-default). No rate limiting for now — can be added later.
+        - id: recruitment-service
+          uri: lb://RECRUITMENT-SERVICE
+          predicates:
+            - Path=/api/v1/recruitments/**
       globalcors:
         cors-configurations:
           '[/**]':

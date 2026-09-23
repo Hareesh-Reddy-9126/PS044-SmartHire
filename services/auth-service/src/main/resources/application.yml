@@ -23,8 +23,14 @@ spring:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
   mvc:
+    formcontent:
+      filter:
+        enabled: false
     problemdetails:
       enabled: true
+  security:
+    filter:
+      register: false
 
 server:
   port: 8082

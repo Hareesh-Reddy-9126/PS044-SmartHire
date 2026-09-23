@@ -1,0 +1,63 @@
+spring:
+  application:
+    name: recruitment-service
+  datasource:
+    url: ${REC_SVC_DB_URL:jdbc:postgresql://localhost:5432/smarthire}
+    username: ${REC_SVC_DB_USER:smarthire}
+    # No default: the password must be supplied via the environment (governance §17 — no secrets in config).
+    password: ${REC_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: recruitment_svc
+  flyway:
+    enabled: true
+    schemas: recruitment_svc
+    default-schema: recruitment_svc
+    create-schemas: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8084
+
+# Resource-server JWT verification (ADR-0009, decision 4 — defense-in-depth behind the gateway).
+# Mirrors the gateway's offline verification: keys are fetched from the auth-service JWKS over a
+# direct HTTP URL (not lb://, the decoder's key fetch does not pass through the load balancer), and
+# iss/aud are pinned to the values auth-service signs, so a token minted for another audience is
+# rejected here too.
+smarthire:
+  recruitment:
+    jwt:
+      jwk-set-uri: ${REC_JWK_SET_URI:http://localhost:8082/oauth2/jwks}
+      issuer: ${AUTH_JWT_ISSUER:https://smarthire.local/auth}
+      audience: ${AUTH_JWT_AUDIENCE:smarthire}
+
+# Inter-service OpenFeign clients. Both are left EMPTY on purpose: with a blank `url` Spring Cloud
+# OpenFeign builds a load-balanced client and resolves the service id (APPLICATION-SERVICE,
+# JOB-SERVICE) through Eureka. Setting either to a literal `lb://NAME` would instead select the
+# direct-client path, which prefixes `http://` onto a value that is not an HTTP URL. The properties
+# exist only so a test or a non-discovery deployment can pin an absolute `http://host:port` address.
+application-service:
+  url: ${APPLICATION_SERVICE_URL:}
+job-service:
+  url: ${JOB_SERVICE_URL:}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      probes:
+        enabled: true

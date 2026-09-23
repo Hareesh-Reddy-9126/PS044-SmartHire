@@ -12,7 +12,8 @@ class JobResponseTest {
   @Test
   void mapsEverySourceField() {
     UUID id = UUID.fromString("11111111-1111-1111-1111-111111111111");
-    Job job = new Job(id, "Acme Corp", "Backend Engineer", "Remote", JobStatus.OPEN);
+    UUID ownerOrgId = UUID.fromString("00000000-0000-0000-0000-0000000000a1");
+    Job job = new Job(id, "Acme Corp", "Backend Engineer", "Remote", JobStatus.OPEN, ownerOrgId);
 
     JobResponse dto = JobResponse.from(job);
 
@@ -21,5 +22,6 @@ class JobResponseTest {
     assertThat(dto.role()).isEqualTo("Backend Engineer");
     assertThat(dto.location()).isEqualTo("Remote");
     assertThat(dto.status()).isEqualTo("OPEN");
+    assertThat(dto.ownerOrgId()).isEqualTo(ownerOrgId);
   }
 }

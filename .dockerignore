@@ -1,5 +1,11 @@
-# Build output
+# Build output (exclude for all modules except the ones we build images for)
 **/target/
+!services/application-service/target/
+!services/recruitment-service/target/
+!services/job-service/target/
+!services/auth-service/target/
+!services/api-gateway/target/
+!services/service-registry/target/
 
 # Git & docs (not needed in image build context)
 .git

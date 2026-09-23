@@ -1,7 +1,11 @@
-# SmartHire Inc 0 + Inc 1 — local demonstration stack.
+# SmartHire Inc 0 + Inc 1 + Inc 2 + Inc 3 — local demonstration stack.
 # Inc 0 proves: client → API gateway (8080) → Eureka discovery → job-service → GET /api/v1/jobs.
 # Inc 1 adds: auth-service (JWT issuance + JWKS) and Redis (refresh-token store + jti denylist),
 # with the gateway enforcing edge authentication, revocation and rate limiting (AC-1).
+# Inc 2 adds: application-service (application submission, status, withdrawal) with Job Service
+# validation via OpenFeign (Application → Job inter-service communication).
+# Inc 3 adds: recruitment-service (interview + final status tracking) with Application Service
+# validation via OpenFeign (Recruitment → Application → Job inter-service chain).
 #
 # Run from the repository root:
 #   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up --build
@@ -62,6 +66,10 @@ services:
       JOB_SVC_DB_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in deploy/.env}
       JOB_SVC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
       EUREKA_SERVER_URL: http://service-registry:8761/eureka
+      # JWT verification uses auth-service JWKS directly (not lb://)
+      JOB_JWK_SET_URI: http://auth-service:8082/oauth2/jwks
+      AUTH_JWT_ISSUER: https://smarthire.local/auth
+      AUTH_JWT_AUDIENCE: smarthire
     # Not published to the host: reachable only via the gateway (that is the point of the demo).
     depends_on:
       postgres:
@@ -112,6 +120,68 @@ services:
       retries: 5
       start_period: 60s
 
+  application-service:
+    build:
+      context: ..
+      dockerfile: services/application-service/Dockerfile
+    environment:
+      # Inc-2: application-service uses the shared Postgres app user and creates its own
+      # application_svc schema via Flyway. Per-schema least-privilege DB users are deferred to Inc 3.
+      APP_SVC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-smarthire}
+      APP_SVC_DB_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in deploy/.env}
+      APP_SVC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
+      EUREKA_SERVER_URL: http://service-registry:8761/eureka
+      # JWT verification uses auth-service JWKS directly (not lb://)
+      APP_JWK_SET_URI: http://auth-service:8082/oauth2/jwks
+      AUTH_JWT_ISSUER: https://smarthire.local/auth
+      AUTH_JWT_AUDIENCE: smarthire
+    # Not published to the host: reachable only via the gateway.
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8083/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
+  recruitment-service:
+    build:
+      context: ..
+      dockerfile: services/recruitment-service/Dockerfile
+    environment:
+      # Inc-3: recruitment-service uses the shared Postgres app user and creates its own
+      # recruitment_svc schema via Flyway. Per-schema least-privilege DB users are deferred to Inc 3.
+      REC_SVC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-smarthire}
+      REC_SVC_DB_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in deploy/.env}
+      REC_SVC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
+      EUREKA_SERVER_URL: http://service-registry:8761/eureka
+      # JWT verification uses auth-service JWKS directly (not lb://)
+      REC_JWK_SET_URI: http://auth-service:8082/oauth2/jwks
+      AUTH_JWT_ISSUER: https://smarthire.local/auth
+      AUTH_JWT_AUDIENCE: smarthire
+    # Not published to the host: reachable only via the gateway.
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+      application-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8084/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
   api-gateway:
     build:
       context: ..
@@ -133,6 +203,10 @@ services:
       redis:
         condition: service_healthy
       auth-service:
+        condition: service_healthy
+      application-service:
+        condition: service_healthy
+      recruitment-service:
         condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]

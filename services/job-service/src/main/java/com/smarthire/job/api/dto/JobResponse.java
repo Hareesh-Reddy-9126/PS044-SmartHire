@@ -9,7 +9,7 @@ import java.util.UUID;
  * decoupled from the wire contract.
  */
 public record JobResponse(
-    UUID jobId, String companyName, String role, String location, String status) {
+    UUID jobId, String companyName, String role, String location, String status, UUID ownerOrgId) {
 
   public static JobResponse from(Job job) {
     return new JobResponse(
@@ -17,6 +17,7 @@ public record JobResponse(
         job.getCompanyName(),
         job.getRole(),
         job.getLocation(),
-        job.getStatus().name());
+        job.getStatus().name(),
+        job.getOwnerOrgId());
   }
 }

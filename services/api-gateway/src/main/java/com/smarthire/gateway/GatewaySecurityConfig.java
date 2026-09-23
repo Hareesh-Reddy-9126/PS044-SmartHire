@@ -53,7 +53,8 @@ public class GatewaySecurityConfig {
       Converter<Jwt, Mono<AbstractAuthenticationToken>> jwtAuthenticationConverter,
       JwtRevocationWebFilter revocationFilter,
       ServerAuthenticationEntryPoint authenticationEntryPoint,
-      ServerAccessDeniedHandler accessDeniedHandler) {
+      ServerAccessDeniedHandler accessDeniedHandler,
+      ReactiveJwtDecoder jwtDecoder) {
     http.csrf(ServerHttpSecurity.CsrfSpec::disable)
         .headers(ServerHttpSecurity.HeaderSpec::disable)
         .authorizeExchange(
@@ -78,7 +79,10 @@ public class GatewaySecurityConfig {
         .oauth2ResourceServer(
             oauth2 ->
                 oauth2
-                    .jwt(jwt -> jwt.jwtAuthenticationConverter(jwtAuthenticationConverter))
+                    .jwt(jwt ->
+                        jwt
+                            .jwtAuthenticationConverter(jwtAuthenticationConverter)
+                            .jwtDecoder(jwtDecoder))
                     .authenticationEntryPoint(authenticationEntryPoint)
                     .accessDeniedHandler(accessDeniedHandler))
         .exceptionHandling(
