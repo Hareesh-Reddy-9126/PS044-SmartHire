@@ -24,3 +24,7 @@ target/
 # OS
 .DS_Store
 Thumbs.db
+
+# Postman CLI
+.postman/
+/postman/

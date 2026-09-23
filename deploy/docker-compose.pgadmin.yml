@@ -1,0 +1,37 @@
+# pgAdmin 4 — database evidence tool for Review-1 demo
+# This is an optional service that can be started alongside the main stack.
+# It does not modify the main docker-compose.yml or any application functionality.
+#
+# Usage:
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.pgadmin.yml --env-file deploy/.env up --build
+#
+# Then access pgAdmin at http://localhost:5050
+# Login: pgadmin@smarthire.com / admin123!
+# Add server: Host=postgres, Port=5432, DB=smarthire, User=smarthire, Password=(from .env)
+
+services:
+  pgadmin:
+    image: dpage/pgadmin4:8
+    container_name: smarthire-pgadmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: pgadmin@smarthire.com
+      PGADMIN_DEFAULT_PASSWORD: admin123!
+      PGADMIN_CONFIG_SERVER_MODE: "False"
+    ports:
+      - "5050:80"
+    networks:
+      - default
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:80/misc/ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
+
+networks:
+  default:
+    external: true
+    name: smarthire_default
