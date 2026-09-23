@@ -118,22 +118,7 @@ This section describes how to set up, run, and demonstrate the complete SmartHir
 | `redis` | (internal) | JWT refresh-token store + denylist |
 | `pgadmin` (optional) | 5050 | Database web UI for evidence |
 
-### Step 1: Start the SmartHire stack
-
-Open a terminal, navigate to the project root, and run:
-
-```bash
-# Option A: with pgAdmin (recommended for evidence gathering)
-docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.pgadmin.yml \
-  --env-file deploy/.env up --build
-
-# Option B: without pgAdmin (if you just want to run the demo flow)
-docker compose -f deploy/docker-compose.yml --env-file deploy/.env up --build
-```
-
-Wait for all containers to show `(healthy)`. This takes ~90 seconds on first run (images are built).
-
-### Step 1b: Create deploy/.env (if you don't have it)
+### Step 1: Create your local environment file
 
 ```bash
 cp deploy/.env.example deploy/.env
@@ -148,16 +133,31 @@ POSTGRES_PASSWORD=SetYourOwnStrongPasswordHere
 GATEWAY_CORS_ALLOWED_ORIGINS=http://localhost:5173
 ```
 
-The `deploy/.env.example` file lists all available keys. Only `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` are **required**. The rest are optional — the auth-service will generate an ephemeral dev JWT key if you leave `AUTH_JWT_PRIVATE_KEY` blank, and the recruiter/admin seed accounts are configured out of the box (see Step 2 below for login credentials).
+The `deploy/.env.example` file lists all available keys. Only `POSTGRES_DB`, `POSTGRES_USER`, and `POSTGRES_PASSWORD` are **required**. The rest are optional — the auth-service will generate an ephemeral dev JWT key if you leave `AUTH_JWT_PRIVATE_KEY` blank, and the recruiter/admin seed accounts are configured out of the box (see Step 4 for login credentials).
 
-### Step 2: Verify all services are running
+### Step 2: Start the SmartHire stack
+
+Open a terminal, navigate to the project root, and run:
+
+```bash
+# Option A: with pgAdmin (recommended for evidence gathering)
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.pgadmin.yml \
+  --env-file deploy/.env up --build
+
+# Option B: without pgAdmin (if you just want to run the demo flow)
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up --build
+```
+
+Wait for all containers to show `(healthy)`. This takes ~90 seconds on first run (images are built).
+
+### Step 3: Verify all services are running
 
 ```bash
 # All containers should show "healthy"
-docker compose -f deploy/docker-compose.yml ps
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.pgadmin.yml ps
 
 # Quick smoke test through the gateway
-curl -s http://localhost:8080/api/v1/jobs | head -c 200
+curl -s http://localhost:8080/api/v1/jobs
 ```
 
 Open <http://localhost:8761> in your browser — the Eureka dashboard should show all services registered:
@@ -169,17 +169,17 @@ Open <http://localhost:8761> in your browser — the Eureka dashboard should sho
 - `APPLICATION-SERVICE`
 - `RECRUITMENT-SERVICE`
 
-### Demo credentials
+### Step 4: Demo credentials
 
 | Role | Email | Password |
 |---|---|---|
 | Recruiter | `recruiter@smarthire.local` | `Recruiter123!` |
 | Admin | `admin@smarthire.local` | `Admin123!` |
-| Candidate | Register with any email (see Step 4 below) | Your chosen password |
+| Candidate | Register with any email (see Step 5 below) | Your chosen password |
 
 These are seeded at startup from settings in `deploy/.env` (variables `AUTH_SEED_RECRUITER_EMAIL`/`AUTH_SEED_RECRUITER_PASSWORD` and `AUTH_SEED_ADMIN_EMAIL`/`AUTH_SEED_ADMIN_PASSWORD`). The default values above are the same as your existing `deploy/.env`.
 
-### Step 3: Import the Postman collection
+### Step 5: Import the Postman collection
 
 1. Open **Postman** (desktop or web).
 2. Click **Import** → **Upload Files**.
@@ -188,7 +188,7 @@ These are seeded at startup from settings in `deploy/.env` (variables `AUTH_SEED
 5. In the top-right environment dropdown, select **SmartHire Review-1**.
 6. All 7 variables (`baseUrl`, `recruiterToken`, `candidateToken`, `jobId`, `applicationId`, `recruitmentId`, `candidateId`) are pre-configured. Click **Send** on each request in order.
 
-### Step 4: Run the E2E demo flow (12 requests in the collection)
+### Step 6: Run the E2E demo flow (12 requests in the collection)
 
 | # | Action | Who | What you'll see in Postman |
 |---|---|---|---|
@@ -207,9 +207,9 @@ These are seeded at startup from settings in `deploy/.env` (variables `AUTH_SEED
 
 To run the whole collection at once: click the **Run** button (play icon) in Postman's collection runner, select the collection and environment, and click **Run Review-1 E2E Demo**.
 
-### Step 5: View database evidence in pgAdmin
+### Step 7: View database evidence in pgAdmin
 
-If you started with the pgAdmin override (Option A in Step 1):
+If you started with the pgAdmin override (Option A in Step 2):
 
 1. Open <http://localhost:5050> in your browser.
 2. **Login** with:
@@ -236,13 +236,14 @@ If you started with the pgAdmin override (Option A in Step 1):
 
 If you started without pgAdmin (Option B):
 - Connect to the database via any PostgreSQL client using host `localhost`, port `5432` (you'll need to publish the port first — see the note below).
-- Or start pgAdmin separately:
+- Or start pgAdmin separately **after** the SmartHire stack is running:
   ```bash
   docker run -d --name pgadmin-smarthire --network smarthire_default -p 5050:80 \
     -e PGADMIN_DEFAULT_EMAIL=pgadmin@smarthire.com \
     -e PGADMIN_DEFAULT_PASSWORD=admin123! \
     dpage/pgadmin4
   ```
+  > The `--network smarthire_default` flag connects pgAdmin to the same Docker network as your SmartHire services.
 
 > **Note**: By default, PostgreSQL is **not exposed** to the host (no port mapping in `docker-compose.yml` for security). pgAdmin connects from within the `smarthire_default` Docker network using hostname `postgres`. If you need direct host access, add a `ports` entry to the postgres service in a local override file.
 
@@ -252,6 +253,19 @@ If you started without pgAdmin (Option B):
 |---|---|
 | `Connection refused` on `localhost:8080` | Wait 90s+ for all containers to become healthy |
 | 401 on API calls | Ensure you ran the **Login** request first to get a valid token |
-| Eureka dashboard shows no services | Wait for health checks to pass; check `docker compose ps` |
-| pgAdmin can't connect to postgres | Use hostname `postgres` (not `localhost`), port `5432`, and verify the password matches your `.env` |
+| Eureka dashboard shows no services | Wait for health checks to pass; check `docker compose -f deploy/docker-compose.yml ps` |
+| pgAdmin can't connect to postgres | Use hostname `postgres` (not `localhost`), port `5432`, and verify the password matches your `deploy/.env` |
 | Candidate registration returns 409 | The candidate already exists from a previous run — just run **Login** instead |
+| `docker compose: command not found` | Install Docker Compose v2 (comes with Docker Desktop) or use `docker-compose` (v1) instead |
+
+### Stopping the demo
+
+```bash
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.pgadmin.yml down
+```
+
+This stops all containers but preserves the PostgreSQL database volume. To start fresh (delete all demo data), add `-v`:
+
+```bash
+docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.pgadmin.yml down -v
+```
