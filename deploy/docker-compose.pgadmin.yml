@@ -31,7 +31,5 @@ services:
       retries: 3
       start_period: 30s
 
-networks:
-  default:
-    external: true
-    name: smarthire_default
+# No networks section needed — pgAdmin joins the default network
+# automatically created by docker-compose.yml (smarthire_default)
