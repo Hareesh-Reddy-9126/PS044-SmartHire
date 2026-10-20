@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+  <include resource="org/springframework/boot/logging/logback/defaults.xml"/>
+  <include resource="org/springframework/boot/logging/logback/console-appender.xml"/>
+
+  <!-- JSON appender for production log aggregation -->
+  <appender name="JSON_CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
+    <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+      <providers>
+        <timestamp>
+          <timeZone>UTC</timeZone>
+        </timestamp>
+        <logLevel/>
+        <loggerName/>
+        <threadName/>
+        <message/>
+        <mdc/>
+        <arguments/>
+        <stackTrace/>
+      </providers>
+    </encoder>
+  </appender>
+
+  <!-- Root logger uses standard CONSOLE appender from Spring Boot defaults -->
+  <root level="INFO">
+    <appender-ref ref="CONSOLE"/>
+  </root>
+
+  <!-- Audit logger - uses standard CONSOLE appender, JSON formatting handled by application -->
+  <logger name="AUDIT" level="INFO" additivity="false">
+    <appender-ref ref="CONSOLE"/>
+  </logger>
+
+  <!-- Reduce noise from common libraries -->
+  <logger name="org.springframework.web" level="WARN"/>
+  <logger name="org.springframework.cloud.gateway" level="WARN"/>
+  <logger name="org.hibernate.SQL" level="WARN"/>
+  <logger name="io.micrometer" level="WARN"/>
+</configuration>

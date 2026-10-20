@@ -43,6 +43,15 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    </dependency>
+    <!-- Micrometer Prometheus for metrics export (observability). -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
     <!-- Registers with Eureka so the gateway can resolve lb://JOB-SERVICE (ADR-0005). -->
     <dependency>
       <groupId>org.springframework.cloud</groupId>

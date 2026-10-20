@@ -16,13 +16,57 @@ spring:
       default-filters:
         - SecureHeaders
       routes:
+        # OpenAPI documentation routes (must come before service routes to avoid path conflicts)
+        - id: job-service-api-docs
+          uri: lb://JOB-SERVICE
+          predicates:
+            - Path=/v3/api-docs/job-service
+          filters:
+            - RewritePath=/v3/api-docs/job-service, /v3/api-docs
+        - id: auth-service-api-docs
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/v3/api-docs/auth-service
+          filters:
+            - RewritePath=/v3/api-docs/auth-service, /v3/api-docs
+        - id: application-service-api-docs
+          uri: lb://APPLICATION-SERVICE
+          predicates:
+            - Path=/v3/api-docs/application-service
+          filters:
+            - RewritePath=/v3/api-docs/application-service, /v3/api-docs
+        - id: recruitment-service-api-docs
+          uri: lb://RECRUITMENT-SERVICE
+          predicates:
+            - Path=/v3/api-docs/recruitment-service
+          filters:
+            - RewritePath=/v3/api-docs/recruitment-service, /v3/api-docs
+        - id: document-service-api-docs
+          uri: lb://DOCUMENT-SERVICE
+          predicates:
+            - Path=/v3/api-docs/document-service
+          filters:
+            - RewritePath=/v3/api-docs/document-service, /v3/api-docs
+        - id: notification-service-api-docs
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/v3/api-docs/notification-service
+          filters:
+            - RewritePath=/v3/api-docs/notification-service, /v3/api-docs
+        # Job-service route. Public GET /api/v1/jobs/** for OPEN jobs; writes require RECRUITER.
         - id: job-service
           uri: lb://JOB-SERVICE
           predicates:
             - Path=/api/v1/jobs/**
+        # JWKS endpoint route. Public access for JWT public key verification.
+        - id: auth-service-jwks
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/oauth2/jwks
         # Auth-service route. GatewaySecurityConfig keeps register/login/refresh anonymous while
         # requiring a valid token for /me, /admin/whoami and /logout (deny-by-default, decision 6).
         # RequestRateLimiter throttles per client IP to blunt credential stuffing (decision 4).
+        # Uses standard RedisRateLimiter (redisRateLimiter bean).
         - id: auth-service
           uri: lb://AUTH-SERVICE
           predicates:
@@ -30,21 +74,77 @@ spring:
           filters:
             - name: RequestRateLimiter
               args:
+                rate-limiter: "#{@redisRateLimiter}"
                 key-resolver: "#{@ipKeyResolver}"
                 redis-rate-limiter.replenishRate: 10
                 redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1        # Application-service route. All application endpoints require authentication (enforced by
-        # GatewaySecurityConfig deny-by-default). No rate limiting for now — can be added later.
+                redis-rate-limiter.requestedTokens: 1
+        # Application-service route. All application endpoints require authentication (enforced by
+        # GatewaySecurityConfig deny-by-default). Rate limiting applied to mutating operations.
+        # Uses standard RedisRateLimiter (redisRateLimiter bean).
         - id: application-service
           uri: lb://APPLICATION-SERVICE
           predicates:
             - Path=/api/v1/applications/**
+          filters:
+            # Rate limit application submission (POST) and status changes (PATCH) per user
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: "#{@redisRateLimiter}"
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 20
+                redis-rate-limiter.burstCapacity: 40
+                redis-rate-limiter.requestedTokens: 1
+            - name: SetResponseHeader
+              args:
+                name: X-RateLimit-Policy
+                value: "user:20rps/40burst"
         # Recruitment-service route. All recruitment endpoints require authentication (enforced by
-        # GatewaySecurityConfig deny-by-default). No rate limiting for now — can be added later.
+        # GatewaySecurityConfig deny-by-default). Rate limiting applied to mutating operations.
+        # Uses standard RedisRateLimiter (redisRateLimiter bean).
         - id: recruitment-service
           uri: lb://RECRUITMENT-SERVICE
           predicates:
             - Path=/api/v1/recruitments/**
+          filters:
+            # Rate limit recruitment creation (POST) and status transitions (PATCH) per user
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: "#{@redisRateLimiter}"
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 15
+                redis-rate-limiter.burstCapacity: 30
+                redis-rate-limiter.requestedTokens: 1
+            - name: SetResponseHeader
+              args:
+                name: X-RateLimit-Policy
+                value: "user:15rps/30burst"
+        # Document-service route. All document endpoints require authentication (enforced by
+        # GatewaySecurityConfig deny-by-default). Rate limiting applied to uploads.
+        # Uses standard RedisRateLimiter (redisRateLimiter bean).
+        - id: document-service
+          uri: lb://DOCUMENT-SERVICE
+          predicates:
+            - Path=/api/v1/documents/**
+          filters:
+            # Rate limit document uploads (POST) per user
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: "#{@redisRateLimiter}"
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
+            - name: SetResponseHeader
+              args:
+                name: X-RateLimit-Policy
+                value: "user:10rps/20burst"
+        # Notification-service route. Candidate-facing notification endpoints require authentication
+        # (enforced by GatewaySecurityConfig deny-by-default). No rate limiting for now.
+        - id: notification-service
+          uri: lb://NOTIFICATION-SERVICE
+          predicates:
+            - Path=/api/v1/notifications/**
       globalcors:
         cors-configurations:
           '[/**]':
@@ -66,11 +166,20 @@ management:
   endpoints:
     web:
       exposure:
-        include: health,info
+        include: health,info,metrics,prometheus
   endpoint:
     health:
       probes:
         enabled: true
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
 
 # Edge JWT verification (GatewaySecurityConfig). jwk-set-uri is a direct HTTP URL to the
 # auth-service JWKS — deliberately NOT lb://, since the reactive decoder's key fetch bypasses the
@@ -81,3 +190,26 @@ smarthire:
       jwk-set-uri: ${GATEWAY_JWK_SET_URI:http://localhost:8082/oauth2/jwks}
       issuer: ${AUTH_JWT_ISSUER:https://smarthire.local/auth}
       audience: ${AUTH_JWT_AUDIENCE:smarthire}
+
+# Springdoc Swagger UI configuration for Gateway aggregation
+springdoc:
+  swagger-ui:
+    urls:
+      - name: Job Service
+        url: /v3/api-docs/job-service
+      - name: Auth Service
+        url: /v3/api-docs/auth-service
+      - name: Application Service
+        url: /v3/api-docs/application-service
+      - name: Recruitment Service
+        url: /v3/api-docs/recruitment-service
+      - name: Document Service
+        url: /v3/api-docs/document-service
+      - name: Notification Service
+        url: /v3/api-docs/notification-service
+    # Disable the default petstore URL
+    disable-swagger-default-url: true
+  api-docs:
+    # Gateway's own API docs path (enabled for health/monitoring)
+    enabled: true
+    path: /v3/api-docs

@@ -30,6 +30,22 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-actuator</artifactId>
     </dependency>
+    <!-- Springdoc OpenAPI for reactive WebFlux gateway (Spring Boot 3.4.x compatible). -->
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+    </dependency>
+    <!-- Micrometer Prometheus for metrics export (observability). -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
+    <!-- Logstash Logback Encoder for structured JSON logging (observability). -->
+    <dependency>
+      <groupId>net.logstash.logback</groupId>
+      <artifactId>logstash-logback-encoder</artifactId>
+      <version>8.0</version>
+    </dependency>
     <!-- Edge JWT verification: offline RS256 validation against the auth-service JWKS (ADR-0009,
          decision 9). Brings reactive Spring Security (@EnableWebFluxSecurity) + oauth2-jose. -->
     <dependency>

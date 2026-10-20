@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><title>SmartHire Workspace</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"danger-800":"#6B1616","surface-container":"#f3edea","primary-fixed-dim":"#bbc3ff","secondary-fixed-dim":"#7cd5d3","on-primary-container":"#b5beff","error":"#ba1a1a","warning-200":"#F2DCA8","success-200":"#B7DEC6","c-surface-sunken":"#F4F2F0","info-600":"#1E5EA8","tertiary-fixed":"#dee0ff","surface-tint":"#4d59a1","surface-bright":"#fef8f6","error-container":"#ffdad6","c-primary-800":"#252C5A","tertiary":"#25327b","secondary":"#006a69","outline":"#767682","warning-50":"#FDF3E0","surface-container-highest":"#e7e1df","surface-variant":"#e7e1df","surface-container-low":"#f9f2f0","primary-fixed":"#dee0ff","c-primary-300":"#9BA4D4","warning-800":"#5E3D00","on-tertiary":"#ffffff","c-primary-100":"#DCE0F0","on-tertiary-container":"#b6beff","danger-200":"#F0C2C2","primary-container":"#3e4a91","info-50":"#E8F0FA","on-secondary-container":"#00706f","on-primary-fixed":"#01105b","on-secondary-fixed-variant":"#00504f","on-primary":"#ffffff","on-error":"#ffffff","c-overlay":"rgba(28, 26, 25, 0.48)","surface":"#fef8f6","c-border-strong":"#CBC5BF","danger-500":"#C53030","on-secondary-fixed":"#002020","on-error-container":"#93000a","warning-600":"#8A5A00","secondary-fixed":"#98f2f0","c-bg":"#FBFAF9","inverse-on-surface":"#f6efed","tertiary-container":"#3e4a94","on-secondary":"#ffffff","on-tertiary-fixed":"#000f5d","success-50":"#E7F4EC","outline-variant":"#c6c5d2","on-background":"#1d1b1a","surface-container-lowest":"#ffffff","background":"#fef8f6","c-accent-50":"#E6F2F2","on-tertiary-fixed-variant":"#34408a","c-text-subtle":"#928C86","on-surface":"#1d1b1a","danger-700":"#841C1C","c-primary-50":"#EEF0F8","inverse-surface":"#32302f","c-text-muted":"#6B6560","c-surface":"#FFFFFF","c-primary-700":"#313A75","on-primary-fixed-variant":"#354187","on-surface-variant":"#454651","c-primary-900":"#1A1F40","info-200":"#BBD3EF","inverse-primary":"#bbc3ff","danger-50":"#FBEAEA","success-600":"#1A6B3C","success-700":"#145430","c-border":"#E3DFDB","info-700":"#174A85","danger-600":"#A32424","secondary-container":"#98f2f0","primary":"#263278","tertiary-fixed-dim":"#bbc3ff","surface-dim":"#dfd9d7","surface-container-high":"#ede7e5","c-accent-700":"#0A5F5E"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xl":"1.5rem","margin-mobile":"1rem","space-xs":"0.25rem","space-3xl":"4rem","gutter":"1.5rem","space-sm":"0.5rem","margin":"1.5rem","space-lg":"1rem","space-2xl":"2rem","gutter-mobile":"1rem","space-md":"0.75rem"},"fontFamily":{"headline-sm":["Inter"],"overline":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"],"display":["Inter"],"body-strong":["Inter"],"code-sm":["JetBrains Mono"],"caption":["Inter"],"body-md":["Inter"],"body-lg":["Inter"],"label-md":["Inter"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"600"}],"overline":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"display":["30px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-strong":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"500"}],"code-sm":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"400"}],"caption":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"600"}]}}}</script></head><body class="bg-c-bg font-body-md text-on-surface antialiased min-h-screen"><aside class="fixed left-0 top-0 h-full w-16 md:w-60 bg-c-primary-900 text-c-bg z-50 flex flex-col shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-4 flex items-center justify-between overflow-hidden"><div class="flex items-center gap-space-sm min-w-0"><img alt="SmartHire Brand Logo" class="h-7 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1VVWUOqmiAQdkmhpWVXgXYXyzwtWUUVsNpnnCJtyZkNSTvikns_spHQheNmh3URSDnLXg6HPtIq09RU9abGN6_tlaaI91pCxCp7pHXSRUQVJnqJwtiHAA1N6WpgTCBgteHg27dQl0s3d6g8ZrDNqr2RgmnsQfE033NaALmTFoZwfMZ93oazdz8ncIWgnf4MrDcNH_UHs6FSIyGF3TIq6F-nIa5h2L4WaI_Vymu4RvBUQnNwHSsrrwIPlHg"/><span class="hidden md:inline font-headline-sm text-headline-sm text-surface font-semibold tracking-tight truncate">SmartHire</span></div><button class="md:hidden p-1 text-c-text-subtle hover:text-surface" type="button"><span class="material-symbols-outlined text-[20px]">menu</span></button></div><div class="px-3 py-space-sm"><div class="hidden md:block px-2 py-1 mb-2 font-overline text-overline uppercase tracking-wider text-c-primary-300">Navigation Menu</div><nav class="flex flex-col gap-1" data-active-classes="bg-primary-container text-on-primary font-body-strong shadow-sm"><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="candidate-applications" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">assignment</span><span class="hidden md:inline font-body-md text-body-md truncate">My applications</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="candidate-progress" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">timeline</span><span class="hidden md:inline font-body-md text-body-md truncate">My progress</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="recruiter-jobs" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">work</span><span class="hidden md:inline font-body-md text-body-md truncate">Job postings</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="recruiter-recruitments" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">groups</span><span class="hidden md:inline font-body-md text-body-md truncate">Recruitments</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="admin-overview" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">shield</span><span class="hidden md:inline font-body-md text-body-md truncate">Overview</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="admin-lookup" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">saved_search</span><span class="hidden md:inline font-body-md text-body-md truncate">Record lookup</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="browse-jobs" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">search</span><span class="hidden md:inline font-body-md text-body-md truncate">Browse jobs</span></a></nav></div><div class="mt-auto p-3 flex flex-col gap-2"><div class="hidden md:flex flex-col gap-1.5 p-2.5 rounded-xl bg-c-primary-800/60"><div class="flex items-center justify-between text-c-text-subtle font-caption text-caption"><span class="uppercase font-overline text-overline">System Spec</span><span class="font-code-sm text-code-sm">v2.4</span></div><a class="inline-flex items-center gap-1 font-caption text-caption text-c-primary-300 hover:text-surface transition-colors" href="#"><span class="material-symbols-outlined text-[14px]">description</span>API documentation ↗</a><a class="inline-flex items-center gap-1 font-caption text-caption text-c-primary-300 hover:text-surface transition-colors" href="#"><span class="material-symbols-outlined text-[14px]">hub</span>Service registry ↗</a></div><a class="flex items-center gap-3 px-3 py-2 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="user-profile" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">account_circle</span><span class="hidden md:inline font-body-md text-body-md truncate">Profile</span></a></div></aside><div class="pl-16 md:pl-60 min-h-screen flex flex-col"><header class="fixed top-0 left-16 md:left-60 right-0 h-14 bg-c-surface shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-2"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-c-accent-50 text-c-accent-700 font-overline text-overline uppercase tracking-wider"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>Active Workspace</span><span class="hidden sm:inline font-code-sm text-code-sm text-c-text-muted bg-c-surface-sunken px-2 py-0.5 rounded-lg">org_smarthire_core</span></div></div><div class="flex items-center gap-space-md"><div class="hidden lg:flex items-center gap-space-xs text-right"><span class="font-body-strong text-body-strong text-on-surface">alex.chen@example.com</span><span class="font-caption text-caption text-c-text-subtle">(Role: Candidate)</span></div><a class="inline-flex items-center gap-1 px-space-md py-1.5 rounded-xl font-label-md text-label-md text-danger-700 bg-danger-50 hover:bg-danger-200 hover:text-danger-800 transition-colors" data-path="sign-in" href="#"><span class="material-symbols-outlined text-[16px]">logout</span><span class="hidden sm:inline">Sign out</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="flex-1 pt-14 w-full bg-c-bg"><div class="flex flex-col w-full">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<!-- Top Breadcrumb & Metadata Path -->
+<nav aria-label="Breadcrumb" class="flex items-center gap-2 font-caption text-caption text-c-text-muted">
+<a class="hover:text-primary transition-colors flex items-center gap-1" href="#">
+<span class="material-symbols-outlined text-[16px]">assignment</span>
+<span>My applications</span>
+</a>
+<span class="text-c-text-subtle">/</span>
+<span class="text-on-surface font-body-strong truncate">Senior Full-Stack Engineer</span>
+<span class="text-c-text-subtle font-code-sm text-code-sm bg-surface-container px-2 py-0.5 rounded-lg">app_04e112d7</span>
+</nav>
+<!-- Header Section with State Badging & Actions -->
+<div class="bg-surface-container-lowest p-6 rounded-xl shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-6">
+<div class="space-y-2">
+<div class="flex flex-wrap items-center gap-3">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">Senior Full-Stack Engineer</h1>
+<!-- StatusBadge: UNDER_REVIEW -->
+<span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warning-50 text-warning-800 font-overline text-overline shadow-xs">
+<span class="w-2 h-2 rounded-full bg-warning-600 animate-pulse"></span>
+            UNDER_REVIEW
+          </span>
+</div>
+<div class="flex flex-wrap items-center gap-y-1 gap-x-3 font-body-md text-body-md text-c-text-muted">
+<span class="font-body-strong text-on-surface flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-c-text-subtle">business</span>
+            Acme Corp
+          </span>
+<span class="text-c-text-subtle">•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-c-text-subtle">location_on</span>
+            London, UK (Hybrid)
+          </span>
+<span class="text-c-text-subtle">•</span>
+<span class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[18px] text-c-text-subtle">schedule</span>
+            Submitted 3 days ago
+          </span>
+<span class="text-c-text-subtle">•</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle bg-c-surface-sunken px-2 py-0.5 rounded-lg">
+            Requisition: req_01928fa4
+          </span>
+</div>
+</div>
+<!-- Header Action -->
+<div class="flex items-center shrink-0">
+<button class="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-label-md text-label-md text-warning-800 bg-warning-50 hover:bg-warning-200 transition-all shadow-sm" id="open-withdraw-dialog" type="button">
+<span class="material-symbols-outlined text-[18px]">cancel</span>
+<span>Withdraw application</span>
+</button>
+</div>
+</div>
+<!-- 8 / 4 Responsive Grid Split -->
+<div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+<!-- LEFT COLUMN: 8 Columns -->
+<div class="lg:col-span-8 space-y-6">
+<!-- StatusTimeline Component -->
+<section aria-label="Application status: UNDER_REVIEW — step 2 of 4" class="bg-surface-container-lowest p-6 rounded-xl shadow-sm">
+<div class="flex items-center justify-between pb-4">
+<div>
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-subtle">Audit Sequence</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Application Progression Lifecycle</h2>
+</div>
+<span class="font-code-sm text-code-sm px-2.5 py-1 rounded-lg bg-surface-container text-c-text-muted">
+              Step 2 of 4 Active
+            </span>
+</div>
+<!-- Pipeline Graph Container -->
+<div class="pt-6 pb-4 overflow-x-auto">
+<div class="min-w-[620px] flex items-start justify-between relative px-4">
+<!-- Node 1: APPLIED (Completed) -->
+<div class="flex flex-col items-center text-center relative z-10 w-28">
+<div class="w-10 h-10 rounded-full bg-primary-container text-on-primary flex items-center justify-center shadow-sm">
+<span class="material-symbols-outlined text-[20px]">check</span>
+</div>
+<span class="mt-3 font-label-md text-label-md text-on-surface">APPLIED</span>
+<span class="font-caption text-caption text-c-text-subtle">14 Oct 2025</span>
+<span class="font-code-sm text-code-sm text-success-600 mt-0.5">Recorded</span>
+</div>
+<!-- Connector 1 -> 2 (Complete) -->
+<div class="flex-1 h-1 bg-primary-container mt-5 -mx-2"></div>
+<!-- Node 2: UNDER_REVIEW (Current Active) -->
+<div class="flex flex-col items-center text-center relative z-10 w-32">
+<div class="relative">
+<div class="absolute -inset-1.5 rounded-full bg-warning-200 animate-ping opacity-40"></div>
+<div class="w-10 h-10 rounded-full bg-warning-50 text-warning-800 flex items-center justify-center relative shadow-sm">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</div>
+</div>
+<span class="mt-3 font-label-md text-label-md text-warning-800">UNDER_REVIEW</span>
+<span class="font-caption text-caption text-c-text-muted">Current stage</span>
+<span class="font-code-sm text-code-sm text-warning-600 mt-0.5">In queue</span>
+</div>
+<!-- Connector 2 -> 3 (Upcoming dashed) -->
+<div class="flex-1 h-1 bg-surface-container mt-5 -mx-2 flex items-center">
+<div class="w-full h-full bg-[linear-gradient(to_right,#E3DFDB_50%,transparent_50%)] bg-[length:8px_4px]"></div>
+</div>
+<!-- Node 3: SHORTLISTED (Future) -->
+<div class="flex flex-col items-center text-center relative z-10 w-28">
+<div class="w-10 h-10 rounded-full bg-surface-container-high text-c-text-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</div>
+<span class="mt-3 font-label-md text-label-md text-c-text-subtle">SHORTLISTED</span>
+<span class="font-caption text-caption text-c-text-subtle">Evaluation</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle mt-0.5">Pending</span>
+</div>
+<!-- Connector 3 -> 4 (Upcoming dashed branch) -->
+<div class="flex-1 h-1 bg-surface-container mt-5 -mx-2 flex items-center">
+<div class="w-full h-full bg-[linear-gradient(to_right,#E3DFDB_50%,transparent_50%)] bg-[length:8px_4px]"></div>
+</div>
+<!-- Node 4: Terminal Branches (Hollow future nodes) -->
+<div class="flex flex-col items-center text-center relative z-10 w-32">
+<div class="flex items-center gap-1.5">
+<div class="w-7 h-7 rounded-full bg-surface-container-low text-c-text-subtle flex items-center justify-center" title="Terminal Option: HIRED">
+<span class="material-symbols-outlined text-[14px]">done_all</span>
+</div>
+<span class="font-caption text-caption text-c-text-subtle">/</span>
+<div class="w-7 h-7 rounded-full bg-surface-container-low text-c-text-subtle flex items-center justify-center" title="Terminal Option: REJECTED">
+<span class="material-symbols-outlined text-[14px]">close</span>
+</div>
+</div>
+<span class="mt-3 font-label-md text-label-md text-c-text-subtle">HIRED / REJECTED</span>
+<span class="font-caption text-caption text-c-text-subtle">Terminal State</span>
+</div>
+</div>
+</div>
+<!-- Off-ramp indicator -->
+<div class="mt-6 pt-4 bg-c-surface-sunken p-4 rounded-xl flex items-center justify-between text-c-text-muted">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-warning-800 text-[20px]">call_split</span>
+<p class="font-caption text-caption">
+<strong class="text-on-surface">Available Off-Ramp:</strong> The candidate may initiate a voluntary exit to the <code class="font-code-sm text-code-sm bg-surface-container px-1 py-0.5 rounded">WITHDRAWN</code> terminal state at any time prior to final adjudication.
+              </p>
+</div>
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-subtle px-2 py-0.5 bg-surface-container rounded-lg">Unconstrained</span>
+</div>
+</section>
+<!-- "Submission Details" Card -->
+<section class="bg-surface-container-lowest p-6 rounded-xl shadow-sm space-y-6">
+<div class="flex items-center justify-between">
+<div class="space-y-0.5">
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-subtle">Ledger Record</span>
+<h2 class="font-headline-sm text-headline-sm text-on-surface">Submission Details</h2>
+</div>
+<span class="inline-flex items-center gap-1 font-caption text-caption text-success-700 bg-success-50 px-2.5 py-1 rounded-full">
+<span class="material-symbols-outlined text-[14px]">verified</span>
+              ISO Timestamped
+            </span>
+</div>
+<!-- Metadata Field List with Archival Density -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<!-- Application ID -->
+<div class="p-4 bg-c-surface-sunken rounded-xl flex flex-col justify-between gap-2">
+<span class="font-caption text-caption text-c-text-subtle uppercase tracking-wider font-semibold">Application Reference</span>
+<div class="flex items-center justify-between gap-2">
+<span class="font-code-sm text-code-sm text-on-surface truncate" id="app-id-text">app_04e112d7-98fa-4e12-8821-39dae0921</span>
+<button class="shrink-0 p-1.5 rounded-lg bg-surface-container text-on-surface-variant hover:text-primary transition-colors" id="copy-app-id" title="Copy UUID" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+<!-- Linked Requisition -->
+<div class="p-4 bg-c-surface-sunken rounded-xl flex flex-col justify-between gap-2">
+<span class="font-caption text-caption text-c-text-subtle uppercase tracking-wider font-semibold">Linked Requisition</span>
+<div class="flex items-center justify-between gap-2">
+<a class="font-code-sm text-code-sm text-primary hover:text-c-primary-700 flex items-center gap-1 group" href="#">
+<span>req_01928fa4</span>
+<span class="material-symbols-outlined text-[14px] group-hover:translate-x-0.5 transition-transform">arrow_forward</span>
+</a>
+<span class="font-caption text-caption text-c-text-muted">Job Detail (S-02)</span>
+</div>
+</div>
+<!-- Submitted Résumé Link -->
+<div class="p-4 bg-c-surface-sunken rounded-xl flex flex-col justify-between gap-2">
+<span class="font-caption text-caption text-c-text-subtle uppercase tracking-wider font-semibold">Archived Dossier / Résumé</span>
+<div class="flex items-center justify-between gap-2">
+<a class="font-code-sm text-code-sm text-primary hover:text-c-primary-700 flex items-center gap-1.5 truncate" href="https://storage.cloudscale.io/candidates/alex-chen-senior-fullstack.pdf" rel="noopener noreferrer" target="_blank">
+<span class="material-symbols-outlined text-[16px] text-c-text-subtle shrink-0">picture_as_pdf</span>
+<span class="truncate">alex-chen-senior-fullstack.pdf</span>
+<span class="material-symbols-outlined text-[14px] shrink-0">open_in_new</span>
+</a>
+<span class="font-caption text-caption text-c-text-subtle shrink-0">1.8 MB</span>
+</div>
+</div>
+<!-- Submission Timestamp -->
+<div class="p-4 bg-c-surface-sunken rounded-xl flex flex-col justify-between gap-2">
+<span class="font-caption text-caption text-c-text-subtle uppercase tracking-wider font-semibold">Filing Time (UTC)</span>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-c-text-subtle">schedule</span>
+<span class="font-body-strong text-body-strong text-on-surface">14 Oct 2025, 09:42 UTC</span>
+</div>
+</div>
+</div>
+<!-- Rich Contextual Footnote: Candidate Snapshot -->
+<div class="p-4 rounded-xl bg-c-accent-50 flex items-start gap-4 text-c-accent-700">
+<span class="material-symbols-outlined text-[20px] shrink-0 mt-0.5 text-secondary">shield_person</span>
+<div class="space-y-1">
+<h4 class="font-label-md text-label-md">Immutable Submission Package</h4>
+<p class="font-caption text-caption text-c-text-muted">
+                Your portfolio, resume snapshot, and screening replies were frozen at transmission time. Any global profile updates you make will not overwrite this certified record without recruiter consent.
+              </p>
+</div>
+</div>
+</section>
+</div>
+<!-- RIGHT COLUMN: 4 Columns -->
+<div class="lg:col-span-4 space-y-6">
+<!-- "What happens next" Card -->
+<section class="bg-surface-container-lowest p-6 rounded-xl shadow-sm space-y-4">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-c-primary-50 text-primary flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">info</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">What happens next</h3>
+</div>
+<div class="p-4 rounded-xl bg-surface-container-low space-y-2">
+<span class="font-overline text-overline uppercase tracking-wider text-warning-800 font-semibold">Stage Directive: UNDER_REVIEW</span>
+<p class="font-body-md text-body-md text-on-surface">
+              A recruiter from Acme Corp is actively reviewing your submission against requisition criteria. When reviewed, you may be shortlisted for an interview process.
+            </p>
+</div>
+<div class="space-y-3 pt-2">
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-[18px] text-secondary mt-0.5">timer</span>
+<div class="text-caption font-caption text-c-text-muted">
+<strong class="text-on-surface">Expected Review Window:</strong> Typically 3 to 5 business days from filing.
+              </div>
+</div>
+<div class="flex items-start gap-3">
+<span class="material-symbols-outlined text-[18px] text-secondary mt-0.5">notifications_active</span>
+<div class="text-caption font-caption text-c-text-muted">
+<strong class="text-on-surface">Automated Alerts:</strong> System updates are dispatched instantly via candidate email and workspace timeline notifications.
+              </div>
+</div>
+</div>
+</section>
+<!-- "Linked recruitment process" Card -->
+<section class="bg-surface-container-lowest p-6 rounded-xl shadow-sm space-y-5">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-2.5">
+<div class="w-8 h-8 rounded-lg bg-surface-container text-c-text-muted flex items-center justify-center">
+<span class="material-symbols-outlined text-[18px]">hub</span>
+</div>
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Recruitment Process</h3>
+</div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-surface-container text-c-text-muted font-overline text-overline uppercase">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+              Awaiting
+            </span>
+</div>
+<div class="p-4 rounded-xl bg-c-surface-sunken space-y-3">
+<div class="flex items-center gap-2 text-c-text-muted">
+<span class="material-symbols-outlined text-[18px]">event_busy</span>
+<span class="font-label-md text-label-md text-on-surface">No schedules initiated</span>
+</div>
+<p class="font-caption text-caption text-c-text-muted">
+              No interview schedule has been initiated yet. When shortlisted, an interview process will appear under <strong class="text-on-surface">'My progress'</strong>.
+            </p>
+</div>
+<!-- Operational Status Callout -->
+<div class="p-3.5 rounded-xl bg-warning-50 flex items-center gap-3">
+<span class="material-symbols-outlined text-warning-800 text-[20px] shrink-0">hourglass_top</span>
+<div class="font-caption text-caption text-warning-800">
+<strong>Status indicator:</strong> Pending recruiter action.
+            </div>
+</div>
+<!-- Organization Assurance Stamp -->
+<div class="pt-2 flex items-center justify-between font-caption text-caption text-c-text-subtle">
+<span>Hiring Coordinator</span>
+<span class="font-body-strong text-on-surface">Acme Talent Operations</span>
+</div>
+</section>
+<!-- Help & Policy Compact Module -->
+<div class="p-4 rounded-xl bg-surface-container-lowest shadow-sm flex items-center justify-between">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-c-text-subtle text-[18px]">policy</span>
+<span class="font-caption text-caption text-c-text-muted">Data retention complies with EU/UK GDPR</span>
+</div>
+<a class="font-caption text-caption text-primary hover:underline" href="#">Policy ↗</a>
+</div>
+</div>
+</div>
+</div>
+<!-- ConfirmDialog Modal: Irreversible Withdrawal -->
+<div class="fixed inset-0 z-50 hidden flex items-center justify-center p-4" id="withdraw-modal">
+<!-- Backdrop Scrim -->
+<div class="fixed inset-0 bg-c-overlay transition-opacity duration-200" id="modal-backdrop"></div>
+<!-- Dialog Envelope (sm constrained to 520px) -->
+<div class="relative w-full max-w-[520px] bg-surface-container-lowest rounded-xl shadow-xl overflow-hidden z-10">
+<div class="p-6 space-y-4">
+<!-- Dialog Header -->
+<div class="flex items-start gap-3">
+<div class="w-10 h-10 rounded-full bg-danger-50 text-danger-700 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">warning</span>
+</div>
+<div class="space-y-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface">Withdraw this application?</h3>
+<span class="font-code-sm text-code-sm text-c-text-subtle">Requisition: req_01928fa4</span>
+</div>
+</div>
+<!-- Dialog Body -->
+<div class="p-4 rounded-xl bg-danger-50 text-danger-800 space-y-2">
+<p class="font-body-md text-body-md font-semibold">
+            This cannot be undone.
+          </p>
+<p class="font-body-md text-body-md">
+            Acme Corp will no longer consider you for Senior Full-Stack Engineer. Your application will transition irreversibly to <code class="font-code-sm text-code-sm bg-surface-container-lowest px-1.5 py-0.5 rounded text-danger-700">WITHDRAWN</code> status.
+          </p>
+</div>
+<p class="font-caption text-caption text-c-text-muted">
+          Your candidate profile remains intact for other opportunities, but you will not be permitted to re-apply to this requisition cycle.
+        </p>
+</div>
+<!-- Dialog Action Bar -->
+<div class="px-6 py-4 bg-c-surface-sunken flex flex-col-reverse sm:flex-row items-center justify-end gap-3">
+<button class="w-full sm:w-auto px-4 py-2 rounded-xl font-label-md text-label-md text-on-surface bg-surface-container hover:bg-surface-container-high transition-colors text-center" id="cancel-withdraw-btn" type="button">
+          Keep application
+        </button>
+<button class="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2 rounded-xl font-label-md text-label-md text-on-primary bg-danger-600 hover:bg-danger-700 active:bg-danger-800 transition-colors shadow-sm" id="confirm-withdraw-btn" type="button">
+<span class="material-symbols-outlined text-[16px]">cancel</span>
+<span>Withdraw application</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Interactive Logic for Modal & Copy Feedback -->
+<script>
+    (function() {
+      const openModalBtn = document.getElementById('open-withdraw-dialog');
+      const cancelModalBtn = document.getElementById('cancel-withdraw-btn');
+      const confirmModalBtn = document.getElementById('confirm-withdraw-btn');
+      const modal = document.getElementById('withdraw-modal');
+      const backdrop = document.getElementById('modal-backdrop');
+      const copyBtn = document.getElementById('copy-app-id');
+      const appIdText = document.getElementById('app-id-text');
+
+      function openModal() {
+        modal.classList.remove('hidden');
+        cancelModalBtn.focus();
+      }
+
+      function closeModal() {
+        modal.classList.add('hidden');
+      }
+
+      if (openModalBtn) openModalBtn.addEventListener('click', openModal);
+      if (cancelModalBtn) cancelModalBtn.addEventListener('click', closeModal);
+      if (backdrop) backdrop.addEventListener('click', closeModal);
+
+      if (confirmModalBtn) {
+        confirmModalBtn.addEventListener('click', function() {
+          this.disabled = true;
+          this.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">refresh</span> Transitioning...';
+          setTimeout(() => {
+            closeModal();
+            window.location.reload();
+          }, 600);
+        });
+      }
+
+      // CopyableId Interaction
+      if (copyBtn && appIdText) {
+        copyBtn.addEventListener('click', function() {
+          const textToCopy = appIdText.innerText.trim();
+          navigator.clipboard.writeText(textToCopy).then(() => {
+            const icon = copyBtn.querySelector('.material-symbols-outlined');
+            if (icon) {
+              icon.innerText = 'check';
+              copyBtn.classList.add('text-success-600');
+              setTimeout(() => {
+                icon.innerText = 'content_copy';
+                copyBtn.classList.remove('text-success-600');
+              }, 2000);
+            }
+          });
+        });
+      }
+
+      // Escape key listener for accessible modal dismissal
+      document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+          closeModal();
+        }
+      });
+    })();
+  </script>
+</div></main></div></body></html>

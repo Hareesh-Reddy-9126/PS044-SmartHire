@@ -40,6 +40,15 @@
       <groupId>org.springframework.boot</groupId>
       <artifactId>spring-boot-starter-validation</artifactId>
     </dependency>
+    <dependency>
+      <groupId>org.springdoc</groupId>
+      <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+    </dependency>
+    <!-- Micrometer Prometheus for metrics export (observability). -->
+    <dependency>
+      <groupId>io.micrometer</groupId>
+      <artifactId>micrometer-registry-prometheus</artifactId>
+    </dependency>
     <!-- Redis: jti revocation denylist (ADR-0011). No caching use (roadmap Inc 1 scope). -->
     <dependency>
       <groupId>org.springframework.boot</groupId>

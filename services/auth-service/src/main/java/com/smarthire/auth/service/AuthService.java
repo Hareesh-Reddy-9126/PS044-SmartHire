@@ -3,10 +3,13 @@ package com.smarthire.auth.service;
 import com.smarthire.auth.domain.Role;
 import com.smarthire.auth.domain.User;
 import com.smarthire.auth.infra.UserRepository;
+import com.smarthire.common.audit.AuditService;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -19,6 +22,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class AuthService {
+
+  private static final Logger log = LoggerFactory.getLogger(AuthService.class);
 
   static final String DUMMY_PASSWORD_HASH =
       "{bcrypt}$2a$12$aIBWy02mSzSW3ybBC41KCOHoLO.xaC69G3HyqXv1PTGsOrfGKfeZG";
@@ -50,6 +55,12 @@ public class AuthService {
   public UUID register(String email, String rawPassword) {
     String normalized = email.trim().toLowerCase();
     if (userRepository.existsByEmail(normalized)) {
+      AuditService.auth(
+          AuditService.AuthEvent.REGISTER,
+          null,
+          normalized,
+          AuditService.Outcome.FAILURE,
+          "Email already exists");
       throw new EmailAlreadyExistsException("Email already registered");
     }
     User user =
@@ -61,8 +72,17 @@ public class AuthService {
             null,
             Instant.now(clock));
     try {
-      return userRepository.saveAndFlush(user).getId();
+      UUID userId = userRepository.saveAndFlush(user).getId();
+      AuditService.auth(
+          AuditService.AuthEvent.REGISTER, userId, normalized, AuditService.Outcome.SUCCESS, null);
+      return userId;
     } catch (DataIntegrityViolationException ex) {
+      AuditService.auth(
+          AuditService.AuthEvent.REGISTER,
+          null,
+          normalized,
+          AuditService.Outcome.FAILURE,
+          "Email already exists");
       throw new EmailAlreadyExistsException("Email already registered");
     }
   }
@@ -71,15 +91,34 @@ public class AuthService {
   public AuthTokens login(String email, String rawPassword) {
     User user = userRepository.findByEmail(email.trim().toLowerCase()).orElse(null);
     String passwordHash = user == null ? DUMMY_PASSWORD_HASH : user.getPasswordHash();
+    String normalizedEmail = email.trim().toLowerCase();
     if (!passwordEncoder.matches(rawPassword, passwordHash) || user == null) {
+      AuditService.auth(
+          AuditService.AuthEvent.LOGIN_FAILURE,
+          null,
+          normalizedEmail,
+          AuditService.Outcome.FAILURE,
+          "Invalid credentials");
       throw new InvalidCredentialsException("Invalid email or password");
     }
+    AuditService.auth(
+        AuditService.AuthEvent.LOGIN_SUCCESS,
+        user.getId(),
+        normalizedEmail,
+        AuditService.Outcome.SUCCESS,
+        null);
     return issueFor(user);
   }
 
   @Transactional(noRollbackFor = InvalidTokenException.class)
   public AuthTokens refresh(String refreshToken) {
     if (refreshToken == null || refreshToken.isBlank()) {
+      AuditService.auth(
+          AuditService.AuthEvent.REFRESH,
+          null,
+          null,
+          AuditService.Outcome.FAILURE,
+          "Missing refresh token");
       throw new InvalidTokenException("Missing refresh token");
     }
     RefreshTokenService.RotationResult rotation = refreshTokenService.rotate(refreshToken);
@@ -87,6 +126,12 @@ public class AuthService {
         userRepository
             .findById(rotation.userId())
             .orElseThrow(() -> new InvalidTokenException("Unknown user for refresh token"));
+    AuditService.auth(
+        AuditService.AuthEvent.REFRESH,
+        user.getId(),
+        user.getEmail(),
+        AuditService.Outcome.SUCCESS,
+        null);
     IssuedToken access = jwtIssuer.issue(user.getId(), roles(user), user.getOrgId());
     return new AuthTokens(access.value(), access.expiresAt(), rotation.refreshToken());
   }
@@ -97,10 +142,18 @@ public class AuthService {
    */
   @Transactional
   public void logout(String refreshToken, String accessJti, Instant accessExpiresAt) {
+    // We don't have the user ID here directly; the access token JTI is revoked.
+    // The audit event will be logged with the JTI as detail for traceability.
     if (refreshToken != null && !refreshToken.isBlank()) {
       refreshTokenService.revoke(refreshToken);
     }
     revocationService.revoke(accessJti, accessExpiresAt);
+    AuditService.auth(
+        AuditService.AuthEvent.LOGOUT,
+        null,
+        null,
+        AuditService.Outcome.SUCCESS,
+        "accessJti=" + accessJti);
   }
 
   /**

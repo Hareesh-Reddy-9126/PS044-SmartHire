@@ -1,5 +1,8 @@
 package com.smarthire.application.infra;
 
+import io.github.resilience4j.bulkhead.annotation.Bulkhead;
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import java.util.UUID;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -13,6 +16,7 @@ import org.springframework.web.bind.annotation.PathVariable;
  * data occurs from Application Service.
  *
  * <p>Uses {@code @FeignClient(name = "JOB-SERVICE")} so the call is load-balanced through Eureka.
+ * Protected by Resilience4j circuit breaker, retry, and bulkhead for fault tolerance.
  */
 @FeignClient(name = "JOB-SERVICE")
 public interface JobClient {
@@ -24,7 +28,18 @@ public interface JobClient {
    * @return job details including status and ownerOrgId, or 404 if not found
    */
   @GetMapping("/api/v1/jobs/{jobId}")
+  @CircuitBreaker(name = "jobService", fallbackMethod = "getJobFallback")
+  @Retry(name = "jobService")
+  @Bulkhead(name = "jobService")
   JobResponse getJob(@PathVariable("jobId") UUID jobId);
+
+  /**
+   * Fallback for circuit breaker / bulkhead when Job Service is unavailable. Returns a problem
+   * detail response indicating the downstream dependency is unavailable.
+   */
+  default JobResponse getJobFallback(UUID jobId, Exception ex) {
+    throw new JobServiceUnavailableException("Job service unavailable: " + ex.getMessage());
+  }
 
   /**
    * Response DTO matching Job Service's {@code JobResponse}. Only the fields needed for validation
@@ -40,6 +55,16 @@ public interface JobClient {
 
     public boolean isOpen() {
       return "OPEN".equals(status);
+    }
+  }
+
+  /**
+   * Exception thrown when Job Service is unavailable (circuit breaker open or bulkhead full).
+   * Mapped to RFC 9457 problem detail by the global exception handler.
+   */
+  class JobServiceUnavailableException extends RuntimeException {
+    public JobServiceUnavailableException(String message) {
+      super(message);
     }
   }
 }

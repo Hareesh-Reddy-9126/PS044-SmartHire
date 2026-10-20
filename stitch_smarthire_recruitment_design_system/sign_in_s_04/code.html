@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_blank" name="shell-type"/><title>SmartHire Authentication</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"danger-800":"#6B1616","surface-container":"#f3edea","primary-fixed-dim":"#bbc3ff","secondary-fixed-dim":"#7cd5d3","on-primary-container":"#b5beff","error":"#ba1a1a","warning-200":"#F2DCA8","success-200":"#B7DEC6","c-surface-sunken":"#F4F2F0","info-600":"#1E5EA8","tertiary-fixed":"#dee0ff","surface-tint":"#4d59a1","surface-bright":"#fef8f6","error-container":"#ffdad6","c-primary-800":"#252C5A","tertiary":"#25327b","secondary":"#006a69","outline":"#767682","warning-50":"#FDF3E0","surface-container-highest":"#e7e1df","surface-variant":"#e7e1df","surface-container-low":"#f9f2f0","primary-fixed":"#dee0ff","c-primary-300":"#9BA4D4","warning-800":"#5E3D00","on-tertiary":"#ffffff","c-primary-100":"#DCE0F0","on-tertiary-container":"#b6beff","danger-200":"#F0C2C2","primary-container":"#3e4a91","info-50":"#E8F0FA","on-secondary-container":"#00706f","on-primary-fixed":"#01105b","on-secondary-fixed-variant":"#00504f","on-primary":"#ffffff","on-error":"#ffffff","c-overlay":"rgba(28, 26, 25, 0.48)","surface":"#fef8f6","c-border-strong":"#CBC5BF","danger-500":"#C53030","on-secondary-fixed":"#002020","on-error-container":"#93000a","warning-600":"#8A5A00","secondary-fixed":"#98f2f0","c-bg":"#FBFAF9","inverse-on-surface":"#f6efed","tertiary-container":"#3e4a94","on-secondary":"#ffffff","on-tertiary-fixed":"#000f5d","success-50":"#E7F4EC","outline-variant":"#c6c5d2","on-background":"#1d1b1a","surface-container-lowest":"#ffffff","background":"#fef8f6","c-accent-50":"#E6F2F2","on-tertiary-fixed-variant":"#34408a","c-text-subtle":"#928C86","on-surface":"#1d1b1a","danger-700":"#841C1C","c-primary-50":"#EEF0F8","inverse-surface":"#32302f","c-text-muted":"#6B6560","c-surface":"#FFFFFF","c-primary-700":"#313A75","on-primary-fixed-variant":"#354187","on-surface-variant":"#454651","c-primary-900":"#1A1F40","info-200":"#BBD3EF","inverse-primary":"#bbc3ff","danger-50":"#FBEAEA","success-600":"#1A6B3C","success-700":"#145430","c-border":"#E3DFDB","info-700":"#174A85","danger-600":"#A32424","secondary-container":"#98f2f0","primary":"#263278","tertiary-fixed-dim":"#bbc3ff","surface-dim":"#dfd9d7","surface-container-high":"#ede7e5","c-accent-700":"#0A5F5E"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xl":"1.5rem","margin-mobile":"1rem","space-xs":"0.25rem","space-3xl":"4rem","gutter":"1.5rem","space-sm":"0.5rem","margin":"1.5rem","space-lg":"1rem","space-2xl":"2rem","gutter-mobile":"1rem","space-md":"0.75rem"},"fontFamily":{"headline-sm":["Inter"],"overline":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"],"display":["Inter"],"body-strong":["Inter"],"code-sm":["JetBrains Mono"],"caption":["Inter"],"body-md":["Inter"],"body-lg":["Inter"],"label-md":["Inter"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"600"}],"overline":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"display":["30px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-strong":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"500"}],"code-sm":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"400"}],"caption":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"600"}]}}}</script></head><body class="bg-c-bg font-body-md text-on-surface antialiased min-h-screen flex flex-col justify-between"><header class="w-full py-space-xl flex flex-col items-center justify-center"><a class="flex items-center gap-space-sm" data-path="browse-jobs" href="#"><img alt="SmartHire Brand Logo" class="h-9 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VVWUOqmiAQdkmhpWVXgXYXyzwtWUUVsNpnnCJtyZkNSTvikns_spHQheNmh3URSDnLXg6HPtIq09RU9abGN6_tlaaI91pCxCp7pHXSRUQVJnqJwtiHAA1N6WpgTCBgteHg27dQl0s3d6g8ZrDNqr2RgmnsQfE033NaALmTFoZwfMZ93oazdz8ncIWgnf4MrDcNH_UHs6FSIyGF3TIq6F-nIa5h2L4WaI_Vymu4RvBUQnNwHSsrrwIPlHg"/><span class="font-headline-md text-headline-md text-c-primary-900 tracking-tight">SmartHire</span></a><span class="font-caption text-caption text-c-text-muted mt-1">Employment Decision Architecture</span></header><main class="flex-1 flex items-center justify-center px-margin-mobile sm:px-margin py-space-lg w-full max-w-xl mx-auto"><div class="flex flex-col w-full items-center justify-center">
+<div class="w-full max-w-[400px] flex flex-col items-center">
+<!-- Institutional Identity Header -->
+<div class="flex flex-col items-center mb-space-lg text-center">
+<div class="w-12 h-12 mb-space-sm flex items-center justify-center">
+<img alt="SmartHire Brand Logo" class="w-12 h-12 object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VVWUOqmiAQdkmhpWVXgXYXyzwtWUUVsNpnnCJtyZkNSTvikns_spHQheNmh3URSDnLXg6HPtIq09RU9abGN6_tlaaI91pCxCp7pHXSRUQVJnqJwtiHAA1N6WpgTCBgteHg27dQl0s3d6g8ZrDNqr2RgmnsQfE033NaALmTFoZwfMZ93oazdz8ncIWgnf4MrDcNH_UHs6FSIyGF3TIq6F-nIa5h2L4WaI_Vymu4RvBUQnNwHSsrrwIPlHg"/>
+</div>
+<span class="font-overline text-overline uppercase text-c-text-muted tracking-wider">Access Protocol • Gateway</span>
+</div>
+<!-- Main Authentication Card -->
+<div class="w-full bg-c-surface rounded-xl shadow-sm p-space-xl relative overflow-hidden">
+<!-- Top subtle institutional accent line -->
+<div class="absolute top-0 left-0 right-0 h-1 bg-c-primary-700"></div>
+<!-- Card Title & Context -->
+<div class="mb-space-lg">
+<h1 class="font-display text-display text-c-primary-900 tracking-tight">Sign in</h1>
+<p class="font-caption text-caption text-c-text-muted mt-space-xs">
+          Provide your enterprise or candidate credentials to access the employment architecture.
+        </p>
+</div>
+<!-- RFC 9457 / HTTP 401 Error Notice (Interactive Toggleable Simulation) -->
+<div class="hidden mb-space-lg p-space-md bg-danger-50 rounded-lg" id="auth-error-panel">
+<div class="flex items-start gap-space-sm">
+<span class="material-symbols-outlined text-danger-600 text-[18px] shrink-0 mt-0.5">error</span>
+<div class="flex-1 min-w-0">
+<h2 class="font-body-strong text-body-strong text-danger-700 leading-tight">Authentication Failed</h2>
+<p class="font-caption text-caption text-danger-800 mt-0.5" id="auth-error-text">
+              Incorrect email or password.
+            </p>
+<div class="mt-space-xs flex items-center gap-space-xs font-code-sm text-code-sm text-danger-800 bg-danger-200/50 px-space-xs py-0.5 rounded">
+<span>status: 401</span>
+<span>•</span>
+<span class="truncate">code: invalid_credentials</span>
+</div>
+</div>
+<button aria-label="Dismiss error notice" class="text-danger-700 hover:text-danger-800 p-0.5 transition-colors" onclick="document.getElementById('auth-error-panel').classList.add('hidden')" type="button">
+<span class="material-symbols-outlined text-[16px]">close</span>
+</button>
+</div>
+</div>
+<!-- Login Form -->
+<form class="space-y-space-lg" id="signin-form" novalidate="" onsubmit="return handleFormSubmit(event)">
+<!-- Email Input Field -->
+<div class="flex flex-col">
+<label class="font-label-md text-label-md text-on-surface mb-1 flex items-center justify-between" for="email">
+<span>Email address <span aria-hidden="true" class="text-danger-600">*</span></span>
+</label>
+<div class="relative flex items-center">
+<input aria-describedby="email-hint" autocomplete="username" class="w-full h-10 px-space-md bg-c-surface-sunken hover:bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg transition-colors placeholder:text-c-text-subtle focus:outline-none focus:ring-2 focus:ring-c-primary-700 focus:bg-c-surface" id="email" name="email" placeholder="name@example.com" required="" type="email"/>
+</div>
+<span class="font-caption text-caption text-c-text-subtle mt-1" id="email-hint">Authorized organizational or personal email.</span>
+</div>
+<!-- Password Input Field -->
+<div class="flex flex-col">
+<div class="flex items-center justify-between mb-1">
+<label class="font-label-md text-label-md text-on-surface" for="password">
+              Password <span aria-hidden="true" class="text-danger-600">*</span>
+</label>
+<!-- [GAP-09] Explicitly omitted 'Forgot password?' link as no recovery endpoint exists -->
+</div>
+<div class="relative flex items-center">
+<input autocomplete="current-password" class="w-full h-10 pl-space-md pr-10 bg-c-surface-sunken hover:bg-surface-container-low text-on-surface font-body-md text-body-md rounded-lg transition-colors placeholder:text-c-text-subtle focus:outline-none focus:ring-2 focus:ring-c-primary-700 focus:bg-c-surface" id="password" name="password" placeholder="Enter your password" required="" type="password"/>
+<button aria-label="Show password" aria-pressed="false" class="absolute right-2 p-1.5 text-c-text-muted hover:text-on-surface transition-colors focus:outline-none focus:ring-1 focus:ring-c-primary-700 rounded" id="password-toggle-btn" onclick="togglePasswordVisibility()" type="button">
+<span class="material-symbols-outlined text-[20px] select-none" id="password-toggle-icon">visibility</span>
+</button>
+</div>
+<span class="font-caption text-caption text-c-text-subtle mt-1">UTF-8 credential sequence. Case-sensitive.</span>
+</div>
+<!-- Primary Action Button -->
+<div class="pt-space-xs">
+<button class="w-full h-11 bg-c-primary-700 hover:bg-c-primary-800 active:bg-c-primary-900 text-on-primary font-body-strong text-body-strong rounded-lg transition-colors flex items-center justify-center gap-space-sm shadow-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-c-primary-700 cursor-pointer" id="submit-button" type="submit">
+<span id="button-label">Sign in</span>
+<span class="material-symbols-outlined text-[18px]" id="button-icon">arrow_forward</span>
+<!-- Hidden Loading Spinner -->
+<svg class="hidden animate-spin h-5 w-5 text-on-primary" fill="none" id="loading-spinner" viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+<path class="opacity-75" d="M4 12a8 8 0 018-8v8H4z" fill="currentColor"></path>
+</svg>
+</button>
+</div>
+</form>
+<!-- Protocol Compliance / Dev Simulation Shortcut -->
+<div class="mt-space-lg pt-space-md flex items-center justify-between bg-c-surface-sunken p-space-sm rounded-lg">
+<span class="font-overline text-overline uppercase text-c-text-muted">Simulate 401 Exception</span>
+<button class="font-code-sm text-code-sm text-c-primary-700 hover:text-c-primary-900 px-space-sm py-1 bg-c-surface rounded transition-colors" onclick="triggerSimulationError()" type="button">
+          POST /api/v1/auth/login
+        </button>
+</div>
+</div>
+<!-- Supplementary Actions & Registration Gateway -->
+<div class="mt-space-lg w-full flex flex-col items-center text-center space-y-space-md">
+<div>
+<a class="font-body-md text-body-md text-c-primary-700 hover:text-c-primary-900 transition-colors inline-flex items-center gap-1 group font-medium" data-path="register" href="#">
+<span>New here? Create a candidate account</span>
+<span class="material-symbols-outlined text-[16px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
+</a>
+</div>
+<!-- Security / Session Footnote -->
+<div class="w-full p-space-md bg-c-surface-sunken rounded-lg flex items-start gap-space-sm text-left shadow-xs">
+<span class="material-symbols-outlined text-c-accent-700 text-[18px] shrink-0 mt-0.5">lock_clock</span>
+<p class="font-caption text-caption text-c-text-muted leading-relaxed">
+          Sessions are secured via 15-minute access tokens with encrypted cookie refresh. Audit logging enabled for all authentication events under RFC 9457 protocols.
+        </p>
+</div>
+</div>
+</div>
+</div>
+<script>
+  function togglePasswordVisibility() {
+    const passwordInput = document.getElementById('password');
+    const toggleIcon = document.getElementById('password-toggle-icon');
+    const toggleBtn = document.getElementById('password-toggle-btn');
+    
+    if (passwordInput.type === 'password') {
+      passwordInput.type = 'text';
+      toggleIcon.textContent = 'visibility_off';
+      toggleBtn.setAttribute('aria-label', 'Hide password');
+      toggleBtn.setAttribute('aria-pressed', 'true');
+    } else {
+      passwordInput.type = 'password';
+      toggleIcon.textContent = 'visibility';
+      toggleBtn.setAttribute('aria-label', 'Show password');
+      toggleBtn.setAttribute('aria-pressed', 'false');
+    }
+  }
+
+  function triggerSimulationError() {
+    const errorPanel = document.getElementById('auth-error-panel');
+    const errorText = document.getElementById('auth-error-text');
+    errorText.textContent = 'Incorrect email or password.';
+    errorPanel.classList.remove('hidden');
+    errorPanel.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    const emailInput = document.getElementById('email');
+    const passwordInput = document.getElementById('password');
+    const errorPanel = document.getElementById('auth-error-panel');
+    const btnLabel = document.getElementById('button-label');
+    const btnIcon = document.getElementById('button-icon');
+    const spinner = document.getElementById('loading-spinner');
+    const submitBtn = document.getElementById('submit-button');
+
+    errorPanel.classList.add('hidden');
+
+    if (!emailInput.value || !passwordInput.value) {
+      triggerSimulationError();
+      return false;
+    }
+
+    // Micro-interaction: Loading state simulation
+    btnLabel.textContent = 'Verifying...';
+    btnIcon.classList.add('hidden');
+    spinner.classList.remove('hidden');
+    submitBtn.disabled = true;
+
+    setTimeout(() => {
+      btnLabel.textContent = 'Sign in';
+      btnIcon.classList.remove('hidden');
+      spinner.classList.add('hidden');
+      submitBtn.disabled = false;
+
+      // Deterministic validation rule for prototype demo
+      if (emailInput.value.includes('error') || passwordInput.value === 'wrong') {
+        triggerSimulationError();
+      } else {
+        // Successful mock transition
+        window.location.hash = '#candidate-dashboard';
+      }
+    }, 600);
+
+    return false;
+  }
+</script></main><footer class="py-space-lg text-center font-caption text-caption text-c-text-subtle"><p>© 2024 SmartHire Core Engine • RFC 9457 Compliant Service Interface</p></footer></body></html>

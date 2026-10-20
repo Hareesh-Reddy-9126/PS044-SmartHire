@@ -1,0 +1,45 @@
+# Production profile overrides for Recruitment Service
+# Activates when 'prod' profile is active: --spring.profiles.active=prod
+
+spring:
+  datasource:
+    url: ${REC_SVC_DB_URL}
+    username: ${REC_SVC_DB_USER}
+    password: ${REC_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+smarthire:
+  recruitment:
+    jwt:
+      jwk-set-uri: ${REC_JWK_SET_URI}
+      issuer: ${AUTH_JWT_ISSUER}
+      audience: ${AUTH_JWT_AUDIENCE}
+
+# Resilience4j production tuning
+resilience4j:
+  circuitbreaker:
+    instances:
+      applicationService:
+        waitDurationInOpenState: 60s
+        failureRateThreshold: 50
+      jobService:
+        waitDurationInOpenState: 60s
+        failureRateThreshold: 50
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL}

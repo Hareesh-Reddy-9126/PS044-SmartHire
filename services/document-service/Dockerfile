@@ -1,0 +1,23 @@
+# ---- Build stage: compile on the approved JDK 21, independent of the host JVM (ADR-0002) ----
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /build
+COPY . .
+RUN mvn -B -pl services/document-service -am -DskipTests clean package
+
+# ---- Runtime stage: slim JRE, non-root user, health-checked (governance §34) ----
+FROM eclipse-temurin:21-jre-jammy AS runtime
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/* \
+    && useradd --system --uid 1001 --create-home appuser
+WORKDIR /app
+COPY --from=build /build/services/document-service/target/smarthire-document-service-*.jar app.jar
+
+# Local blob storage root. Created as the runtime user so the service can write into it on a
+# read-only or non-root filesystem; the service creates it on start-up if it is missing anyway.
+RUN mkdir -p /var/lib/smarthire/documents && chown -R appuser:appuser /var/lib/smarthire
+USER appuser
+EXPOSE 8085
+HEALTHCHECK --interval=15s --timeout=5s --start-period=60s --retries=5 \
+  CMD curl -fsS http://localhost:8085/actuator/health || exit 1
+ENTRYPOINT ["java", "-jar", "app.jar"]

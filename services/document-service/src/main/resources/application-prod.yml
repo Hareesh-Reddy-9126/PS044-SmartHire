@@ -1,0 +1,45 @@
+# Production profile overrides for Document Service
+# Activates when 'prod' profile is active: --spring.profiles.active=prod
+
+spring:
+  datasource:
+    url: ${DOC_SVC_DB_URL}
+    username: ${DOC_SVC_DB_USER}
+    password: ${DOC_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  servlet:
+    multipart:
+      max-file-size: ${DOC_MAX_FILE_SIZE:10MB}
+      max-request-size: ${DOC_MAX_FILE_SIZE:10MB}
+
+smarthire:
+  document:
+    jwt:
+      jwk-set-uri: ${DOC_JWK_SET_URI}
+      issuer: ${AUTH_JWT_ISSUER}
+      audience: ${AUTH_JWT_AUDIENCE}
+    storage:
+      type: local
+      local:
+        root-dir: ${DOC_STORAGE_ROOT:/var/smarthire/documents}
+    upload:
+      max-file-size: ${DOC_MAX_FILE_SIZE:10MB}
+      allowed-content-types: ${DOC_ALLOWED_CONTENT_TYPES:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL}

@@ -11,6 +11,7 @@ import com.smarthire.application.domain.ApplicationStatus;
 import com.smarthire.application.domain.IllegalApplicationStateException;
 import com.smarthire.application.infra.ApplicationRepository;
 import com.smarthire.application.infra.JobClient;
+import com.smarthire.application.infra.NotificationClient;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,6 +24,7 @@ class ApplicationServiceTest {
 
   private ApplicationRepository applicationRepository;
   private JobClient jobClient;
+  private NotificationClient notificationClient;
   private ApplicationService applicationService;
 
   private final UUID JOB_ID = UUID.randomUUID();
@@ -34,7 +36,9 @@ class ApplicationServiceTest {
   void setUp() {
     applicationRepository = mock(ApplicationRepository.class);
     jobClient = mock(JobClient.class);
-    applicationService = new ApplicationService(applicationRepository, jobClient);
+    notificationClient = mock(NotificationClient.class);
+    applicationService =
+        new ApplicationService(applicationRepository, jobClient, notificationClient);
   }
 
   @Nested
@@ -235,6 +239,247 @@ class ApplicationServiceTest {
           .thenReturn(Optional.of(app));
 
       assertThatThrownBy(() -> applicationService.withdraw(app.getApplicationId(), CANDIDATE_ID))
+          .isInstanceOf(IllegalApplicationStateException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("Update application status (recruiter-driven)")
+  class UpdateStatus {
+
+    private JobClient.JobResponse jobResponse;
+    private Application app;
+
+    @BeforeEach
+    void setup() {
+      jobResponse =
+          new JobClient.JobResponse(
+              JOB_ID, "Acme Corp", "Backend Engineer", "Remote", "OPEN", ORG_ID);
+      when(jobClient.getJob(JOB_ID)).thenReturn(jobResponse);
+    }
+
+    @Test
+    @DisplayName("Recruiter can move APPLIED to UNDER_REVIEW")
+    void recruiterCanMoveAppliedToUnderReview() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+      when(applicationRepository.save(any(Application.class)))
+          .thenAnswer(inv -> inv.getArgument(0));
+
+      Application result =
+          applicationService.updateStatus(
+              app.getApplicationId(), ApplicationStatus.UNDER_REVIEW, ORG_ID, false);
+
+      assertThat(result.getStatus()).isEqualTo(ApplicationStatus.UNDER_REVIEW);
+    }
+
+    @Test
+    @DisplayName("Recruiter can move UNDER_REVIEW to SHORTLISTED")
+    void recruiterCanMoveUnderReviewToShortlisted() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      app.moveToUnderReview();
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+      when(applicationRepository.save(any(Application.class)))
+          .thenAnswer(inv -> inv.getArgument(0));
+
+      Application result =
+          applicationService.updateStatus(
+              app.getApplicationId(), ApplicationStatus.SHORTLISTED, ORG_ID, false);
+
+      assertThat(result.getStatus()).isEqualTo(ApplicationStatus.SHORTLISTED);
+    }
+
+    @Test
+    @DisplayName("Recruiter can move SHORTLISTED to HIRED")
+    void recruiterCanMoveShortlistedToHired() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      app.moveToUnderReview();
+      app.shortlist();
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+      when(applicationRepository.save(any(Application.class)))
+          .thenAnswer(inv -> inv.getArgument(0));
+
+      Application result =
+          applicationService.updateStatus(
+              app.getApplicationId(), ApplicationStatus.HIRED, ORG_ID, false);
+
+      assertThat(result.getStatus()).isEqualTo(ApplicationStatus.HIRED);
+    }
+
+    @Test
+    @DisplayName("Recruiter can move SHORTLISTED to REJECTED")
+    void recruiterCanMoveShortlistedToRejected() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      app.moveToUnderReview();
+      app.shortlist();
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+      when(applicationRepository.save(any(Application.class)))
+          .thenAnswer(inv -> inv.getArgument(0));
+
+      Application result =
+          applicationService.updateStatus(
+              app.getApplicationId(), ApplicationStatus.REJECTED, ORG_ID, false);
+
+      assertThat(result.getStatus()).isEqualTo(ApplicationStatus.REJECTED);
+    }
+
+    @Test
+    @DisplayName("ADMIN can update status without org check")
+    void adminCanUpdateWithoutOrgCheck() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+      when(applicationRepository.save(any(Application.class)))
+          .thenAnswer(inv -> inv.getArgument(0));
+
+      Application result =
+          applicationService.updateStatus(
+              app.getApplicationId(), ApplicationStatus.UNDER_REVIEW, null, true);
+
+      assertThat(result.getStatus()).isEqualTo(ApplicationStatus.UNDER_REVIEW);
+    }
+
+    @Test
+    @DisplayName("Recruiter from wrong org cannot update status")
+    void recruiterFromWrongOrgCannotUpdate() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+      UUID otherOrgId = UUID.randomUUID();
+      JobClient.JobResponse otherJobResponse =
+          new JobClient.JobResponse(
+              JOB_ID, "Other Corp", "Backend Engineer", "Remote", "OPEN", otherOrgId);
+      when(jobClient.getJob(JOB_ID)).thenReturn(otherJobResponse);
+
+      assertThatThrownBy(
+              () ->
+                  applicationService.updateStatus(
+                      app.getApplicationId(), ApplicationStatus.UNDER_REVIEW, ORG_ID, false))
+          .isInstanceOf(ApplicationForbiddenException.class)
+          .hasMessageContaining("does not own");
+    }
+
+    @Test
+    @DisplayName("Recruiter without orgId cannot update status")
+    void recruiterWithoutOrgIdCannotUpdate() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+
+      assertThatThrownBy(
+              () ->
+                  applicationService.updateStatus(
+                      app.getApplicationId(), ApplicationStatus.UNDER_REVIEW, null, false))
+          .isInstanceOf(ApplicationForbiddenException.class)
+          .hasMessageContaining("must have an organization");
+    }
+
+    @Test
+    @DisplayName("Cannot transition to APPLIED via recruiter update")
+    void cannotTransitionToApplied() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+
+      assertThatThrownBy(
+              () ->
+                  applicationService.updateStatus(
+                      app.getApplicationId(), ApplicationStatus.APPLIED, ORG_ID, false))
+          .isInstanceOf(IllegalApplicationStateException.class);
+    }
+
+    @Test
+    @DisplayName("Cannot transition to WITHDRAWN via recruiter update")
+    void cannotTransitionToWithdrawn() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+
+      assertThatThrownBy(
+              () ->
+                  applicationService.updateStatus(
+                      app.getApplicationId(), ApplicationStatus.WITHDRAWN, ORG_ID, false))
+          .isInstanceOf(IllegalApplicationStateException.class);
+    }
+
+    @Test
+    @DisplayName("Cannot skip from APPLIED to SHORTLISTED")
+    void cannotSkipToShortlisted() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+
+      assertThatThrownBy(
+              () ->
+                  applicationService.updateStatus(
+                      app.getApplicationId(), ApplicationStatus.SHORTLISTED, ORG_ID, false))
+          .isInstanceOf(IllegalApplicationStateException.class);
+    }
+
+    @Test
+    @DisplayName("Cannot skip from APPLIED to HIRED")
+    void cannotSkipToHired() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+
+      assertThatThrownBy(
+              () ->
+                  applicationService.updateStatus(
+                      app.getApplicationId(), ApplicationStatus.HIRED, ORG_ID, false))
+          .isInstanceOf(IllegalApplicationStateException.class);
+    }
+
+    @Test
+    @DisplayName("Cannot skip from UNDER_REVIEW to HIRED")
+    void cannotSkipUnderReviewToHired() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      app.moveToUnderReview();
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+
+      assertThatThrownBy(
+              () ->
+                  applicationService.updateStatus(
+                      app.getApplicationId(), ApplicationStatus.HIRED, ORG_ID, false))
+          .isInstanceOf(IllegalApplicationStateException.class);
+    }
+
+    @Test
+    @DisplayName("Cannot transition HIRED to REJECTED")
+    void cannotTransitionHiredToRejected() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      app.moveToUnderReview();
+      app.shortlist();
+      app.hire();
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+
+      assertThatThrownBy(
+              () ->
+                  applicationService.updateStatus(
+                      app.getApplicationId(), ApplicationStatus.REJECTED, ORG_ID, false))
+          .isInstanceOf(IllegalApplicationStateException.class);
+    }
+
+    @Test
+    @DisplayName("Cannot transition REJECTED to HIRED")
+    void cannotTransitionRejectedToHired() {
+      app = Application.createApplied(UUID.randomUUID(), JOB_ID, CANDIDATE_ID, RESUME_LINK);
+      app.moveToUnderReview();
+      app.shortlist();
+      app.reject();
+      when(applicationRepository.findByApplicationId(app.getApplicationId()))
+          .thenReturn(Optional.of(app));
+
+      assertThatThrownBy(
+              () ->
+                  applicationService.updateStatus(
+                      app.getApplicationId(), ApplicationStatus.HIRED, ORG_ID, false))
           .isInstanceOf(IllegalApplicationStateException.class);
     }
   }

@@ -1,0 +1,745 @@
+<!DOCTYPE html>
+
+<html lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config = {"darkMode":"class","theme":{"extend":{"colors":{"surface-container-low":"#f9f2f0","on-secondary":"#ffffff","warning-50":"#FDF3E0","c-surface":"#FFFFFF","c-primary-800":"#252C5A","surface-bright":"#fef8f6","primary-fixed-dim":"#bbc3ff","background":"#fef8f6","warning-600":"#8A5A00","danger-50":"#FBEAEA","info-600":"#1E5EA8","c-primary-50":"#EEF0F8","danger-500":"#C53030","secondary-fixed":"#98f2f0","tertiary-fixed":"#dee0ff","danger-600":"#A32424","info-50":"#E8F0FA","c-overlay":"rgba(28, 26, 25, 0.48)","on-secondary-fixed":"#002020","surface":"#fef8f6","surface-container":"#f3edea","surface-container-lowest":"#ffffff","warning-200":"#F2DCA8","surface-dim":"#dfd9d7","c-surface-sunken":"#F4F2F0","on-secondary-container":"#00706f","on-background":"#1d1b1a","tertiary-fixed-dim":"#bbc3ff","c-accent-700":"#0A5F5E","c-accent-50":"#E6F2F2","on-tertiary-fixed":"#000f5d","surface-container-high":"#ede7e5","success-700":"#145430","tertiary":"#25327b","c-primary-300":"#9BA4D4","primary-container":"#3e4a91","on-tertiary-fixed-variant":"#34408a","danger-700":"#841C1C","tertiary-container":"#3e4a94","c-border-strong":"#CBC5BF","secondary":"#006a69","error":"#ba1a1a","on-primary-fixed-variant":"#354187","on-primary-fixed":"#01105b","danger-800":"#6B1616","on-secondary-fixed-variant":"#00504f","danger-200":"#F0C2C2","surface-tint":"#4d59a1","success-600":"#1A6B3C","outline":"#767682","primary":"#263278","outline-variant":"#c6c5d2","on-tertiary-container":"#b6beff","surface-container-highest":"#e7e1df","c-bg":"#FBFAF9","info-200":"#BBD3EF","on-error":"#ffffff","secondary-container":"#98f2f0","c-primary-700":"#313A75","surface-variant":"#e7e1df","info-700":"#174A85","success-50":"#E7F4EC","warning-800":"#5E3D00","inverse-primary":"#bbc3ff","on-surface-variant":"#454651","on-error-container":"#93000a","primary-fixed":"#dee0ff","c-text-muted":"#6B6560","secondary-fixed-dim":"#7cd5d3","c-text-subtle":"#928C86","c-border":"#E3DFDB","on-surface":"#1d1b1a","on-tertiary":"#ffffff","c-primary-900":"#1A1F40","on-primary-container":"#b5beff","inverse-on-surface":"#f6efed","c-primary-100":"#DCE0F0","success-200":"#B7DEC6","on-primary":"#ffffff","inverse-surface":"#32302f","error-container":"#ffdad6"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-sm":"0.5rem","space-xs":"0.25rem","margin-mobile":"1rem","space-md":"0.75rem","space-lg":"1rem","space-3xl":"4rem","gutter":"1.5rem","space-2xl":"2rem","space-xl":"1.5rem","margin":"1.5rem","gutter-mobile":"1rem"},"fontFamily":{"headline-md":["Inter"],"caption":["Inter"],"label-md":["Inter"],"body-md":["Inter"],"code-sm":["JetBrains Mono"],"body-lg":["Inter"],"overline":["Inter"],"body-strong":["Inter"],"headline-sm":["Inter"],"headline-lg":["Inter"],"display":["Inter"]},"fontSize":{"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"caption":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"600"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"code-sm":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"400"}],"overline":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"body-strong":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"500"}],"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"display":["30px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"600"}]}}}};</script></head><body class="bg-c-bg font-body-md text-body-md text-on-surface antialiased"><aside class="fixed left-0 top-0 h-full w-[240px] bg-c-primary-900 z-50 flex flex-col justify-between shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="flex flex-col w-full"><div class="h-14 px-space-lg flex items-center gap-space-sm bg-c-primary-900"><div class="w-6 h-6 rounded-lg bg-c-primary-700 flex items-center justify-center"><span class="material-symbols-outlined text-c-surface text-[16px]">corporate_fare</span></div><div class="flex flex-col"><span class="font-label-md text-label-md text-c-surface tracking-tight leading-tight">SmartHire</span><span class="font-code-sm text-code-sm text-c-primary-300 leading-none">OPS CONSOLE</span></div></div><div class="px-space-lg pt-space-md pb-space-xs"><span class="font-overline text-overline uppercase text-c-primary-300 tracking-wider">Navigation</span></div><nav class="flex flex-col gap-space-xs px-space-sm w-full" data-active-classes="bg-c-primary-800 text-c-surface font-body-strong"><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-c-primary-100 hover:bg-c-primary-800 hover:text-c-surface transition-all duration-150" data-path="overview" href="#"><span class="material-symbols-outlined text-[18px]">space_dashboard</span><span class="font-body-md text-body-md">Overview</span></a><a aria-current="page" class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg transition-all duration-150 bg-c-primary-800 text-c-surface font-body-strong" data-path="all-recruitments" href="#"><span class="material-symbols-outlined text-[18px]">work</span><span class="font-body-md text-body-md">All recruitments</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-c-primary-100 hover:bg-c-primary-800 hover:text-c-surface transition-all duration-150" data-path="record-lookup" href="#"><span class="material-symbols-outlined text-[18px]">manage_search</span><span class="font-body-md text-body-md">Record lookup</span></a><a class="flex items-center gap-space-md px-space-md py-space-sm rounded-lg text-c-primary-100 hover:bg-c-primary-800 hover:text-c-surface transition-all duration-150" data-path="profile" href="#"><span class="material-symbols-outlined text-[18px]">badge</span><span class="font-body-md text-body-md">Profile</span></a></nav></div><div class="p-space-md bg-c-primary-900 flex flex-col gap-space-sm"><div class="flex items-center justify-between px-space-sm py-space-xs bg-c-primary-800 rounded-lg"><span class="font-caption text-caption text-c-primary-300">System Spec</span><span class="font-code-sm text-code-sm text-c-surface font-semibold">v2.4</span></div><div class="flex flex-col gap-space-xs"><a class="flex items-center justify-between px-space-sm py-space-xs text-c-primary-100 hover:text-c-surface rounded transition-colors" href="/swagger-ui.html" rel="noopener noreferrer" target="_blank"><span class="font-caption text-caption">API documentation</span><span class="material-symbols-outlined text-[14px]">north_east</span></a><a class="flex items-center justify-between px-space-sm py-space-xs text-c-primary-100 hover:text-c-surface rounded transition-colors" href="http://localhost:8761" rel="noopener noreferrer" target="_blank"><span class="font-caption text-caption">Service registry</span><span class="material-symbols-outlined text-[14px]">north_east</span></a><a class="flex items-center justify-between px-space-sm py-space-xs text-c-primary-100 hover:text-c-surface rounded transition-colors" data-path="profile" href="#"><span class="font-caption text-caption">Profile</span><span class="material-symbols-outlined text-[14px]">arrow_forward</span></a></div></div></aside><div class="pl-[240px]"><header class="fixed top-0 left-[240px] right-0 h-14 bg-c-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-between px-space-xl"><div class="flex items-center gap-space-md"><div class="flex items-center gap-space-sm"><span class="material-symbols-outlined text-outline text-[18px]">hub</span><span class="font-caption text-caption text-c-text-muted">Workspace:</span><span class="font-code-sm text-code-sm text-on-surface bg-c-surface-sunken px-space-sm py-0.5 rounded">org_smarthire_core</span></div><div class="h-4 w-px bg-surface-container-high"></div><span class="h-[20px] px-space-sm inline-flex items-center gap-1.5 rounded-full bg-warning-50 text-warning-800 font-overline text-overline tracking-wider font-semibold"><span class="w-1.5 h-1.5 rounded-full bg-warning-600"></span>ADMIN</span></div><div class="flex items-center gap-space-lg"><div class="flex items-center gap-space-sm"><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div><span class="font-body-md text-body-md text-on-surface font-body-strong">admin.ops@smarthire.local</span></div><a class="flex items-center gap-space-xs text-c-text-muted hover:text-danger-600 transition-colors" data-path="login" href="#"><span class="material-symbols-outlined text-[18px]">logout</span><span class="font-label-md text-label-md">Sign out</span></a></div></header><main class="relative pt-14 bg-c-bg min-h-screen px-space-xl py-space-xl"><div class="flex flex-col w-full">
+<div class="flex flex-col gap-space-lg w-full max-w-[1240px] mx-auto pb-space-3xl">
+<!-- Top Action Breadcrumb & Context Header -->
+<div class="flex flex-col gap-space-xs">
+<nav aria-label="Breadcrumb" class="flex items-center gap-space-xs text-c-text-muted">
+<span class="font-caption text-caption text-c-text-subtle">Administration</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle">chevron_right</span>
+<span class="font-caption text-caption text-c-text-muted font-body-strong">Recruitments</span>
+</nav>
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-space-md pt-space-xs">
+<div class="flex flex-col gap-1">
+<div class="flex items-center gap-space-md">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">All recruitments</h1>
+<span class="h-[22px] px-space-sm inline-flex items-center gap-1.5 rounded-full bg-warning-50 text-warning-800 font-overline text-overline font-semibold uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-warning-600"></span>
+              Scope: Global platform read-across (ADMIN)
+            </span>
+</div>
+<p class="font-body-md text-body-md text-c-text-muted">42 active and concluded processes across all tenant organizations</p>
+</div>
+<!-- Metric Pulse Indicators (Non-speculative baseline counts) -->
+<div class="flex items-center gap-space-xs bg-c-surface p-1 rounded-xl shadow-sm">
+<div class="px-space-md py-1.5 flex flex-col items-start bg-c-surface-sunken rounded-lg">
+<span class="font-overline text-overline uppercase text-c-text-subtle tracking-wider">Tenants</span>
+<span class="font-code-sm text-code-sm font-semibold text-on-surface">18 Active</span>
+</div>
+<div class="px-space-md py-1.5 flex flex-col items-start bg-c-surface-sunken rounded-lg">
+<span class="font-overline text-overline uppercase text-c-text-subtle tracking-wider">Indexed Total</span>
+<span class="font-code-sm text-code-sm font-semibold text-c-primary-700">42 Records</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Architectural Protocol Callouts (GAP-14 & GAP-15 Contextual Badges) -->
+<div class="grid grid-cols-1 md:grid-cols-2 gap-space-md">
+<!-- Gap Notice GAP-14 -->
+<div class="bg-c-surface-sunken rounded-xl p-space-md flex items-start gap-space-md shadow-sm">
+<span class="material-symbols-outlined text-c-accent-700 text-[20px] mt-0.5">filter_alt</span>
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Client-Side Filtering Active</span>
+<span class="font-code-sm text-code-sm text-c-accent-700 bg-c-accent-50 px-1.5 py-0.5 rounded">GAP-14</span>
+</div>
+<p class="font-caption text-caption text-c-text-muted leading-relaxed">
+            Multi-attribute backend query filters are scheduled for v2.6. Status facet chips below operate exclusively on the current client dataset page partition.
+          </p>
+</div>
+</div>
+<!-- Gap Notice GAP-15 Privacy Notice -->
+<div class="bg-c-surface-sunken rounded-xl p-space-md flex items-start gap-space-md shadow-sm">
+<span class="material-symbols-outlined text-warning-800 text-[20px] mt-0.5">shield_person</span>
+<div class="flex flex-col gap-0.5">
+<div class="flex items-center gap-space-sm">
+<span class="font-label-md text-label-md text-on-surface font-semibold">Zero-PII Admin Obfuscation</span>
+<span class="font-code-sm text-code-sm text-warning-800 bg-warning-50 px-1.5 py-0.5 rounded">GAP-15</span>
+</div>
+<p class="font-caption text-caption text-c-text-muted leading-relaxed">
+            Direct candidate PII (legal name, phone, email) is pseudonymized into opaque cryptographic identifiers for root-level administrative audit access.
+          </p>
+</div>
+</div>
+</div>
+<!-- Filtering Panel -->
+<div class="bg-c-surface rounded-xl p-space-lg shadow-sm flex flex-col gap-space-md">
+<div class="flex flex-col sm:flex-row sm:items-center justify-between gap-space-sm pb-space-xs">
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-subtle font-semibold">
+          Filtered on this page (Page-local filter)
+        </span>
+<button class="font-code-sm text-code-sm text-c-text-muted hover:text-c-primary-700 flex items-center gap-1 transition-colors self-start sm:self-auto" id="resetFiltersBtn">
+<span class="material-symbols-outlined text-[14px]">refresh</span>
+          Reset client filters
+        </button>
+</div>
+<!-- Dual Row Filter Badges -->
+<div class="flex flex-col gap-space-sm">
+<!-- Interview Status Group -->
+<div class="flex flex-wrap items-center gap-space-sm">
+<span class="font-label-md text-label-md text-on-surface min-w-[124px] text-c-text-muted">Interview Status:</span>
+<div class="flex flex-wrap items-center gap-space-xs" id="interviewStatusFilter">
+<button class="filter-pill-active h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-primary-800 text-c-surface transition-all flex items-center gap-1.5" data-filter-type="interview" data-val="ALL">
+              All <span class="opacity-75 font-code-sm text-code-sm font-normal">42</span>
+</button>
+<button class="filter-pill-idle h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-surface-sunken hover:bg-surface-container-high text-on-surface transition-all flex items-center gap-1.5" data-filter-type="interview" data-val="NOT_SCHEDULED">
+              Not scheduled <span class="text-c-text-subtle font-code-sm text-code-sm font-normal">14</span>
+</button>
+<button class="filter-pill-idle h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-surface-sunken hover:bg-surface-container-high text-on-surface transition-all flex items-center gap-1.5" data-filter-type="interview" data-val="SCHEDULED">
+              Scheduled <span class="text-c-text-subtle font-code-sm text-code-sm font-normal">12</span>
+</button>
+<button class="filter-pill-idle h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-surface-sunken hover:bg-surface-container-high text-on-surface transition-all flex items-center gap-1.5" data-filter-type="interview" data-val="COMPLETED">
+              Completed <span class="text-c-text-subtle font-code-sm text-code-sm font-normal">11</span>
+</button>
+<button class="filter-pill-idle h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-surface-sunken hover:bg-surface-container-high text-on-surface transition-all flex items-center gap-1.5" data-filter-type="interview" data-val="NO_SHOW">
+              No show <span class="text-c-text-subtle font-code-sm text-code-sm font-normal">5</span>
+</button>
+</div>
+</div>
+<!-- Final Decision Group -->
+<div class="flex flex-wrap items-center gap-space-sm pt-space-xs">
+<span class="font-label-md text-label-md text-on-surface min-w-[124px] text-c-text-muted">Final Decision:</span>
+<div class="flex flex-wrap items-center gap-space-xs" id="decisionStatusFilter">
+<button class="filter-pill-active h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-primary-800 text-c-surface transition-all flex items-center gap-1.5" data-filter-type="decision" data-val="ALL">
+              All <span class="opacity-75 font-code-sm text-code-sm font-normal">42</span>
+</button>
+<button class="filter-pill-idle h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-surface-sunken hover:bg-surface-container-high text-on-surface transition-all flex items-center gap-1.5" data-filter-type="decision" data-val="PENDING">
+              Pending <span class="text-c-text-subtle font-code-sm text-code-sm font-normal">29</span>
+</button>
+<button class="filter-pill-idle h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-surface-sunken hover:bg-surface-container-high text-on-surface transition-all flex items-center gap-1.5" data-filter-type="decision" data-val="HIRED">
+              Hired <span class="text-c-text-subtle font-code-sm text-code-sm font-normal">8</span>
+</button>
+<button class="filter-pill-idle h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-surface-sunken hover:bg-surface-container-high text-on-surface transition-all flex items-center gap-1.5" data-filter-type="decision" data-val="REJECTED">
+              Rejected <span class="text-c-text-subtle font-code-sm text-code-sm font-normal">5</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Data Table Container -->
+<div class="bg-c-surface rounded-xl shadow-sm overflow-hidden flex flex-col">
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse" id="recruitmentsTable">
+<thead>
+<tr class="h-11 bg-c-surface-sunken text-c-text-muted">
+<th class="px-space-lg font-overline text-overline uppercase tracking-wider text-c-text-subtle font-semibold" scope="col">
+                Role &amp; Organization
+              </th>
+<th class="px-space-lg font-overline text-overline uppercase tracking-wider text-c-text-subtle font-semibold" scope="col">
+                Candidate Ref
+              </th>
+<th class="px-space-lg font-overline text-overline uppercase tracking-wider text-c-text-subtle font-semibold" scope="col">
+                Interview Status
+              </th>
+<th class="px-space-lg font-overline text-overline uppercase tracking-wider text-c-text-subtle font-semibold" scope="col">
+                Decision Status
+              </th>
+<th class="px-space-lg font-overline text-overline uppercase tracking-wider text-c-text-subtle font-semibold" scope="col">
+                Recruitment ID
+              </th>
+<th class="px-space-lg font-overline text-overline uppercase tracking-wider text-c-text-subtle font-semibold text-right" scope="col">
+                Details
+              </th>
+</tr>
+</thead>
+<tbody class="divide-y divide-c-border">
+<!-- Row 1 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="PENDING" data-interview="SCHEDULED">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">Senior Full-Stack Engineer</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>Acme Corp</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928fa4</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group relative cursor-pointer copy-trigger" data-copy="cand_8f419b02-18ad-44b2-a6f9-03f990b7a011">
+<span class="font-code-sm text-code-sm text-on-surface">cand_8f419b02...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+<span class="copy-tooltip hidden absolute -top-7 left-1/2 -translate-x-1/2 bg-on-surface text-c-surface px-1.5 py-0.5 rounded font-caption text-caption shadow-sm whitespace-nowrap z-20">Copy full UUID</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-warning-50 text-warning-800 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-warning-600"></span>
+                  SCHEDULED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-c-surface-sunken text-c-text-muted font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+                  PENDING
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_9821fab0-e102-4fc7-bf94-f2a890a88190">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_9821fab0...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 2 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="HIRED" data-interview="COMPLETED">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">Staff Cloud Architect</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>CloudScale Systems</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928fb1</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="cand_3a992bc1-00e9-4110-9c29-873499fae120">
+<span class="font-code-sm text-code-sm text-on-surface">cand_3a992bc1...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-info-50 text-info-700 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-info-600"></span>
+                  COMPLETED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-success-50 text-success-700 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-success-600"></span>
+                  HIRED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_1109a904-45aa-4392-80dc-328f09bc1922">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_1109a904...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 3 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="REJECTED" data-interview="NO_SHOW">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">Principal Security Specialist</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>CyberTrust Ltd</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928fc8</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="cand_441f92c8-8902-4521-ba32-473919e900a8">
+<span class="font-code-sm text-code-sm text-on-surface">cand_441f92c8...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-danger-50 text-danger-700 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-danger-600"></span>
+                  NO_SHOW
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-danger-50 text-danger-700 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-danger-600"></span>
+                  REJECTED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_77491ae3-89ef-450a-9ff1-90a887b22101">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_77491ae3...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 4 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="PENDING" data-interview="NOT_SCHEDULED">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">Frontend Systems Architect</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>FinTech Labs Ltd</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928fe9</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="cand_90ab3847-e129-4d66-9901-b76400acbe89">
+<span class="font-code-sm text-code-sm text-on-surface">cand_90ab3847...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-c-surface-sunken text-c-text-muted font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+                  NOT_SCHEDULED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-c-surface-sunken text-c-text-muted font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+                  PENDING
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_4492bf88-12cd-4889-8d72-9099eefa3281">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_4492bf88...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 5 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="PENDING" data-interview="SCHEDULED">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">Data Platform Lead</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>Vertex Data Systems</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928ff2</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="cand_a23b4991-66c3-424a-9128-e4b788a1099f">
+<span class="font-code-sm text-code-sm text-on-surface">cand_a23b4991...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-warning-50 text-warning-800 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-warning-600"></span>
+                  SCHEDULED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-c-surface-sunken text-c-text-muted font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+                  PENDING
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_6672ff0a-55bc-4389-9a77-4409bbce5511">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_6672ff0a...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 6 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="REJECTED" data-interview="COMPLETED">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">Site Reliability Director</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>AeroPulse Engineering</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928014</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="cand_b45c991a-7712-4eb2-a001-c88f9901237a">
+<span class="font-code-sm text-code-sm text-on-surface">cand_b45c991a...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-info-50 text-info-700 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-info-600"></span>
+                  COMPLETED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-danger-50 text-danger-700 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-danger-600"></span>
+                  REJECTED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_3321ba99-88fa-4e31-ba24-0012eefc7744">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_3321ba99...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 7 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="PENDING" data-interview="NOT_SCHEDULED">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">Staff ML Ops Engineer</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>Synthetix Bio</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928039</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="cand_f1104e76-3209-482e-b6ca-dd8941038ca4">
+<span class="font-code-sm text-code-sm text-on-surface">cand_f1104e76...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-c-surface-sunken text-c-text-muted font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+                  NOT_SCHEDULED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-c-surface-sunken text-c-text-muted font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+                  PENDING
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_0098fa32-114a-4ce2-b09e-7721abf00192">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_0098fa32...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 8 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="HIRED" data-interview="COMPLETED">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">Chief Enterprise Architect</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>Global Logistics Core</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928077</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="cand_cc8912e4-9981-4200-a0ff-554433221100">
+<span class="font-code-sm text-code-sm text-on-surface">cand_cc8912e4...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-info-50 text-info-700 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-info-600"></span>
+                  COMPLETED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-success-50 text-success-700 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-success-600"></span>
+                  HIRED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_9011be77-44aa-4bc2-af89-332900fae101">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_9011be77...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 9 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="PENDING" data-interview="SCHEDULED">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">iOS Platform Lead</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>Apex Media UK</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928091</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="cand_77bb4321-1200-47da-9081-334455667788">
+<span class="font-code-sm text-code-sm text-on-surface">cand_77bb4321...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-warning-50 text-warning-800 font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-warning-600"></span>
+                  SCHEDULED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-c-surface-sunken text-c-text-muted font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+                  PENDING
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_4432cc11-88bc-4df1-bc01-889021eebb41">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_4432cc11...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 10 -->
+<tr class="h-14 hover:bg-surface-container-lowest/60 transition-colors recruitment-row" data-decision="PENDING" data-interview="NOT_SCHEDULED">
+<td class="px-space-lg py-2">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong text-on-surface">Principal Rust Developer</span>
+<div class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>RustWorks Protocol</span>
+<span class="text-c-text-subtle">·</span>
+<span class="font-code-sm text-code-sm text-c-text-subtle">req_01928099</span>
+</div>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="cand_00129844-33a1-4fc3-b771-44332211aa00">
+<span class="font-code-sm text-code-sm text-on-surface">cand_00129844...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-on-surface transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-c-surface-sunken text-c-text-muted font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+                  NOT_SCHEDULED
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<span class="h-[22px] px-2.5 inline-flex items-center gap-1.5 rounded-full bg-c-surface-sunken text-c-text-muted font-overline text-overline font-semibold uppercase tracking-wide">
+<span class="w-1.5 h-1.5 rounded-full bg-c-text-subtle"></span>
+                  PENDING
+                </span>
+</td>
+<td class="px-space-lg py-2">
+<div class="inline-flex items-center gap-1.5 px-2 py-1 bg-c-surface-sunken rounded group cursor-pointer copy-trigger" data-copy="rec_1900fa22-3490-411a-8bb1-998877112200">
+<span class="font-code-sm text-code-sm text-c-primary-700 font-medium">rec_1900fa22...</span>
+<span class="material-symbols-outlined text-[14px] text-c-text-subtle group-hover:text-c-primary-700 transition-colors">content_copy</span>
+</div>
+</td>
+<td class="px-space-lg py-2 text-right">
+<a class="font-label-md text-label-md text-c-primary-700 hover:text-c-primary-900 inline-flex items-center gap-1 transition-colors" data-path="record-lookup" href="#">
+<span>View detail</span>
+<span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Empty State for local filtering -->
+<div class="hidden p-space-3xl flex-col items-center justify-center text-center" id="noMatchingRows">
+<span class="material-symbols-outlined text-[36px] text-c-text-subtle mb-space-sm">filter_list_off</span>
+<span class="font-headline-sm text-headline-sm text-on-surface">No matching records on this page</span>
+<p class="font-caption text-caption text-c-text-muted mt-1 max-w-sm">
+          No items on page 1 match your selected interview and decision status criteria.
+        </p>
+</div>
+<!-- Pagination Footer -->
+<div class="px-space-lg py-space-md bg-c-surface-sunken flex flex-col md:flex-row items-center justify-between gap-space-md border-t border-c-border">
+<!-- Left: Row Count & Clamp Note -->
+<div class="flex items-center gap-space-md">
+<span class="font-body-md text-body-md text-c-text-muted">
+            Showing <strong class="text-on-surface font-body-strong">1–10</strong> of <strong class="text-on-surface font-body-strong">42</strong> recruitments
+          </span>
+<div class="flex items-center gap-space-xs text-c-text-subtle">
+<span class="text-c-border-strong">·</span>
+<span class="font-caption text-caption">Clamped server-side (Max 100)</span>
+</div>
+</div>
+<!-- Center / Right: Pagination Bar & Page Size Selector -->
+<div class="flex items-center gap-space-lg">
+<!-- Rows per page selector -->
+<div class="flex items-center gap-space-xs">
+<label class="font-caption text-caption text-c-text-muted" for="pageSizeSelect">Rows per page:</label>
+<div class="relative inline-block">
+<select class="h-8 pl-space-sm pr-space-xl bg-c-surface text-on-surface font-code-sm text-code-sm rounded-lg border-0 shadow-sm appearance-none focus:outline-none cursor-pointer" id="pageSizeSelect">
+<option selected="" value="10">10</option>
+<option value="25">25</option>
+<option value="50">50</option>
+<option value="100">100</option>
+</select>
+<span class="material-symbols-outlined pointer-events-none absolute right-1.5 top-2 text-[16px] text-c-text-subtle">arrow_drop_down</span>
+</div>
+</div>
+<!-- Page Stepper -->
+<div class="flex items-center gap-1">
+<button class="h-8 px-2 bg-c-surface text-c-text-subtle hover:bg-surface-container-high rounded-lg text-caption font-medium transition-colors disabled:opacity-40" disabled="" title="First Page">
+              « First
+            </button>
+<button class="h-8 px-2 bg-c-surface text-c-text-subtle hover:bg-surface-container-high rounded-lg text-caption font-medium transition-colors disabled:opacity-40" disabled="" title="Previous Page">
+              ‹ Prev
+            </button>
+<span class="px-space-sm font-code-sm text-code-sm text-on-surface font-medium">Page 1 of 5</span>
+<button class="h-8 px-2 bg-c-surface text-on-surface hover:bg-surface-container-high rounded-lg text-caption font-medium transition-colors" title="Next Page">
+              Next ›
+            </button>
+<button class="h-8 px-2 bg-c-surface text-on-surface hover:bg-surface-container-high rounded-lg text-caption font-medium transition-colors" title="Last Page">
+              Last »
+            </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Legal & Security Note (AC-ADMIN Protocol Compliance) -->
+<div class="bg-surface-container-low rounded-xl p-space-lg flex items-start gap-space-md">
+<span class="material-symbols-outlined text-c-primary-700 text-[22px] mt-0.5">lock_clock</span>
+<div class="flex flex-col gap-1">
+<span class="font-label-md text-label-md text-on-surface font-semibold tracking-tight">
+          Read-Only Privilege [AC-ADMIN]
+        </span>
+<p class="font-caption text-caption text-c-text-muted leading-relaxed">
+          Administrators have read-across visibility to monitor all organizational pipelines. Decision recording (<code class="font-code-sm text-code-sm bg-surface-container px-1 py-0.5 rounded text-c-primary-800">PATCH /recruitments/{id}/final-status</code>) and interview lifecycle updates are strictly reserved for verified RECRUITER tokens of the owning organization. The action column is omitted in compliance with security mandate §9.4.
+        </p>
+</div>
+</div>
+</div>
+</div>
+<!-- Inline Interaction Logic (Filtering, Tooltip, Copy Full UUID) -->
+<script>
+  (function initRecruitmentsFilter() {
+    let currentInterview = 'ALL';
+    let currentDecision = 'ALL';
+
+    const interviewButtons = document.querySelectorAll('#interviewStatusFilter button');
+    const decisionButtons = document.querySelectorAll('#decisionStatusFilter button');
+    const rows = document.querySelectorAll('.recruitment-row');
+    const noMatching = document.getElementById('noMatchingRows');
+
+    function applyFilter() {
+      let visibleCount = 0;
+      rows.forEach(row => {
+        const rowInterview = row.getAttribute('data-interview');
+        const rowDecision = row.getAttribute('data-decision');
+
+        const matchInterview = (currentInterview === 'ALL') || (rowInterview === currentInterview);
+        const matchDecision = (currentDecision === 'ALL') || (rowDecision === currentDecision);
+
+        if (matchInterview && matchDecision) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      if (visibleCount === 0) {
+        noMatching.classList.remove('hidden');
+        noMatching.classList.add('flex');
+      } else {
+        noMatching.classList.add('hidden');
+        noMatching.classList.remove('flex');
+      }
+    }
+
+    function updateBtnStyles(buttons, activeVal) {
+      buttons.forEach(btn => {
+        const val = btn.getAttribute('data-val');
+        if (val === activeVal) {
+          btn.className = 'filter-pill-active h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-primary-800 text-c-surface transition-all flex items-center gap-1.5';
+        } else {
+          btn.className = 'filter-pill-idle h-7 px-space-md rounded-full font-overline text-overline uppercase tracking-wide bg-c-surface-sunken hover:bg-surface-container-high text-on-surface transition-all flex items-center gap-1.5';
+        }
+      });
+    }
+
+    interviewButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentInterview = btn.getAttribute('data-val');
+        updateBtnStyles(interviewButtons, currentInterview);
+        applyFilter();
+      });
+    });
+
+    decisionButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        currentDecision = btn.getAttribute('data-val');
+        updateBtnStyles(decisionButtons, currentDecision);
+        applyFilter();
+      });
+    });
+
+    document.getElementById('resetFiltersBtn')?.addEventListener('click', () => {
+      currentInterview = 'ALL';
+      currentDecision = 'ALL';
+      updateBtnStyles(interviewButtons, 'ALL');
+      updateBtnStyles(decisionButtons, 'ALL');
+      applyFilter();
+    });
+
+    // Copy to clipboard handlers
+    document.querySelectorAll('.copy-trigger').forEach(trigger => {
+      trigger.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const copyText = this.getAttribute('data-copy');
+        if (!copyText) return;
+        
+        navigator.clipboard.writeText(copyText).then(() => {
+          const icon = this.querySelector('.material-symbols-outlined');
+          if (icon) {
+            const originalIcon = icon.textContent;
+            icon.textContent = 'done';
+            icon.classList.add('text-success-600');
+            setTimeout(() => {
+              icon.textContent = originalIcon;
+              icon.classList.remove('text-success-600');
+            }, 1400);
+          }
+        }).catch(err => {
+          console.warn('Copy failed', err);
+        });
+      });
+    });
+  })();
+</script></main></div></body></html>

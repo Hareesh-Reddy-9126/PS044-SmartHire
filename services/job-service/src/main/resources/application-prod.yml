@@ -1,0 +1,34 @@
+# Production profile overrides for Job Service
+# Activates when 'prod' profile is active: --spring.profiles.active=prod
+
+spring:
+  datasource:
+    url: ${JOB_SVC_DB_URL}
+    username: ${JOB_SVC_DB_USER}
+    password: ${JOB_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+smarthire:
+  job:
+    jwt:
+      jwk-set-uri: ${JOB_JWK_SET_URI}
+      issuer: ${AUTH_JWT_ISSUER}
+      audience: ${AUTH_JWT_AUDIENCE}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL}

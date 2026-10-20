@@ -1,0 +1,46 @@
+# Production profile overrides for Auth Service
+# Activates when 'prod' profile is active: --spring.profiles.active=prod
+
+spring:
+  datasource:
+    url: ${AUTH_SVC_DB_URL}
+    username: ${AUTH_SVC_DB_USER}
+    password: ${AUTH_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+  data:
+    redis:
+      host: ${REDIS_HOST}
+      port: ${REDIS_PORT}
+
+smarthire:
+  jwt:
+    issuer: ${AUTH_JWT_ISSUER}
+    audience: ${AUTH_JWT_AUDIENCE}
+    access-token-ttl: PT15M
+    refresh-token-ttl: P7D
+    # Production MUST provide explicit PKCS#8 PEM RSA private key
+    private-key: ${AUTH_JWT_PRIVATE_KEY}
+  # Seeding is disabled in production - no seed profile active
+  seed:
+    recruiter-email: ""
+    recruiter-password: ""
+    admin-email: ""
+    admin-password: ""
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL}

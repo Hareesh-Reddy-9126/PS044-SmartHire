@@ -1,0 +1,324 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html, body {
+    margin: 0;
+    padding: 0;
+    overscroll-behavior: none;
+  }
+  
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #FBFAF9;
+    color: #1d1b1a;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  ::-webkit-scrollbar {
+    display: none;
+  }
+
+  * {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+}
+
+@layer utilities {
+  .font-display { font-size: 30px; line-height: 36px; font-weight: 600; letter-spacing: -0.01em; }
+  .font-headline-lg { font-size: 24px; line-height: 32px; font-weight: 600; letter-spacing: -0.01em; }
+  .font-headline-md { font-size: 20px; line-height: 28px; font-weight: 600; letter-spacing: -0.01em; }
+  .font-headline-sm { font-size: 18px; line-height: 26px; font-weight: 600; letter-spacing: 0; }
+  .font-body-lg { font-size: 16px; line-height: 24px; font-weight: 400; letter-spacing: 0; }
+  .font-body-md { font-size: 14px; line-height: 20px; font-weight: 400; letter-spacing: 0; }
+  .font-body-strong { font-size: 14px; line-height: 20px; font-weight: 500; letter-spacing: 0; }
+  .font-label-md { font-size: 13px; line-height: 18px; font-weight: 600; letter-spacing: 0.01em; }
+  .font-caption { font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: 0.01em; }
+  .font-overline { font-size: 12px; line-height: 16px; font-weight: 600; letter-spacing: 0.02em; }
+  .font-code-sm { font-size: 12px; line-height: 16px; font-weight: 400; letter-spacing: 0; }
+
+  /* Animations */
+  .animate-in { animation: animate-in 150ms ease-out forwards; }
+  .fade-in { animation: fade-in 150ms ease-out forwards; }
+  .zoom-in-95 { animation: zoom-in-95 150ms ease-out forwards; }
+  .slide-in-from-right { animation: slide-in-from-right 200ms ease-out forwards; }
+
+  @keyframes animate-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes zoom-in-95 {
+    from { opacity: 0; transform: scale(0.95); }
+    to { opacity: 1; transform: scale(1); }
+  }
+  @keyframes slide-in-from-right {
+    from { opacity: 0; transform: translateX(10px); }
+    to { opacity: 1; transform: translateX(0); }
+  }
+}
+
+@layer components {
+  /* Focus ring utilities */
+  .focus-ring {
+    @apply focus:outline-none focus:ring-2 focus:ring-c-primary-700 focus:ring-offset-2 focus:ring-offset-white;
+  }
+
+  /* Button base */
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 font-label-md text-label-md rounded-lg transition-colors focus-ring disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .btn-primary {
+    @apply btn h-11 bg-c-primary-700 text-on-primary hover:bg-c-primary-800 active:bg-c-primary-900 shadow-sm;
+  }
+  
+  .btn-secondary {
+    @apply btn h-11 bg-c-surface border border-c-border-strong text-on-surface hover:bg-c-surface-sunken;
+  }
+  
+  .btn-danger {
+    @apply btn h-11 bg-danger-600 text-on-error hover:bg-danger-700 active:bg-danger-800 shadow-sm;
+  }
+  
+  .btn-sm {
+    @apply h-8 px-3 text-caption;
+  }
+  
+  .btn-lg {
+    @apply h-12 px-6 text-body-md;
+  }
+
+  /* Input base */
+  .input {
+    @apply w-full h-10 px-3 bg-c-surface-sunken border border-c-border rounded-lg text-body-md text-on-surface placeholder:text-c-text-subtle transition-colors focus:bg-c-surface focus:border-primary focus:outline-none focus:ring-2 focus:ring-c-primary-700/40;
+  }
+  
+  .input-error {
+    @apply border-danger-500 focus:border-danger-500 focus:ring-danger-500/40;
+  }
+
+  .label {
+    @apply block font-label-md text-label-md text-on-surface mb-1;
+  }
+  
+  .label-required::after {
+    content: " *";
+    @apply text-danger-600;
+  }
+
+  .helper-text {
+    @apply mt-1 font-caption text-caption text-c-text-subtle;
+  }
+  
+  .error-text {
+    @apply mt-1 font-caption text-caption text-danger-600;
+  }
+
+  /* Card */
+  .card {
+    @apply bg-c-surface border border-c-border rounded-xl shadow-sm;
+  }
+  
+  .card-header {
+    @apply p-5 border-b border-c-border;
+  }
+  
+  .card-body {
+    @apply p-5;
+  }
+  
+  .card-footer {
+    @apply p-5 border-t border-c-border bg-c-surface-sunken flex items-center justify-end gap-3;
+  }
+
+  /* Modal/Dialog */
+  .modal-overlay {
+    @apply fixed inset-0 z-50 bg-c-overlay backdrop-blur-sm flex items-center justify-center p-4;
+  }
+  
+  .modal {
+    @apply w-full max-w-[520px] bg-c-surface rounded-xl shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150;
+  }
+  
+  .modal-header {
+    @apply px-6 py-4 bg-c-surface flex items-center justify-between border-b border-c-surface-sunken;
+  }
+  
+  .modal-body {
+    @apply p-6 space-y-4;
+  }
+  
+  .modal-footer {
+    @apply px-6 py-4 bg-c-surface-sunken flex items-center justify-end gap-3 border-t border-c-surface-sunken;
+  }
+
+  /* Toast */
+  .toast {
+    @apply fixed bottom-6 right-6 z-50 transform translate-y-16 opacity-0 pointer-events-none transition-all duration-300;
+  }
+  
+  .toast.show {
+    @apply translate-y-0 opacity-100;
+  }
+  
+  .toast-content {
+    @apply bg-c-primary-900 text-c-bg px-4 py-3 rounded-xl shadow-xl flex items-center gap-3;
+  }
+  
+  .toast-content.error {
+    @apply bg-danger-600;
+  }
+
+  /* Status Badge */
+  .status-badge {
+    @apply inline-flex items-center gap-1.5 h-[22px] px-2.5 rounded-full font-overline text-overline uppercase tracking-wider;
+  }
+  
+  .status-badge::before {
+    content: "";
+    @apply w-1.5 h-1.5 rounded-full;
+  }
+
+  .status-open { @apply bg-success-50 text-success-700; }
+  .status-open::before { @apply bg-success-600; }
+  
+  .status-draft { @apply bg-c-surface-sunken text-c-text-muted; }
+  .status-draft::before { @apply bg-c-text-muted; }
+  
+  .status-closed { @apply bg-surface-container-high text-on-surface; }
+  .status-closed::before { @apply bg-on-surface; }
+  
+  .status-applied { @apply bg-info-50 text-info-700; }
+  .status-applied::before { @apply bg-info-600; }
+  
+  .status-under-review { @apply bg-warning-50 text-warning-800; }
+  .status-under-review::before { @apply bg-warning-600; }
+  
+  .status-shortlisted { @apply bg-c-primary-50 text-c-primary-700; }
+  .status-shortlisted::before { @apply bg-primary-container; }
+  
+  .status-hired { @apply bg-success-50 text-success-700; }
+  .status-hired::before { @apply bg-success-600; }
+  
+  .status-rejected { @apply bg-danger-50 text-danger-700; }
+  .status-rejected::before { @apply bg-danger-600; }
+  
+  .status-withdrawn { @apply bg-c-surface-sunken text-c-text-muted; }
+  .status-withdrawn::before { @apply bg-c-text-muted; }
+  
+  .status-not-scheduled { @apply bg-c-surface-sunken text-c-text-muted; }
+  .status-not-scheduled::before { @apply bg-c-text-muted; }
+  
+  .status-scheduled { @apply bg-warning-50 text-warning-800; }
+  .status-scheduled::before { @apply bg-warning-600; }
+  
+  .status-completed { @apply bg-info-50 text-info-700; }
+  .status-completed::before { @apply bg-info-600; }
+  
+  .status-no-show { @apply bg-danger-50 text-danger-700; }
+  .status-no-show::before { @apply bg-danger-600; }
+  
+  .status-pending { @apply bg-c-surface-sunken text-c-text-muted; }
+  .status-pending::before { @apply bg-c-text-muted; }
+
+  /* Role Chip */
+  .role-chip {
+    @apply inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full font-overline text-overline uppercase tracking-wider;
+  }
+  
+  .role-candidate { @apply bg-c-primary-50 text-c-primary-700; }
+  .role-recruiter { @apply bg-c-accent-50 text-c-accent-700; }
+  .role-admin { @apply bg-warning-50 text-warning-800; }
+
+  /* Table */
+  .data-table {
+    @apply w-full text-left border-collapse;
+  }
+  
+  .data-table th {
+    @apply px-4 py-3 bg-c-surface-sunken text-c-text-muted font-overline text-overline uppercase tracking-wider whitespace-nowrap;
+  }
+  
+  .data-table td {
+    @apply px-4 py-3 divide-y divide-c-border font-body-md text-body-md text-on-surface;
+  }
+  
+  .data-table tbody tr {
+    @apply hover:bg-c-surface-sunken/50 transition-colors;
+  }
+  
+  .data-table tbody tr:last-child td {
+    @apply border-b-0;
+  }
+
+  /* Empty State */
+  .empty-state {
+    @apply p-12 text-center flex flex-col items-center justify-center gap-3;
+  }
+  
+  .empty-state-icon {
+    @apply w-12 h-12 rounded-full bg-c-surface-sunken text-c-text-subtle flex items-center justify-center;
+  }
+  
+  .empty-state-title {
+    @apply font-headline-sm text-headline-sm text-on-surface;
+  }
+  
+  .empty-state-message {
+    @apply font-body-md text-body-md text-c-text-muted max-w-sm;
+  }
+
+  /* Pagination */
+  .pagination {
+    @apply flex flex-col sm:flex-row items-center justify-between gap-4 px-4 py-3 bg-c-surface-sunken font-caption text-caption text-c-text-muted;
+  }
+  
+  .pagination-btn {
+    @apply p-1.5 rounded-lg text-c-text-subtle hover:text-on-surface hover:bg-surface-container transition-colors disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  
+  .pagination-page {
+    @apply px-3 py-1 rounded bg-primary text-on-primary font-code-sm text-code-sm;
+  }
+
+  /* Gap Notice */
+  .gap-notice {
+    @apply rounded-xl p-4 bg-c-surface-sunken shadow-sm flex flex-col sm:flex-row items-start justify-between gap-4;
+  }
+  
+  .gap-notice-icon {
+    @apply p-1.5 rounded-lg bg-surface-container-highest text-info-700 shrink-0 mt-0.5;
+  }
+
+  /* Planned Banner */
+  .planned-banner {
+    @apply rounded-xl p-4 bg-c-accent-50 border border-c-accent-700/20 flex items-start gap-3;
+  }
+
+  /* Error Panel */
+  .error-panel {
+    @apply p-4 bg-danger-50 border border-danger-200 rounded-lg flex items-start gap-3;
+  }
+  
+.error-panel-icon {
+    @apply text-danger-600 text-[18px] shrink-0 mt-0.5;
+    font-family: 'Material Symbols Outlined';
+  }
+  
+  /* Copyable ID */
+  .copyable-id {
+    @apply inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-c-surface-sunken text-c-text-muted hover:text-on-surface hover:bg-c-border font-code-sm text-code-sm border border-c-border transition-colors cursor-pointer group;
+  }
+  
+  .copyable-id .copy-icon {
+    @apply text-[13px] opacity-60 group-hover:opacity-100;
+    font-family: 'Material Symbols Outlined';
+  }
+}

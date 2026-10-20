@@ -1,0 +1,42 @@
+# Production profile overrides for Notification Service
+# Activates when 'prod' profile is active: --spring.profiles.active=prod
+
+spring:
+  datasource:
+    url: ${NOTIF_SVC_DB_URL}
+    username: ${NOTIF_SVC_DB_USER}
+    password: ${NOTIF_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+smarthire:
+  notification:
+    jwt:
+      jwk-set-uri: ${NOTIF_JWK_SET_URI}
+      issuer: ${AUTH_JWT_ISSUER}
+      audience: ${AUTH_JWT_AUDIENCE}
+    sender:
+      type: ${NOTIFICATION_SENDER_TYPE:smtp}
+      smtp:
+        host: ${NOTIFICATION_SMTP_HOST}
+        port: ${NOTIFICATION_SMTP_PORT:587}
+        username: ${NOTIFICATION_SMTP_USERNAME}
+        password: ${NOTIFICATION_SMTP_PASSWORD}
+        from: ${NOTIFICATION_SMTP_FROM:noreply@smarthire.local}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL}

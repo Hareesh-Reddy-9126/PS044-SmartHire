@@ -7,11 +7,19 @@ import com.smarthire.auth.api.dto.RegisterResponse;
 import com.smarthire.auth.api.dto.TokenResponse;
 import com.smarthire.auth.service.AuthService;
 import com.smarthire.auth.service.AuthTokens;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.UUID;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseCookie;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -33,6 +41,9 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/auth")
+@Tag(
+    name = "Authentication",
+    description = "User registration, login, token refresh, and identity endpoints")
 public class AuthController {
 
   private static final String BEARER = "Bearer";
@@ -45,6 +56,24 @@ public class AuthController {
     this.authService = authService;
   }
 
+  @Operation(
+      summary = "Register a new user",
+      description = "Registers a new user account. Public endpoint.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "User registered successfully",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = RegisterResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed or email already exists",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
+  @SecurityRequirement(name = "")
   @PostMapping("/register")
   @ResponseStatus(HttpStatus.CREATED)
   public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
@@ -52,6 +81,29 @@ public class AuthController {
     return new RegisterResponse(userId.toString());
   }
 
+  @Operation(
+      summary = "User login",
+      description =
+          "Authenticates a user and returns access token with refresh token in HttpOnly cookie. Public endpoint.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Login successful",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = TokenResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Invalid credentials",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
+  @SecurityRequirement(name = "")
   @PostMapping("/login")
   public TokenResponse login(
       @Valid @RequestBody LoginRequest request, jakarta.servlet.http.HttpServletResponse response) {
@@ -60,6 +112,25 @@ public class AuthController {
     return toTokenResponse(tokens);
   }
 
+  @Operation(
+      summary = "Refresh access token",
+      description =
+          "Refreshes the access token using the refresh token from the HttpOnly cookie. Public endpoint.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Token refreshed successfully",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = TokenResponse.class))),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Invalid or expired refresh token",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
+  @SecurityRequirement(name = "")
   @PostMapping("/refresh")
   public TokenResponse refresh(
       @CookieValue(value = REFRESH_COOKIE, required = false) String refreshToken,
@@ -69,6 +140,19 @@ public class AuthController {
     return toTokenResponse(tokens);
   }
 
+  @Operation(
+      summary = "User logout",
+      description =
+          "Logs out the user by invalidating the refresh token and clearing the cookie. Requires authentication.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "204", description = "Logged out successfully"),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
+  @SecurityRequirement(name = "bearerAuth")
   @PostMapping("/logout")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void logout(
@@ -80,12 +164,52 @@ public class AuthController {
   }
 
   /** Any authenticated caller (decision 6). */
+  @Operation(
+      summary = "Get current user profile",
+      description = "Returns the profile of the authenticated user. Requires authentication.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Profile retrieved successfully",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = MeResponse.class))),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
+  @SecurityRequirement(name = "bearerAuth")
   @GetMapping("/me")
   public MeResponse me(@AuthenticationPrincipal Jwt accessToken) {
     return toMeResponse(accessToken);
   }
 
   /** ADMIN only (decision 6) — demonstrates role-gated authorization. */
+  @Operation(
+      summary = "Get admin profile",
+      description = "Returns the profile of the authenticated admin user. Requires ADMIN role.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Admin profile retrieved successfully",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = MeResponse.class))),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden - requires ADMIN role",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
+  @SecurityRequirement(name = "bearerAuth")
   @GetMapping("/admin/whoami")
   @PreAuthorize("hasRole('ADMIN')")
   public MeResponse adminWhoami(@AuthenticationPrincipal Jwt accessToken) {

@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><title>SmartHire Workspace</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"danger-800":"#6B1616","surface-container":"#f3edea","primary-fixed-dim":"#bbc3ff","secondary-fixed-dim":"#7cd5d3","on-primary-container":"#b5beff","error":"#ba1a1a","warning-200":"#F2DCA8","success-200":"#B7DEC6","c-surface-sunken":"#F4F2F0","info-600":"#1E5EA8","tertiary-fixed":"#dee0ff","surface-tint":"#4d59a1","surface-bright":"#fef8f6","error-container":"#ffdad6","c-primary-800":"#252C5A","tertiary":"#25327b","secondary":"#006a69","outline":"#767682","warning-50":"#FDF3E0","surface-container-highest":"#e7e1df","surface-variant":"#e7e1df","surface-container-low":"#f9f2f0","primary-fixed":"#dee0ff","c-primary-300":"#9BA4D4","warning-800":"#5E3D00","on-tertiary":"#ffffff","c-primary-100":"#DCE0F0","on-tertiary-container":"#b6beff","danger-200":"#F0C2C2","primary-container":"#3e4a91","info-50":"#E8F0FA","on-secondary-container":"#00706f","on-primary-fixed":"#01105b","on-secondary-fixed-variant":"#00504f","on-primary":"#ffffff","on-error":"#ffffff","c-overlay":"rgba(28, 26, 25, 0.48)","surface":"#fef8f6","c-border-strong":"#CBC5BF","danger-500":"#C53030","on-secondary-fixed":"#002020","on-error-container":"#93000a","warning-600":"#8A5A00","secondary-fixed":"#98f2f0","c-bg":"#FBFAF9","inverse-on-surface":"#f6efed","tertiary-container":"#3e4a94","on-secondary":"#ffffff","on-tertiary-fixed":"#000f5d","success-50":"#E7F4EC","outline-variant":"#c6c5d2","on-background":"#1d1b1a","surface-container-lowest":"#ffffff","background":"#fef8f6","c-accent-50":"#E6F2F2","on-tertiary-fixed-variant":"#34408a","c-text-subtle":"#928C86","on-surface":"#1d1b1a","danger-700":"#841C1C","c-primary-50":"#EEF0F8","inverse-surface":"#32302f","c-text-muted":"#6B6560","c-surface":"#FFFFFF","c-primary-700":"#313A75","on-primary-fixed-variant":"#354187","on-surface-variant":"#454651","c-primary-900":"#1A1F40","info-200":"#BBD3EF","inverse-primary":"#bbc3ff","danger-50":"#FBEAEA","success-600":"#1A6B3C","success-700":"#145430","c-border":"#E3DFDB","info-700":"#174A85","danger-600":"#A32424","secondary-container":"#98f2f0","primary":"#263278","tertiary-fixed-dim":"#bbc3ff","surface-dim":"#dfd9d7","surface-container-high":"#ede7e5","c-accent-700":"#0A5F5E"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xl":"1.5rem","margin-mobile":"1rem","space-xs":"0.25rem","space-3xl":"4rem","gutter":"1.5rem","space-sm":"0.5rem","margin":"1.5rem","space-lg":"1rem","space-2xl":"2rem","gutter-mobile":"1rem","space-md":"0.75rem"},"fontFamily":{"headline-sm":["Inter"],"overline":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"],"display":["Inter"],"body-strong":["Inter"],"code-sm":["JetBrains Mono"],"caption":["Inter"],"body-md":["Inter"],"body-lg":["Inter"],"label-md":["Inter"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"600"}],"overline":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"display":["30px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-strong":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"500"}],"code-sm":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"400"}],"caption":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"600"}]}}}</script></head><body class="bg-c-bg font-body-md text-on-surface antialiased min-h-screen"><aside class="fixed left-0 top-0 h-full w-16 md:w-60 bg-c-primary-900 text-c-bg z-50 flex flex-col shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-4 flex items-center justify-between overflow-hidden"><div class="flex items-center gap-space-sm min-w-0"><img alt="SmartHire Brand Logo" class="h-7 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1VVWUOqmiAQdkmhpWVXgXYXyzwtWUUVsNpnnCJtyZkNSTvikns_spHQheNmh3URSDnLXg6HPtIq09RU9abGN6_tlaaI91pCxCp7pHXSRUQVJnqJwtiHAA1N6WpgTCBgteHg27dQl0s3d6g8ZrDNqr2RgmnsQfE033NaALmTFoZwfMZ93oazdz8ncIWgnf4MrDcNH_UHs6FSIyGF3TIq6F-nIa5h2L4WaI_Vymu4RvBUQnNwHSsrrwIPlHg"/><span class="hidden md:inline font-headline-sm text-headline-sm text-surface font-semibold tracking-tight truncate">SmartHire</span></div><button class="md:hidden p-1 text-c-text-subtle hover:text-surface" type="button"><span class="material-symbols-outlined text-[20px]">menu</span></button></div><div class="px-3 py-space-sm"><div class="hidden md:block px-2 py-1 mb-2 font-overline text-overline uppercase tracking-wider text-c-primary-300">Navigation Menu</div><nav class="flex flex-col gap-1" data-active-classes="bg-primary-container text-on-primary font-body-strong shadow-sm"><a aria-current="page" class="flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all bg-primary-container text-on-primary font-body-strong shadow-sm" data-path="candidate-applications" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">assignment</span><span class="hidden md:inline font-body-md text-body-md truncate">My applications</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="candidate-progress" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">timeline</span><span class="hidden md:inline font-body-md text-body-md truncate">My progress</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="recruiter-jobs" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">work</span><span class="hidden md:inline font-body-md text-body-md truncate">Job postings</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="recruiter-recruitments" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">groups</span><span class="hidden md:inline font-body-md text-body-md truncate">Recruitments</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="admin-overview" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">shield</span><span class="hidden md:inline font-body-md text-body-md truncate">Overview</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="admin-lookup" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">saved_search</span><span class="hidden md:inline font-body-md text-body-md truncate">Record lookup</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="browse-jobs" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">search</span><span class="hidden md:inline font-body-md text-body-md truncate">Browse jobs</span></a></nav></div><div class="mt-auto p-3 flex flex-col gap-2"><div class="hidden md:flex flex-col gap-1.5 p-2.5 rounded-xl bg-c-primary-800/60"><div class="flex items-center justify-between text-c-text-subtle font-caption text-caption"><span class="uppercase font-overline text-overline">System Spec</span><span class="font-code-sm text-code-sm">v2.4</span></div><a class="inline-flex items-center gap-1 font-caption text-caption text-c-primary-300 hover:text-surface transition-colors" href="#"><span class="material-symbols-outlined text-[14px]">description</span>API documentation ↗</a><a class="inline-flex items-center gap-1 font-caption text-caption text-c-primary-300 hover:text-surface transition-colors" href="#"><span class="material-symbols-outlined text-[14px]">hub</span>Service registry ↗</a></div><a class="flex items-center gap-3 px-3 py-2 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="user-profile" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">account_circle</span><span class="hidden md:inline font-body-md text-body-md truncate">Profile</span></a></div></aside><div class="pl-16 md:pl-60 min-h-screen flex flex-col"><header class="fixed top-0 left-16 md:left-60 right-0 h-14 bg-c-surface shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-2"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-c-accent-50 text-c-accent-700 font-overline text-overline uppercase tracking-wider"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>Active Workspace</span><span class="hidden sm:inline font-code-sm text-code-sm text-c-text-muted bg-c-surface-sunken px-2 py-0.5 rounded-lg">org_smarthire_core</span></div></div><div class="flex items-center gap-space-md"><div class="hidden lg:flex items-center gap-space-xs text-right"><span class="font-body-strong text-body-strong text-on-surface">alex.chen@example.com</span><span class="font-caption text-caption text-c-text-subtle">(Role: Candidate)</span></div><a class="inline-flex items-center gap-1 px-space-md py-1.5 rounded-xl font-label-md text-label-md text-danger-700 bg-danger-50 hover:bg-danger-200 hover:text-danger-800 transition-colors" data-path="sign-in" href="#"><span class="material-symbols-outlined text-[16px]">logout</span><span class="hidden sm:inline">Sign out</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="flex-1 pt-14 w-full bg-c-bg"><div class="flex flex-col w-full">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 space-y-6">
+<!-- Breadcrumb & Top Bar -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div class="space-y-1">
+<nav aria-label="Breadcrumb" class="flex items-center gap-1.5 font-caption text-caption text-c-text-muted">
+<span>SmartHire</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span>Candidate</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="text-on-surface font-body-strong">My applications</span>
+</nav>
+<div class="flex items-center gap-3">
+<h1 class="font-headline-lg text-headline-lg text-on-surface tracking-tight">My applications</h1>
+<span class="inline-flex items-center px-2 py-0.5 rounded-full font-code-sm text-code-sm bg-surface-container-high text-on-surface-variant">3 total</span>
+</div>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<button class="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl font-label-md text-label-md bg-primary text-on-primary hover:bg-c-primary-700 active:bg-c-primary-800 shadow-sm transition-all focus:outline-none" onclick="document.getElementById('dialog-gap01').classList.remove('hidden')" type="button">
+<span class="material-symbols-outlined text-[18px]">add</span>
+<span>Add application by ID</span>
+</button>
+</div>
+</div>
+<!-- Mandatory Gap Notice [GAP-01] -->
+<div class="relative rounded-xl p-4 bg-c-surface-sunken shadow-sm transition-all" id="gap-notice-banner">
+<div class="flex flex-col sm:flex-row items-start justify-between gap-4">
+<div class="flex items-start gap-3">
+<div class="p-1.5 rounded-lg bg-surface-container-highest text-info-700 shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-center gap-2">
+<span class="font-overline text-overline uppercase tracking-wider text-info-700">Audit Protocol [GAP-01]</span>
+<span class="inline-flex items-center px-1.5 py-0.2 rounded font-code-sm text-code-sm bg-surface-container text-c-text-muted">Storage: Local + Process</span>
+</div>
+<h2 class="font-body-strong text-body-strong text-on-surface">Notice on Application Visibility</h2>
+<p class="font-body-md text-body-md text-c-text-muted max-w-3xl">
+              This list is assembled from your tracked applications on this device plus any application that has entered a recruitment process. Applications submitted on another device may not appear until a recruiter progresses them.
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+<button class="px-3 py-1.5 rounded-xl font-label-md text-label-md bg-c-surface text-on-surface shadow-sm hover:bg-surface-container transition-all" onclick="document.getElementById('dialog-gap01').classList.remove('hidden')" type="button">
+            Add an application by ID
+          </button>
+<button aria-label="Dismiss notice" class="p-1 rounded-lg text-c-text-subtle hover:text-on-surface hover:bg-surface-container-high transition-colors" onclick="document.getElementById('gap-notice-banner').remove()" title="Dismiss notice" type="button">
+<span class="material-symbols-outlined text-[18px]">close</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Search, Filter Chips, Stats Bar -->
+<div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 p-3 rounded-xl bg-c-surface shadow-sm">
+<div class="flex flex-wrap items-center gap-2">
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md bg-c-primary-900 text-c-bg shadow-sm transition-colors" type="button">
+<span>All</span>
+<span class="px-1.5 py-0.2 rounded-full font-code-sm text-code-sm bg-primary-container text-on-primary">3</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md bg-surface-container text-on-surface-variant hover:bg-surface-container-highest transition-colors" type="button">
+<span>Active</span>
+<span class="px-1.5 py-0.2 rounded-full font-code-sm text-code-sm bg-surface-container-high text-on-surface">2</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md bg-surface-container text-on-surface-variant hover:bg-surface-container-highest transition-colors" type="button">
+<span>Decided</span>
+<span class="px-1.5 py-0.2 rounded-full font-code-sm text-code-sm bg-surface-container-high text-on-surface">1</span>
+</button>
+</div>
+<div class="flex items-center gap-3">
+<div class="relative w-full sm:w-72">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-c-text-subtle">search</span>
+<input class="w-full pl-9 pr-3 py-2 rounded-xl font-body-md text-body-md bg-c-surface-sunken text-on-surface placeholder:text-c-text-subtle focus:bg-c-surface focus:outline-none transition-colors" placeholder="Filter by role, company, or ID..." type="text"/>
+</div>
+<button class="p-2 rounded-xl bg-c-surface-sunken text-c-text-muted hover:text-on-surface hover:bg-surface-container transition-colors" title="Filter attributes" type="button">
+<span class="material-symbols-outlined text-[20px]">filter_list</span>
+</button>
+</div>
+</div>
+<!-- Application Table Desktop (≥768px) -->
+<div class="hidden md:block rounded-xl bg-c-surface shadow-sm overflow-hidden">
+<div class="overflow-x-auto">
+<table class="w-full text-left font-body-md text-body-md">
+<thead>
+<tr class="bg-c-surface-sunken text-c-text-muted font-overline text-overline uppercase tracking-wider">
+<th class="py-3 px-4" scope="col">Role &amp; Company</th>
+<th class="py-3 px-4" scope="col">Location</th>
+<th class="py-3 px-4" scope="col">Status</th>
+<th class="py-3 px-4" scope="col">Source Origin</th>
+<th class="py-3 px-4" scope="col">Last checked</th>
+<th class="py-3 px-4 text-right" scope="col">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y-0 text-on-surface">
+<!-- Row 1: Senior Backend Engineer -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-4">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">terminal</span>
+</div>
+<div class="space-y-0.5 min-w-0">
+<a class="font-body-strong text-body-strong text-on-surface hover:text-primary transition-colors block truncate" href="#">
+                      Senior Backend Engineer
+                    </a>
+<div class="flex items-center gap-2 font-caption text-caption text-c-text-muted">
+<span>FinTech Labs Ltd</span>
+<span class="text-outline-variant">•</span>
+<button class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-c-surface-sunken text-c-text-subtle hover:text-on-surface hover:bg-surface-container transition-colors" onclick="navigator.clipboard.writeText('app_8f29c4ba'); this.innerText='copied!'; setTimeout(() =&gt; this.innerText='app_8f29c4ba', 1200)" title="Copy tracking UUID" type="button">
+                        app_8f29c4ba
+                      </button>
+</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 whitespace-nowrap text-c-text-muted font-body-md text-body-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-c-text-subtle">location_on</span>
+<span>London, UK <span class="text-caption text-c-text-subtle">(Hybrid)</span></span>
+</div>
+</td>
+<td class="py-4 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-overline text-overline uppercase tracking-wider bg-warning-50 text-warning-800">
+<span class="w-1.5 h-1.5 rounded-full bg-warning-600"></span>
+                  UNDER_REVIEW
+                </span>
+</td>
+<td class="py-4 px-4 whitespace-nowrap">
+<div class="flex flex-col gap-0.5">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-label-md text-label-md bg-c-accent-50 text-c-accent-700 w-max">
+<span class="material-symbols-outlined text-[14px]">cloud_sync</span>
+                    Recruitment
+                  </span>
+<span class="font-caption text-caption text-c-text-subtle">server-confirmed</span>
+</div>
+</td>
+<td class="py-4 px-4 whitespace-nowrap font-caption text-caption text-c-text-muted">
+                10 mins ago
+              </td>
+<td class="py-4 px-4 whitespace-nowrap text-right">
+<a class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-label-md text-label-md bg-surface-container-high text-on-surface hover:bg-c-primary-900 hover:text-c-bg transition-all" href="#">
+<span>View details</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 2: Frontend Systems Architect -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-4">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">layers</span>
+</div>
+<div class="space-y-0.5 min-w-0">
+<a class="font-body-strong text-body-strong text-on-surface hover:text-primary transition-colors block truncate" href="#">
+                      Frontend Systems Architect
+                    </a>
+<div class="flex items-center gap-2 font-caption text-caption text-c-text-muted">
+<span>CloudScale Systems</span>
+<span class="text-outline-variant">•</span>
+<button class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-c-surface-sunken text-c-text-subtle hover:text-on-surface hover:bg-surface-container transition-colors" onclick="navigator.clipboard.writeText('app_04e112d7'); this.innerText='copied!'; setTimeout(() =&gt; this.innerText='app_04e112d7', 1200)" title="Copy tracking UUID" type="button">
+                        app_04e112d7
+                      </button>
+</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 whitespace-nowrap text-c-text-muted font-body-md text-body-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-c-text-subtle">public</span>
+<span>Remote</span>
+</div>
+</td>
+<td class="py-4 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-overline text-overline uppercase tracking-wider bg-c-primary-50 text-c-primary-700">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+                  SHORTLISTED
+                </span>
+</td>
+<td class="py-4 px-4 whitespace-nowrap">
+<div class="flex flex-col gap-0.5">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-label-md text-label-md bg-surface-container-high text-on-surface-variant w-max">
+<span class="material-symbols-outlined text-[14px]">smartphone</span>
+                    This device
+                  </span>
+<span class="font-caption text-caption text-c-text-subtle">local registry</span>
+</div>
+</td>
+<td class="py-4 px-4 whitespace-nowrap font-caption text-caption text-c-text-muted">
+                1 hour ago
+              </td>
+<td class="py-4 px-4 whitespace-nowrap text-right">
+<a class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-label-md text-label-md bg-surface-container-high text-on-surface hover:bg-c-primary-900 hover:text-c-bg transition-all" href="#">
+<span>View details</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+<!-- Row 3: Staff Data Platform Engineer -->
+<tr class="hover:bg-surface-container-low transition-colors group">
+<td class="py-4 px-4">
+<div class="flex items-start gap-3">
+<div class="w-9 h-9 rounded-xl bg-surface-container-highest flex items-center justify-center text-primary shrink-0">
+<span class="material-symbols-outlined text-[20px]">database</span>
+</div>
+<div class="space-y-0.5 min-w-0">
+<a class="font-body-strong text-body-strong text-on-surface hover:text-primary transition-colors block truncate" href="#">
+                      Staff Data Platform Engineer
+                    </a>
+<div class="flex items-center gap-2 font-caption text-caption text-c-text-muted">
+<span>DataFlow Infrastructure</span>
+<span class="text-outline-variant">•</span>
+<button class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-c-surface-sunken text-c-text-subtle hover:text-on-surface hover:bg-surface-container transition-colors" onclick="navigator.clipboard.writeText('app_d58a91bc'); this.innerText='copied!'; setTimeout(() =&gt; this.innerText='app_d58a91bc', 1200)" title="Copy tracking UUID" type="button">
+                        app_d58a91bc
+                      </button>
+</div>
+</div>
+</div>
+</td>
+<td class="py-4 px-4 whitespace-nowrap text-c-text-muted font-body-md text-body-md">
+<div class="flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[16px] text-c-text-subtle">location_on</span>
+<span>Manchester, UK</span>
+</div>
+</td>
+<td class="py-4 px-4 whitespace-nowrap">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full font-overline text-overline uppercase tracking-wider bg-info-50 text-info-700">
+<span class="w-1.5 h-1.5 rounded-full bg-info-600"></span>
+                  APPLIED
+                </span>
+</td>
+<td class="py-4 px-4 whitespace-nowrap">
+<div class="flex flex-col gap-0.5">
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md font-label-md text-label-md bg-surface-container-high text-on-surface-variant w-max">
+<span class="material-symbols-outlined text-[14px]">smartphone</span>
+                    This device
+                  </span>
+<span class="font-caption text-caption text-c-text-subtle">local registry</span>
+</div>
+</td>
+<td class="py-4 px-4 whitespace-nowrap font-caption text-caption text-c-text-muted">
+                Yesterday
+              </td>
+<td class="py-4 px-4 whitespace-nowrap text-right">
+<a class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-label-md text-label-md bg-surface-container-high text-on-surface hover:bg-c-primary-900 hover:text-c-bg transition-all" href="#">
+<span>View details</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<!-- Application Mobile Card Fallback (<768px) -->
+<div class="md:hidden flex flex-col gap-3">
+<!-- Card 1 -->
+<div class="p-4 rounded-xl bg-c-surface shadow-sm space-y-3">
+<div class="flex items-start justify-between gap-2">
+<div class="space-y-0.5">
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-subtle">FinTech Labs Ltd</span>
+<h3 class="font-body-strong text-body-strong text-on-surface">Senior Backend Engineer</h3>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-overline text-overline uppercase tracking-wider bg-warning-50 text-warning-800 shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-warning-600"></span>
+            UNDER_REVIEW
+          </span>
+</div>
+<div class="grid grid-cols-2 gap-2 py-2 px-3 rounded-lg bg-c-surface-sunken font-caption text-caption">
+<div>
+<span class="text-c-text-subtle block">Location</span>
+<span class="text-on-surface font-body-strong">London (Hybrid)</span>
+</div>
+<div>
+<span class="text-c-text-subtle block">Origin</span>
+<span class="text-on-surface font-body-strong">Recruitment (Server)</span>
+</div>
+<div class="col-span-2 flex items-center justify-between pt-1">
+<span class="text-c-text-subtle">Reference:</span>
+<button class="font-code-sm text-code-sm text-primary" type="button">app_8f29c4ba</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-caption text-caption text-c-text-muted">Checked 10m ago</span>
+<a class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-label-md text-label-md bg-c-primary-900 text-c-bg" href="#">
+<span>View details</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="p-4 rounded-xl bg-c-surface shadow-sm space-y-3">
+<div class="flex items-start justify-between gap-2">
+<div class="space-y-0.5">
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-subtle">CloudScale Systems</span>
+<h3 class="font-body-strong text-body-strong text-on-surface">Frontend Systems Architect</h3>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-overline text-overline uppercase tracking-wider bg-c-primary-50 text-c-primary-700 shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-primary-container"></span>
+            SHORTLISTED
+          </span>
+</div>
+<div class="grid grid-cols-2 gap-2 py-2 px-3 rounded-lg bg-c-surface-sunken font-caption text-caption">
+<div>
+<span class="text-c-text-subtle block">Location</span>
+<span class="text-on-surface font-body-strong">Remote</span>
+</div>
+<div>
+<span class="text-c-text-subtle block">Origin</span>
+<span class="text-on-surface font-body-strong">This device</span>
+</div>
+<div class="col-span-2 flex items-center justify-between pt-1">
+<span class="text-c-text-subtle">Reference:</span>
+<button class="font-code-sm text-code-sm text-primary" type="button">app_04e112d7</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-caption text-caption text-c-text-muted">Checked 1h ago</span>
+<a class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-label-md text-label-md bg-c-primary-900 text-c-bg" href="#">
+<span>View details</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+</div>
+<!-- Card 3 -->
+<div class="p-4 rounded-xl bg-c-surface shadow-sm space-y-3">
+<div class="flex items-start justify-between gap-2">
+<div class="space-y-0.5">
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-subtle">DataFlow Infrastructure</span>
+<h3 class="font-body-strong text-body-strong text-on-surface">Staff Data Platform Engineer</h3>
+</div>
+<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-overline text-overline uppercase tracking-wider bg-info-50 text-info-700 shrink-0">
+<span class="w-1.5 h-1.5 rounded-full bg-info-600"></span>
+            APPLIED
+          </span>
+</div>
+<div class="grid grid-cols-2 gap-2 py-2 px-3 rounded-lg bg-c-surface-sunken font-caption text-caption">
+<div>
+<span class="text-c-text-subtle block">Location</span>
+<span class="text-on-surface font-body-strong">Manchester, UK</span>
+</div>
+<div>
+<span class="text-c-text-subtle block">Origin</span>
+<span class="text-on-surface font-body-strong">This device</span>
+</div>
+<div class="col-span-2 flex items-center justify-between pt-1">
+<span class="text-c-text-subtle">Reference:</span>
+<button class="font-code-sm text-code-sm text-primary" type="button">app_d58a91bc</button>
+</div>
+</div>
+<div class="flex items-center justify-between pt-1">
+<span class="font-caption text-caption text-c-text-muted">Checked yesterday</span>
+<a class="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl font-label-md text-label-md bg-c-primary-900 text-c-bg" href="#">
+<span>View details</span>
+<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+</a>
+</div>
+</div>
+</div>
+<!-- Institutional Pagination Bar -->
+<div class="flex flex-col sm:flex-row items-center justify-between gap-4 py-3 px-4 rounded-xl bg-c-surface shadow-sm font-caption text-caption text-c-text-muted">
+<div class="flex items-center gap-2">
+<span>Showing <strong class="font-body-strong text-on-surface">1–3</strong> of <strong class="font-body-strong text-on-surface">3</strong> applications</span>
+<span class="text-outline-variant">•</span>
+<span>Page 1 of 1</span>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span>Rows per page:</span>
+<select aria-label="Rows per page" class="py-1 px-2 rounded-lg bg-c-surface-sunken font-code-sm text-code-sm text-on-surface focus:outline-none">
+<option selected="" value="20">20</option>
+<option value="50">50</option>
+<option value="100">100 (Max clamp)</option>
+</select>
+</div>
+<div class="flex items-center gap-1">
+<button class="p-1.5 rounded-lg text-c-text-subtle opacity-40 cursor-not-allowed" disabled="" type="button">
+<span class="material-symbols-outlined text-[18px]">first_page</span>
+</button>
+<button class="p-1.5 rounded-lg text-c-text-subtle opacity-40 cursor-not-allowed" disabled="" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="p-1.5 rounded-lg text-c-text-subtle opacity-40 cursor-not-allowed" disabled="" type="button">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+<button class="p-1.5 rounded-lg text-c-text-subtle opacity-40 cursor-not-allowed" disabled="" type="button">
+<span class="material-symbols-outlined text-[18px]">last_page</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Structured Institutional Insights & Metrics Card -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+<div class="p-4 rounded-xl bg-c-surface shadow-sm space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-muted">Active Pipeline</span>
+<span class="material-symbols-outlined text-[18px] text-primary">hourglass_top</span>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface">2 Positions</div>
+<p class="font-caption text-caption text-c-text-subtle">1 under technical review, 1 shortlisted for final stage.</p>
+</div>
+<div class="p-4 rounded-xl bg-c-surface shadow-sm space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-muted">Telemetry &amp; Sync</span>
+<span class="material-symbols-outlined text-[18px] text-secondary">sync</span>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface">Device Synced</div>
+<p class="font-caption text-caption text-c-text-subtle">Local token validated. Recruiter state refresh triggered 10m ago.</p>
+</div>
+<div class="p-4 rounded-xl bg-c-surface shadow-sm space-y-2">
+<div class="flex items-center justify-between">
+<span class="font-overline text-overline uppercase tracking-wider text-c-text-muted">Process Integrity</span>
+<span class="material-symbols-outlined text-[18px] text-info-700">verified_user</span>
+</div>
+<div class="font-headline-md text-headline-md text-on-surface">RFC 9457 Compliant</div>
+<p class="font-caption text-caption text-c-text-subtle">All state transitions strictly signed and recorded to audit trail.</p>
+</div>
+</div>
+</div>
+<!-- GAP-01 Modal Dialog Envelope (max-w 520px per layout spec) -->
+<div aria-labelledby="gap-dialog-title" aria-modal="true" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-c-overlay hidden" id="dialog-gap01" role="dialog">
+<div class="w-full max-w-lg rounded-xl bg-c-surface shadow-xl overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+<div class="px-6 pt-6 pb-4 bg-c-surface-sunken flex items-start justify-between">
+<div class="space-y-1">
+<div class="flex items-center gap-1.5 font-overline text-overline uppercase tracking-wider text-c-accent-700">
+<span class="material-symbols-outlined text-[16px]">link</span>
+            Registry Sync Utility
+          </div>
+<h2 class="font-headline-sm text-headline-sm text-on-surface" id="gap-dialog-title">Add Application by ID</h2>
+</div>
+<button class="p-1 rounded-lg text-c-text-subtle hover:text-on-surface hover:bg-surface-container transition-colors" onclick="document.getElementById('dialog-gap01').classList.add('hidden')" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<div class="p-6 space-y-4">
+<p class="font-body-md text-body-md text-c-text-muted">
+          Enter the unique 36-character application identifier or short tracking reference (e.g. <span class="font-code-sm text-code-sm text-on-surface">app_8f29c4ba</span>) provided during application submission to link it to this browser session.
+        </p>
+<div class="space-y-1.5">
+<label class="block font-label-md text-label-md text-on-surface" for="app-id-input">Application Identifier</label>
+<input class="w-full px-3 py-2 rounded-lg font-code-sm text-code-sm bg-c-surface-sunken text-on-surface placeholder:text-c-text-subtle focus:bg-c-surface focus:outline-none transition-all" id="app-id-input" placeholder="e.g. app_9845-a71f-4bb2..." type="text"/>
+<span class="block font-caption text-caption text-c-text-subtle">Identifier is case-insensitive. Must be an active submission.</span>
+</div>
+<div class="p-3 rounded-lg bg-surface-container font-caption text-caption text-on-surface-variant flex items-start gap-2.5">
+<span class="material-symbols-outlined text-[18px] text-info-700 shrink-0 mt-0.5">shield</span>
+<span>Linking an ID pulls verifiable progression history from the primary database while preserving strict candidate confidentiality.</span>
+</div>
+</div>
+<div class="px-6 py-4 bg-c-surface-sunken flex items-center justify-end gap-3">
+<button class="px-4 py-2 rounded-xl font-label-md text-label-md bg-c-surface text-on-surface hover:bg-surface-container transition-colors" onclick="document.getElementById('dialog-gap01').classList.add('hidden')" type="button">
+          Cancel
+        </button>
+<button class="px-4 py-2 rounded-xl font-label-md text-label-md bg-primary text-on-primary hover:bg-c-primary-700 active:bg-c-primary-800 transition-colors shadow-sm" onclick="document.getElementById('dialog-gap01').classList.add('hidden')" type="button">
+          Track application
+        </button>
+</div>
+</div>
+</div>
+</div></main></div></body></html>

@@ -1,6 +1,7 @@
 package com.smarthire.application.api;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.smarthire.application.infra.JobClient;
 import com.smarthire.application.service.ApplicationForbiddenException;
 import com.smarthire.application.service.ApplicationNotFoundException;
 import com.smarthire.common.web.CorrelationId;
@@ -80,6 +81,16 @@ public class ApplicationExceptionHandler {
   public ProblemDetail handleIllegalArgument(
       IllegalArgumentException ex, HttpServletRequest request) {
     return problem(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+  }
+
+  @ExceptionHandler(JobClient.JobServiceUnavailableException.class)
+  public ProblemDetail handleJobServiceUnavailable(
+      JobClient.JobServiceUnavailableException ex, HttpServletRequest request) {
+    return problem(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        "Service Unavailable",
+        "Job service is temporarily unavailable. Please try again later.",
+        request);
   }
 
   @ExceptionHandler(com.smarthire.application.domain.IllegalApplicationStateException.class)

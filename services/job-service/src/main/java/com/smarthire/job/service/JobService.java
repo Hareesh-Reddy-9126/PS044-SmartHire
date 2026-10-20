@@ -1,5 +1,6 @@
 package com.smarthire.job.service;
 
+import com.smarthire.common.audit.AuditService;
 import com.smarthire.job.domain.Job;
 import com.smarthire.job.domain.JobStatus;
 import com.smarthire.job.infra.JobRepository;
@@ -49,7 +50,14 @@ public class JobService {
   public Job create(String companyName, String role, String location, UUID ownerOrgId) {
     requireOrg(ownerOrgId);
     Job job = Job.createDraft(UUID.randomUUID(), companyName, role, location, ownerOrgId);
-    return jobRepository.save(job);
+    Job saved = jobRepository.save(job);
+    AuditService.job(
+        AuditService.JobEvent.CREATE,
+        ownerOrgId,
+        saved.getJobId(),
+        AuditService.Outcome.SUCCESS,
+        null);
+    return saved;
   }
 
   /** Edits a job's descriptive fields. Ownership and status are not editable through this path. */
@@ -58,7 +66,10 @@ public class JobService {
       UUID jobId, String companyName, String role, String location, UUID callerOrgId) {
     Job job = loadOwned(jobId, callerOrgId);
     job.updateDetails(companyName, role, location);
-    return jobRepository.save(job);
+    Job saved = jobRepository.save(job);
+    AuditService.job(
+        AuditService.JobEvent.UPDATE, callerOrgId, jobId, AuditService.Outcome.SUCCESS, null);
+    return saved;
   }
 
   /** {@code DRAFT → OPEN} on a job owned by the caller's organization. */
@@ -66,7 +77,10 @@ public class JobService {
   public Job open(UUID jobId, UUID callerOrgId) {
     Job job = loadOwned(jobId, callerOrgId);
     job.open();
-    return jobRepository.save(job);
+    Job saved = jobRepository.save(job);
+    AuditService.job(
+        AuditService.JobEvent.OPEN, callerOrgId, jobId, AuditService.Outcome.SUCCESS, null);
+    return saved;
   }
 
   /** {@code OPEN → CLOSED} on a job owned by the caller's organization. */
@@ -74,7 +88,10 @@ public class JobService {
   public Job close(UUID jobId, UUID callerOrgId) {
     Job job = loadOwned(jobId, callerOrgId);
     job.close();
-    return jobRepository.save(job);
+    Job saved = jobRepository.save(job);
+    AuditService.job(
+        AuditService.JobEvent.CLOSE, callerOrgId, jobId, AuditService.Outcome.SUCCESS, null);
+    return saved;
   }
 
   /** {@code CLOSED → OPEN} on a job owned by the caller's organization. */
@@ -82,7 +99,10 @@ public class JobService {
   public Job reopen(UUID jobId, UUID callerOrgId) {
     Job job = loadOwned(jobId, callerOrgId);
     job.reopen();
-    return jobRepository.save(job);
+    Job saved = jobRepository.save(job);
+    AuditService.job(
+        AuditService.JobEvent.REOPEN, callerOrgId, jobId, AuditService.Outcome.SUCCESS, null);
+    return saved;
   }
 
   /**
@@ -126,6 +146,8 @@ public class JobService {
     requireOrg(callerOrgId);
     Job job = load(jobId);
     if (!job.isOwnedBy(callerOrgId)) {
+      AuditService.authorizationFailure(
+          "job", jobId, callerOrgId, "Organization does not own this job");
       throw new JobForbiddenException("This job belongs to another organization.");
     }
     return job;

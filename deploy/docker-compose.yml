@@ -1,4 +1,4 @@
-# SmartHire Inc 0 + Inc 1 + Inc 2 + Inc 3 — local demonstration stack.
+# SmartHire Inc 0 + Inc 1 + Inc 2 + Inc 3 + Inc 4 + Inc 5 — local demonstration stack.
 # Inc 0 proves: client → API gateway (8080) → Eureka discovery → job-service → GET /api/v1/jobs.
 # Inc 1 adds: auth-service (JWT issuance + JWKS) and Redis (refresh-token store + jti denylist),
 # with the gateway enforcing edge authentication, revocation and rate limiting (AC-1).
@@ -6,6 +6,8 @@
 # validation via OpenFeign (Application → Job inter-service communication).
 # Inc 3 adds: recruitment-service (interview + final status tracking) with Application Service
 # validation via OpenFeign (Recruitment → Application → Job inter-service chain).
+# Inc 4 adds: document-service (candidate document management) with local storage abstraction.
+# Inc 5 adds: notification-service (application status change notifications) with logging sender.
 #
 # Run from the repository root:
 #   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up --build
@@ -182,6 +184,74 @@ services:
       retries: 5
       start_period: 60s
 
+  document-service:
+    build:
+      context: ..
+      dockerfile: services/document-service/Dockerfile
+    environment:
+      # Inc-5: document-service uses the shared Postgres app user and creates its own
+      # document_svc schema via Flyway. Per-schema least-privilege DB users are deferred to Inc 5.
+      DOC_SVC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-smarthire}
+      DOC_SVC_DB_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in deploy/.env}
+      DOC_SVC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
+      EUREKA_SERVER_URL: http://service-registry:8761/eureka
+      # JWT verification uses auth-service JWKS directly (not lb://)
+      DOC_JWK_SET_URI: http://auth-service:8082/oauth2/jwks
+      AUTH_JWT_ISSUER: https://smarthire.local/auth
+      AUTH_JWT_AUDIENCE: smarthire
+      # Local filesystem storage (R1), on the document-data volume mounted in this service.
+      DOC_STORAGE_ROOT: /var/lib/smarthire/documents
+    # Not published to the host: reachable only via the gateway.
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8085/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    # Uploaded blobs live on a named volume: inside the container's writable layer they would be
+    # discarded by `docker compose down`, leaving metadata rows that point at nothing.
+    volumes:
+      - document-data:/var/lib/smarthire/documents
+
+  notification-service:
+    build:
+      context: ..
+      dockerfile: services/notification-service/Dockerfile
+    environment:
+      # Inc-5: notification-service uses the shared Postgres app user and creates its own
+      # notification_svc schema via Flyway. Per-schema least-privilege DB users are deferred to Inc 5.
+      NOTIF_SVC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-smarthire}
+      NOTIF_SVC_DB_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in deploy/.env}
+      NOTIF_SVC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
+      EUREKA_SERVER_URL: http://service-registry:8761/eureka
+      # JWT verification uses auth-service JWKS directly (not lb://)
+      NOTIF_JWK_SET_URI: http://auth-service:8082/oauth2/jwks
+      AUTH_JWT_ISSUER: https://smarthire.local/auth
+      AUTH_JWT_AUDIENCE: smarthire
+      # Notification sender configuration (R1: logging sender)
+      NOTIFICATION_SENDER_TYPE: logging
+    # Not published to the host: reachable only via the gateway and internal service communication.
+    depends_on:
+      postgres:
+        condition: service_healthy
+      service-registry:
+        condition: service_healthy
+      auth-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://localhost:8086/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+
   api-gateway:
     build:
       context: ..
@@ -208,9 +278,18 @@ services:
         condition: service_healthy
       recruitment-service:
         condition: service_healthy
+      document-service:
+        condition: service_healthy
+      notification-service:
+        condition: service_healthy
     healthcheck:
       test: ["CMD", "curl", "-fsS", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 5
       start_period: 60s
+
+volumes:
+  # Local blob storage for document-service (R1). A named volume so uploaded files outlive the
+  # container; replace with object storage when the platform leaves the single-host deployment.
+  document-data:

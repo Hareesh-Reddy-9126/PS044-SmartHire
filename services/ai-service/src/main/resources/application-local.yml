@@ -1,0 +1,32 @@
+# Local development profile for AI Service
+# Activates when 'local' profile is active: --spring.profiles.active=local
+
+spring:
+  datasource:
+    url: ${AI_SVC_DB_URL:jdbc:postgresql://localhost:5432/smarthire}
+    username: ${AI_SVC_DB_USER:postgres}
+    password: ${AI_SVC_DB_PASSWORD:postgres}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    properties:
+      hibernate:
+        default_schema: ai_svc
+
+smarthire:
+  ai:
+    jwt:
+      jwk-set-uri: ${AI_JWK_SET_URI:http://localhost:8082/oauth2/jwks}
+      issuer: ${AUTH_JWT_ISSUER:https://smarthire.local/auth}
+      audience: ${AUTH_JWT_AUDIENCE:smarthire}
+    enabled: true
+    provider: mock
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      show-details: always

@@ -5,6 +5,7 @@ import org.springframework.boot.context.properties.EnableConfigurationProperties
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.convert.converter.Converter;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
@@ -47,6 +48,12 @@ import reactor.core.publisher.Mono;
 @EnableConfigurationProperties(GatewaySecurityProperties.class)
 public class GatewaySecurityConfig {
 
+  private final Environment environment;
+
+  public GatewaySecurityConfig(Environment environment) {
+    this.environment = environment;
+  }
+
   @Bean
   public SecurityWebFilterChain securityWebFilterChain(
       ServerHttpSecurity http,
@@ -74,15 +81,25 @@ public class GatewaySecurityConfig {
                     .permitAll()
                     .pathMatchers("/actuator/health", "/actuator/health/**", "/actuator/info")
                     .permitAll()
+                    .pathMatchers(
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**",
+                        "/swagger-ui.html",
+                        "/webjars/swagger-ui/**",
+                        "/webjars/swagger-ui.html")
+                    .permitAll()
+                    // Prometheus metrics: only exposed in non-production profiles (local/dev)
+                    .pathMatchers("/actuator/prometheus")
+                    .access((authMono, ctx) -> isLocalOrDevProfile())
                     .anyExchange()
                     .authenticated())
         .oauth2ResourceServer(
             oauth2 ->
                 oauth2
-                    .jwt(jwt ->
-                        jwt
-                            .jwtAuthenticationConverter(jwtAuthenticationConverter)
-                            .jwtDecoder(jwtDecoder))
+                    .jwt(
+                        jwt ->
+                            jwt.jwtAuthenticationConverter(jwtAuthenticationConverter)
+                                .jwtDecoder(jwtDecoder))
                     .authenticationEntryPoint(authenticationEntryPoint)
                     .accessDeniedHandler(accessDeniedHandler))
         .exceptionHandling(
@@ -91,6 +108,17 @@ public class GatewaySecurityConfig {
                     .accessDeniedHandler(accessDeniedHandler))
         .addFilterAfter(revocationFilter, SecurityWebFiltersOrder.AUTHENTICATION);
     return http.build();
+  }
+
+  /**
+   * Returns an authorization decision that permits access only when a local/development profile is
+   * active. In production, /actuator/prometheus requires explicit configuration override.
+   */
+  private Mono<org.springframework.security.authorization.AuthorizationDecision>
+      isLocalOrDevProfile() {
+    return Mono.just(
+        new org.springframework.security.authorization.AuthorizationDecision(
+            environment.acceptsProfiles(org.springframework.core.env.Profiles.of("local", "dev"))));
   }
 
   /**

@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_blank" name="shell-type"/><title>SmartHire Authentication</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"danger-800":"#6B1616","surface-container":"#f3edea","primary-fixed-dim":"#bbc3ff","secondary-fixed-dim":"#7cd5d3","on-primary-container":"#b5beff","error":"#ba1a1a","warning-200":"#F2DCA8","success-200":"#B7DEC6","c-surface-sunken":"#F4F2F0","info-600":"#1E5EA8","tertiary-fixed":"#dee0ff","surface-tint":"#4d59a1","surface-bright":"#fef8f6","error-container":"#ffdad6","c-primary-800":"#252C5A","tertiary":"#25327b","secondary":"#006a69","outline":"#767682","warning-50":"#FDF3E0","surface-container-highest":"#e7e1df","surface-variant":"#e7e1df","surface-container-low":"#f9f2f0","primary-fixed":"#dee0ff","c-primary-300":"#9BA4D4","warning-800":"#5E3D00","on-tertiary":"#ffffff","c-primary-100":"#DCE0F0","on-tertiary-container":"#b6beff","danger-200":"#F0C2C2","primary-container":"#3e4a91","info-50":"#E8F0FA","on-secondary-container":"#00706f","on-primary-fixed":"#01105b","on-secondary-fixed-variant":"#00504f","on-primary":"#ffffff","on-error":"#ffffff","c-overlay":"rgba(28, 26, 25, 0.48)","surface":"#fef8f6","c-border-strong":"#CBC5BF","danger-500":"#C53030","on-secondary-fixed":"#002020","on-error-container":"#93000a","warning-600":"#8A5A00","secondary-fixed":"#98f2f0","c-bg":"#FBFAF9","inverse-on-surface":"#f6efed","tertiary-container":"#3e4a94","on-secondary":"#ffffff","on-tertiary-fixed":"#000f5d","success-50":"#E7F4EC","outline-variant":"#c6c5d2","on-background":"#1d1b1a","surface-container-lowest":"#ffffff","background":"#fef8f6","c-accent-50":"#E6F2F2","on-tertiary-fixed-variant":"#34408a","c-text-subtle":"#928C86","on-surface":"#1d1b1a","danger-700":"#841C1C","c-primary-50":"#EEF0F8","inverse-surface":"#32302f","c-text-muted":"#6B6560","c-surface":"#FFFFFF","c-primary-700":"#313A75","on-primary-fixed-variant":"#354187","on-surface-variant":"#454651","c-primary-900":"#1A1F40","info-200":"#BBD3EF","inverse-primary":"#bbc3ff","danger-50":"#FBEAEA","success-600":"#1A6B3C","success-700":"#145430","c-border":"#E3DFDB","info-700":"#174A85","danger-600":"#A32424","secondary-container":"#98f2f0","primary":"#263278","tertiary-fixed-dim":"#bbc3ff","surface-dim":"#dfd9d7","surface-container-high":"#ede7e5","c-accent-700":"#0A5F5E"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xl":"1.5rem","margin-mobile":"1rem","space-xs":"0.25rem","space-3xl":"4rem","gutter":"1.5rem","space-sm":"0.5rem","margin":"1.5rem","space-lg":"1rem","space-2xl":"2rem","gutter-mobile":"1rem","space-md":"0.75rem"},"fontFamily":{"headline-sm":["Inter"],"overline":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"],"display":["Inter"],"body-strong":["Inter"],"code-sm":["JetBrains Mono"],"caption":["Inter"],"body-md":["Inter"],"body-lg":["Inter"],"label-md":["Inter"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"600"}],"overline":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"display":["30px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-strong":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"500"}],"code-sm":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"400"}],"caption":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"600"}]}}}</script></head><body class="bg-c-bg font-body-md text-on-surface antialiased min-h-screen flex flex-col justify-between"><header class="w-full py-space-xl flex flex-col items-center justify-center"><a class="flex items-center gap-space-sm" data-path="browse-jobs" href="#"><img alt="SmartHire Brand Logo" class="h-9 w-auto object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VVWUOqmiAQdkmhpWVXgXYXyzwtWUUVsNpnnCJtyZkNSTvikns_spHQheNmh3URSDnLXg6HPtIq09RU9abGN6_tlaaI91pCxCp7pHXSRUQVJnqJwtiHAA1N6WpgTCBgteHg27dQl0s3d6g8ZrDNqr2RgmnsQfE033NaALmTFoZwfMZ93oazdz8ncIWgnf4MrDcNH_UHs6FSIyGF3TIq6F-nIa5h2L4WaI_Vymu4RvBUQnNwHSsrrwIPlHg"/><span class="font-headline-md text-headline-md text-c-primary-900 tracking-tight">SmartHire</span></a><span class="font-caption text-caption text-c-text-muted mt-1">Employment Decision Architecture</span></header><main class="flex-1 flex items-center justify-center px-margin-mobile sm:px-margin py-space-lg w-full max-w-xl mx-auto"><div class="flex flex-col w-full items-center justify-center">
+<!-- Auth Envelope Card: Constrained to 440px per specification -->
+<div class="w-full max-w-[440px] bg-c-surface rounded-xl shadow-md p-space-xl sm:p-space-2xl relative">
+<!-- Wordmark & Logo Section -->
+<div class="flex flex-col items-center text-center mb-space-xl">
+<div class="h-12 w-12 rounded-lg bg-c-primary-50 flex items-center justify-center p-2 mb-space-sm shadow-sm">
+<img alt="SmartHire Brand Logo" class="w-8 h-8 object-contain" src="https://lh3.googleusercontent.com/aida/AEtjO1VVWUOqmiAQdkmhpWVXgXYXyzwtWUUVsNpnnCJtyZkNSTvikns_spHQheNmh3URSDnLXg6HPtIq09RU9abGN6_tlaaI91pCxCp7pHXSRUQVJnqJwtiHAA1N6WpgTCBgteHg27dQl0s3d6g8ZrDNqr2RgmnsQfE033NaALmTFoZwfMZ93oazdz8ncIWgnf4MrDcNH_UHs6FSIyGF3TIq6F-nIa5h2L4WaI_Vymu4RvBUQnNwHSsrrwIPlHg"/>
+</div>
+<div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-c-primary-50 text-c-primary-700 font-overline text-overline uppercase tracking-wider mb-2">
+<span class="w-1.5 h-1.5 rounded-full bg-c-primary-700"></span>
+        Candidate Registration
+      </div>
+<h1 class="font-headline-lg text-headline-lg text-c-primary-900 tracking-tight">Create your candidate account</h1>
+<p class="font-caption text-caption text-c-text-muted mt-1 max-w-[360px] leading-relaxed">
+        Recruiter and administrator accounts are provisioned by your administrator.
+      </p>
+</div>
+<!-- Registration Form -->
+<form class="flex flex-col gap-space-lg" id="register-form" novalidate="" onsubmit="return handleFormSubmit(event)">
+<!-- Field 1: Email Address -->
+<div class="flex flex-col">
+<div class="flex justify-between items-center mb-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="email">Email address <span class="text-danger-500">*</span></label>
+</div>
+<div class="relative">
+<input class="w-full h-10 px-3.5 bg-surface-bright rounded-lg font-body-md text-body-md text-on-surface placeholder:text-c-text-subtle transition-all duration-150 outline-none focus:bg-c-surface shadow-sm" id="email" name="email" onblur="this.style.boxShadow='inset 0 0 0 1px #E3DFDB'" onfocus="this.style.boxShadow='inset 0 0 0 2px #3E4A91'" placeholder="name@organization.com" required="" style="box-shadow: inset 0 0 0 1px #E3DFDB;" type="email"/>
+</div>
+<p class="font-caption text-caption text-c-text-muted mt-1.5 flex items-center gap-1">
+<span class="material-symbols-outlined text-caption text-c-text-subtle" style="font-size: 14px;">info</span>
+          Used for login and hiring status updates.
+        </p>
+</div>
+<!-- Field 2: Password -->
+<div class="flex flex-col">
+<div class="flex justify-between items-center mb-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="password">Password <span class="text-danger-500">*</span></label>
+</div>
+<div class="relative">
+<input class="w-full h-10 pl-3.5 pr-11 bg-surface-bright rounded-lg font-body-md text-body-md text-on-surface placeholder:text-c-text-subtle transition-all duration-150 outline-none focus:bg-c-surface shadow-sm" id="password" name="password" onblur="this.style.boxShadow='inset 0 0 0 1px #E3DFDB'" onfocus="this.style.boxShadow='inset 0 0 0 2px #3E4A91'" oninput="validatePassword(this.value)" placeholder="••••••••••••" required="" style="box-shadow: inset 0 0 0 1px #E3DFDB;" type="password"/>
+<button aria-label="Toggle password visibility" class="absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-c-text-subtle hover:text-c-primary-900 transition-colors" id="toggle-password-btn" onclick="togglePasswordVisibility('password', 'toggle-password-btn')" type="button">
+<span class="material-symbols-outlined" style="font-size: 18px;">visibility</span>
+</button>
+</div>
+<!-- Live Rule Checklist Component -->
+<div class="mt-2.5 p-3 rounded-lg bg-c-surface-sunken flex flex-col gap-2">
+<!-- Primary Enforced Server Rule -->
+<div class="pb-2" style="box-shadow: 0 1px 0 0 #E3DFDB;">
+<div class="flex items-center gap-2 text-c-text-muted transition-colors duration-150" id="rule-length">
+<span class="material-symbols-outlined text-caption" id="icon-length" style="font-size: 16px;">radio_button_unchecked</span>
+<span class="font-body-strong text-body-strong text-c-primary-900 tracking-tight flex items-center gap-1.5">
+                At least 12 characters
+                <span class="font-overline text-[10px] uppercase px-1.5 py-0.2 rounded bg-c-primary-100 text-c-primary-800 font-semibold tracking-wider">Required</span>
+</span>
+</div>
+</div>
+<!-- Secondary Advisory Suggestions -->
+<div class="flex flex-col gap-1.5 pt-0.5">
+<span class="font-overline text-[10px] uppercase text-c-text-subtle tracking-wider font-semibold">Security Recommendations</span>
+<div class="flex items-center gap-2 text-c-text-muted transition-colors duration-150" id="rule-casing">
+<span class="material-symbols-outlined text-caption" id="icon-casing" style="font-size: 15px;">remove</span>
+<span class="font-caption text-caption">Includes uppercase &amp; lowercase letters</span>
+</div>
+<div class="flex items-center gap-2 text-c-text-muted transition-colors duration-150" id="rule-number">
+<span class="material-symbols-outlined text-caption" id="icon-number" style="font-size: 15px;">remove</span>
+<span class="font-caption text-caption">Includes a number (0-9)</span>
+</div>
+<div class="flex items-center gap-2 text-c-text-muted transition-colors duration-150" id="rule-symbol">
+<span class="material-symbols-outlined text-caption" id="icon-symbol" style="font-size: 15px;">remove</span>
+<span class="font-caption text-caption">Includes a special symbol (!@#$%^&amp;*)</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Field 3: Confirm Password -->
+<div class="flex flex-col">
+<div class="flex justify-between items-center mb-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="confirm-password">Confirm password <span class="text-danger-500">*</span></label>
+</div>
+<div class="relative">
+<input class="w-full h-10 pl-3.5 pr-11 bg-surface-bright rounded-lg font-body-md text-body-md text-on-surface placeholder:text-c-text-subtle transition-all duration-150 outline-none focus:bg-c-surface shadow-sm" id="confirm-password" name="confirm-password" onblur="this.style.boxShadow='inset 0 0 0 1px #E3DFDB'" onfocus="this.style.boxShadow='inset 0 0 0 2px #3E4A91'" oninput="validateMatch()" placeholder="••••••••••••" required="" style="box-shadow: inset 0 0 0 1px #E3DFDB;" type="password"/>
+<button aria-label="Toggle confirm password visibility" class="absolute right-0 top-0 h-10 w-10 flex items-center justify-center text-c-text-subtle hover:text-c-primary-900 transition-colors" id="toggle-confirm-btn" onclick="togglePasswordVisibility('confirm-password', 'toggle-confirm-btn')" type="button">
+<span class="material-symbols-outlined" style="font-size: 18px;">visibility</span>
+</button>
+</div>
+<div class="mt-1.5 font-caption text-caption text-c-text-subtle flex items-center gap-1.5 min-h-[16px]" id="match-status">
+<!-- Dynamic JS state indicator will render here -->
+</div>
+</div>
+<!-- Informational Callout -->
+<div class="p-3 rounded-lg bg-c-primary-50 flex items-start gap-2.5">
+<span class="material-symbols-outlined text-primary-container shrink-0 mt-0.5" style="font-size: 18px;">verified_user</span>
+<p class="font-caption text-caption text-c-primary-900 leading-normal">
+          By signing up, you gain access to browse open roles, track application statuses, and manage your credentials.
+        </p>
+</div>
+<!-- Submit Action -->
+<button class="w-full h-12 rounded-lg bg-primary-container hover:bg-c-primary-700 active:bg-c-primary-800 text-on-primary font-headline-sm text-[15px] font-semibold tracking-wide flex items-center justify-center gap-2 shadow-sm transition-all duration-150 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed" id="submit-btn" type="submit">
+<span>Create account</span>
+<span class="material-symbols-outlined" style="font-size: 18px;">arrow_forward</span>
+</button>
+</form>
+<!-- Redirection Link Section -->
+<div class="mt-space-xl pt-space-lg text-center" style="box-shadow: 0 -1px 0 0 #E3DFDB;">
+<p class="font-body-md text-body-md text-c-text-muted">
+        Already have an account? 
+        <a class="inline-flex items-center gap-1 font-body-strong text-body-strong text-primary-container hover:text-c-primary-900 hover:underline transition-colors ml-1" data-path="login" href="#">
+<span>Sign in</span>
+<span class="material-symbols-outlined" style="font-size: 14px;">arrow_right_alt</span>
+</a>
+</p>
+</div>
+</div>
+<!-- System Governance Footnote -->
+<div class="mt-space-lg flex items-center justify-center gap-2 text-c-text-subtle font-overline text-[11px] uppercase tracking-wider">
+<span class="material-symbols-outlined" style="font-size: 14px;">lock</span>
+<span>Role Level: Candidate (Self-Service) • Verified Zero-Trust Vault</span>
+</div>
+</div>
+<script>
+  function togglePasswordVisibility(fieldId, btnId) {
+    const input = document.getElementById(fieldId);
+    const btn = document.getElementById(btnId);
+    const icon = btn.querySelector('.material-symbols-outlined');
+    if (!input || !icon) return;
+    
+    if (input.type === 'password') {
+      input.type = 'text';
+      icon.textContent = 'visibility_off';
+      btn.classList.add('text-primary-container');
+    } else {
+      input.type = 'password';
+      icon.textContent = 'visibility';
+      btn.classList.remove('text-primary-container');
+    }
+  }
+
+  function validatePassword(pwd) {
+    // 1. Mandatory Server Rule: >= 12 chars
+    const lengthValid = pwd.length >= 12;
+    const ruleLength = document.getElementById('rule-length');
+    const iconLength = document.getElementById('icon-length');
+    
+    if (lengthValid) {
+      ruleLength.className = 'flex items-center gap-2 text-success-700 transition-colors duration-150';
+      iconLength.textContent = 'check_circle';
+      iconLength.className = 'material-symbols-outlined text-caption text-success-600';
+      iconLength.style.fontVariationSettings = "'FILL' 1";
+    } else {
+      ruleLength.className = 'flex items-center gap-2 text-c-text-muted transition-colors duration-150';
+      iconLength.textContent = 'radio_button_unchecked';
+      iconLength.className = 'material-symbols-outlined text-caption';
+      iconLength.style.fontVariationSettings = "'FILL' 0";
+    }
+
+    // 2. Advisory: Upper & Lower
+    const casingValid = /[a-z]/.test(pwd) && /[A-Z]/.test(pwd);
+    updateAdvisory('rule-casing', 'icon-casing', casingValid);
+
+    // 3. Advisory: Number
+    const numberValid = /[0-9]/.test(pwd);
+    updateAdvisory('rule-number', 'icon-number', numberValid);
+
+    // 4. Advisory: Symbol
+    const symbolValid = /[^A-Za-z0-9]/.test(pwd);
+    updateAdvisory('rule-symbol', 'icon-symbol', symbolValid);
+
+    validateMatch();
+  }
+
+  function updateAdvisory(elementId, iconId, isValid) {
+    const el = document.getElementById(elementId);
+    const icon = document.getElementById(iconId);
+    if (!el || !icon) return;
+
+    if (isValid) {
+      el.className = 'flex items-center gap-2 text-secondary font-medium transition-colors duration-150';
+      icon.textContent = 'check';
+      icon.className = 'material-symbols-outlined text-caption text-secondary';
+    } else {
+      el.className = 'flex items-center gap-2 text-c-text-muted transition-colors duration-150';
+      icon.textContent = 'remove';
+      icon.className = 'material-symbols-outlined text-caption text-c-text-subtle';
+    }
+  }
+
+  function validateMatch() {
+    const pwd = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm-password').value;
+    const statusContainer = document.getElementById('match-status');
+    const confirmInput = document.getElementById('confirm-password');
+
+    if (!confirm) {
+      statusContainer.innerHTML = '';
+      confirmInput.style.boxShadow = 'inset 0 0 0 1px #E3DFDB';
+      return false;
+    }
+
+    if (pwd === confirm) {
+      statusContainer.innerHTML = '<span class="material-symbols-outlined text-success-600" style="font-size: 15px;">check_circle</span><span class="text-success-700 font-body-strong">Passwords match</span>';
+      confirmInput.style.boxShadow = 'inset 0 0 0 1px #1A6B3C';
+      return true;
+    } else {
+      statusContainer.innerHTML = '<span class="material-symbols-outlined text-danger-500" style="font-size: 15px;">cancel</span><span class="text-danger-600 font-body-strong">Passwords do not match</span>';
+      confirmInput.style.boxShadow = 'inset 0 0 0 1px #C53030';
+      return false;
+    }
+  }
+
+  function handleFormSubmit(event) {
+    event.preventDefault();
+    const pwd = document.getElementById('password').value;
+    const confirm = document.getElementById('confirm-password').value;
+    const email = document.getElementById('email').value;
+
+    if (!email || !email.includes('@')) {
+      document.getElementById('email').focus();
+      return false;
+    }
+
+    if (pwd.length < 12) {
+      document.getElementById('password').focus();
+      return false;
+    }
+
+    if (pwd !== confirm) {
+      document.getElementById('confirm-password').focus();
+      return false;
+    }
+
+    const btn = document.getElementById('submit-btn');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="material-symbols-outlined animate-spin" style="font-size: 18px;">progress_activity</span><span>Registering account...</span>';
+    
+    setTimeout(() => {
+      btn.innerHTML = '<span class="material-symbols-outlined" style="font-size: 18px;">check</span><span>Account Created</span>';
+      btn.className = btn.className.replace('bg-primary-container', 'bg-success-600');
+    }, 1000);
+
+    return false;
+  }
+</script></main><footer class="py-space-lg text-center font-caption text-caption text-c-text-subtle"><p>© 2024 SmartHire Core Engine • RFC 9457 Compliant Service Interface</p></footer></body></html>

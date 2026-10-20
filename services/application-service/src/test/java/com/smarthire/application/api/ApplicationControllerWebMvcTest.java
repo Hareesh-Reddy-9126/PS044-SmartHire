@@ -6,6 +6,7 @@ import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -13,6 +14,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smarthire.application.api.dto.ApplicationCreateRequest;
+import com.smarthire.application.api.dto.ApplicationStatusUpdateRequest;
 import com.smarthire.application.domain.Application;
 import com.smarthire.application.domain.ApplicationStatus;
 import com.smarthire.application.infra.JobClient;
@@ -308,6 +310,289 @@ class ApplicationControllerWebMvcTest {
     @Test
     void unauthenticatedReturns401() throws Exception {
       mvc.perform(post("/api/v1/applications/{applicationId}/withdraw", APPLICATION_ID))
+          .andExpect(status().isUnauthorized());
+    }
+  }
+
+  // ---------------------------------------------------------------- PATCH
+  // /applications/{id}/status
+
+  @Nested
+  class UpdateApplicationStatus {
+
+    @Test
+    void recruiterCanMoveAppliedToUnderReview() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.UNDER_REVIEW);
+      Application app = application(ApplicationStatus.UNDER_REVIEW);
+      when(applicationService.updateStatus(
+              APPLICATION_ID, ApplicationStatus.UNDER_REVIEW, ORG_ID, false))
+          .thenReturn(app);
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.status").value("UNDER_REVIEW"));
+    }
+
+    @Test
+    void recruiterCanMoveUnderReviewToShortlisted() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.SHORTLISTED);
+      Application app = application(ApplicationStatus.SHORTLISTED);
+      when(applicationService.updateStatus(
+              APPLICATION_ID, ApplicationStatus.SHORTLISTED, ORG_ID, false))
+          .thenReturn(app);
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.status").value("SHORTLISTED"));
+    }
+
+    @Test
+    void recruiterCanMoveShortlistedToHired() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.HIRED);
+      Application app = application(ApplicationStatus.HIRED);
+      when(applicationService.updateStatus(APPLICATION_ID, ApplicationStatus.HIRED, ORG_ID, false))
+          .thenReturn(app);
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.status").value("HIRED"));
+    }
+
+    @Test
+    void recruiterCanMoveShortlistedToRejected() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.REJECTED);
+      Application app = application(ApplicationStatus.REJECTED);
+      when(applicationService.updateStatus(
+              APPLICATION_ID, ApplicationStatus.REJECTED, ORG_ID, false))
+          .thenReturn(app);
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.status").value("REJECTED"));
+    }
+
+    @Test
+    void adminCanUpdateAnyApplication() throws Exception {
+      givenToken(ADMIN);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.UNDER_REVIEW);
+      Application app = application(ApplicationStatus.UNDER_REVIEW);
+      when(applicationService.updateStatus(
+              APPLICATION_ID, ApplicationStatus.UNDER_REVIEW, null, true))
+          .thenReturn(app);
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + ADMIN)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.status").value("UNDER_REVIEW"));
+    }
+
+    @Test
+    void recruiterFromWrongOrgCannotUpdate() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.UNDER_REVIEW);
+      when(applicationService.updateStatus(
+              APPLICATION_ID, ApplicationStatus.UNDER_REVIEW, ORG_ID, false))
+          .thenThrow(
+              new ApplicationForbiddenException(
+                  "Recruiter does not own the job for this application."));
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isForbidden())
+          .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+          .andExpect(jsonPath("$.title").value("Forbidden"))
+          .andExpect(jsonPath("$.status").value(403));
+    }
+
+    @Test
+    void candidateCannotUpdateStatus() throws Exception {
+      givenToken(CANDIDATE);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.UNDER_REVIEW);
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + CANDIDATE)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void cannotSkipToShortlisted() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.SHORTLISTED);
+      when(applicationService.updateStatus(
+              APPLICATION_ID, ApplicationStatus.SHORTLISTED, ORG_ID, false))
+          .thenThrow(
+              new com.smarthire.application.domain.IllegalApplicationStateException(
+                  "Only an UNDER_REVIEW application can be shortlisted; this application is APPLIED.",
+                  ApplicationStatus.APPLIED,
+                  "shortlist"));
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isConflict())
+          .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+          .andExpect(jsonPath("$.title").value("Illegal State Transition"))
+          .andExpect(jsonPath("$.status").value(409))
+          .andExpect(jsonPath("$.currentStatus").value("APPLIED"))
+          .andExpect(jsonPath("$.attemptedAction").value("shortlist"));
+    }
+
+    @Test
+    void cannotSkipToHired() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.HIRED);
+      when(applicationService.updateStatus(APPLICATION_ID, ApplicationStatus.HIRED, ORG_ID, false))
+          .thenThrow(
+              new com.smarthire.application.domain.IllegalApplicationStateException(
+                  "Only a SHORTLISTED application can be hired; this application is APPLIED.",
+                  ApplicationStatus.APPLIED,
+                  "hire"));
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isConflict())
+          .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+          .andExpect(jsonPath("$.title").value("Illegal State Transition"))
+          .andExpect(jsonPath("$.status").value(409));
+    }
+
+    @Test
+    void cannotTransitionToApplied() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.APPLIED);
+      when(applicationService.updateStatus(
+              APPLICATION_ID, ApplicationStatus.APPLIED, ORG_ID, false))
+          .thenThrow(
+              new com.smarthire.application.domain.IllegalApplicationStateException(
+                  "Cannot transition to APPLIED via recruiter-driven update",
+                  ApplicationStatus.APPLIED,
+                  "updateStatus"));
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isConflict())
+          .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+          .andExpect(jsonPath("$.title").value("Illegal State Transition"))
+          .andExpect(jsonPath("$.status").value(409));
+    }
+
+    @Test
+    void cannotTransitionToWithdrawn() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.WITHDRAWN);
+      when(applicationService.updateStatus(
+              APPLICATION_ID, ApplicationStatus.WITHDRAWN, ORG_ID, false))
+          .thenThrow(
+              new com.smarthire.application.domain.IllegalApplicationStateException(
+                  "Cannot transition to WITHDRAWN via recruiter-driven update",
+                  ApplicationStatus.APPLIED,
+                  "updateStatus"));
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isConflict())
+          .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+          .andExpect(jsonPath("$.title").value("Illegal State Transition"))
+          .andExpect(jsonPath("$.status").value(409));
+    }
+
+    @Test
+    void cannotTransitionHiredToRejected() throws Exception {
+      givenToken(RECRUITER);
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.REJECTED);
+      when(applicationService.updateStatus(
+              APPLICATION_ID, ApplicationStatus.REJECTED, ORG_ID, false))
+          .thenThrow(
+              new com.smarthire.application.domain.IllegalApplicationStateException(
+                  "Only a SHORTLISTED application can be rejected; this application is HIRED.",
+                  ApplicationStatus.HIRED,
+                  "reject"));
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isConflict())
+          .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+          .andExpect(jsonPath("$.title").value("Illegal State Transition"))
+          .andExpect(jsonPath("$.status").value(409));
+    }
+
+    @Test
+    void invalidRequestBodyReturns400() throws Exception {
+      givenToken(RECRUITER);
+      String invalidJson = "{}";
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .header("Authorization", "Bearer " + RECRUITER)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(invalidJson))
+          .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void unauthenticatedReturns401() throws Exception {
+      ApplicationStatusUpdateRequest request =
+          new ApplicationStatusUpdateRequest(ApplicationStatus.UNDER_REVIEW);
+
+      mvc.perform(
+              patch("/api/v1/applications/{applicationId}/status", APPLICATION_ID)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
           .andExpect(status().isUnauthorized());
     }
   }

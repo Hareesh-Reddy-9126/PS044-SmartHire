@@ -28,6 +28,9 @@
     <module>services/auth-service</module>
     <module>services/application-service</module>
     <module>services/recruitment-service</module>
+    <module>services/document-service</module>
+    <module>services/notification-service</module>
+    <module>services/ai-service</module>
   </modules>
 
   <properties>
@@ -49,6 +52,8 @@
          plugin bundles; used for targeted @SuppressFBWarnings (compile-only, provided scope). -->
     <spotbugs-annotations.version>4.8.6</spotbugs-annotations.version>
     <dependency-check.version>10.0.4</dependency-check.version>
+    <springdoc-openapi.version>2.8.0</springdoc-openapi.version>
+    <micrometer.version>1.13.4</micrometer.version>
   </properties>
 
   <dependencyManagement>
@@ -66,6 +71,30 @@
         <groupId>com.smarthire</groupId>
         <artifactId>smarthire-common</artifactId>
         <version>${project.version}</version>
+      </dependency>
+      <!-- Springdoc OpenAPI for API documentation (Inc 5). -->
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        <version>${springdoc-openapi.version}</version>
+      </dependency>
+      <!-- Springdoc OpenAPI for reactive WebFlux gateway (Inc 5). -->
+      <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webflux-ui</artifactId>
+        <version>${springdoc-openapi.version}</version>
+      </dependency>
+      <!-- Micrometer Prometheus for metrics export (observability). -->
+      <dependency>
+        <groupId>io.micrometer</groupId>
+        <artifactId>micrometer-registry-prometheus</artifactId>
+        <version>${micrometer.version}</version>
+      </dependency>
+      <!-- Logstash Logback Encoder for structured JSON logging (observability). -->
+      <dependency>
+        <groupId>net.logstash.logback</groupId>
+        <artifactId>logstash-logback-encoder</artifactId>
+        <version>8.0</version>
       </dependency>
       <!-- ArchUnit is not in the Spring BOM; pin it here (governance §46). -->
       <dependency>
@@ -152,6 +181,17 @@
       <plugin>
         <groupId>com.github.spotbugs</groupId>
         <artifactId>spotbugs-maven-plugin</artifactId>
+      </plugin>
+
+      <!-- Compiler: include parameter names for Jackson record deserialization (JEP 118). -->
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-compiler-plugin</artifactId>
+        <version>3.13.0</version>
+        <configuration>
+          <release>${maven.compiler.release}</release>
+          <parameters>true</parameters>
+        </configuration>
       </plugin>
 
       <!-- Surefire (unit) + Failsafe (integration, *IT) with ByteBuddy experimental flag so

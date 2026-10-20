@@ -1,9 +1,16 @@
 package com.smarthire.application.service;
 
 import com.smarthire.application.domain.Application;
+import com.smarthire.application.domain.ApplicationStatus;
+import com.smarthire.application.domain.IllegalApplicationStateException;
 import com.smarthire.application.infra.ApplicationRepository;
 import com.smarthire.application.infra.JobClient;
+import com.smarthire.application.infra.NotificationClient;
+import com.smarthire.common.audit.AuditService;
+import com.smarthire.common.contract.notification.ApplicationStatusChangeRequest;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -31,12 +38,19 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class ApplicationService {
 
+  private static final Logger log = LoggerFactory.getLogger(ApplicationService.class);
+
   private final ApplicationRepository applicationRepository;
   private final JobClient jobClient;
+  private final NotificationClient notificationClient;
 
-  public ApplicationService(ApplicationRepository applicationRepository, JobClient jobClient) {
+  public ApplicationService(
+      ApplicationRepository applicationRepository,
+      JobClient jobClient,
+      NotificationClient notificationClient) {
     this.applicationRepository = applicationRepository;
     this.jobClient = jobClient;
+    this.notificationClient = notificationClient;
   }
 
   /**
@@ -66,7 +80,14 @@ public class ApplicationService {
 
     Application application =
         Application.createApplied(UUID.randomUUID(), jobId, candidateId, resumeLink);
-    return applicationRepository.save(application);
+    Application saved = applicationRepository.save(application);
+    AuditService.application(
+        AuditService.ApplicationEvent.CREATE,
+        candidateId,
+        saved.getApplicationId(),
+        AuditService.Outcome.SUCCESS,
+        "jobId=" + jobId);
+    return saved;
   }
 
   /**
@@ -123,35 +144,139 @@ public class ApplicationService {
   public Application withdraw(UUID applicationId, UUID callerCandidateId) {
     Application application = loadOwned(applicationId, callerCandidateId);
     application.withdraw();
-    return applicationRepository.save(application);
+    Application saved = applicationRepository.save(application);
+    AuditService.application(
+        AuditService.ApplicationEvent.WITHDRAW,
+        callerCandidateId,
+        applicationId,
+        AuditService.Outcome.SUCCESS,
+        null);
+    return saved;
+  }
+
+  /**
+   * Recruiter or ADMIN updates an application's status (recruiter-driven transitions).
+   *
+   * <p>Allowed transitions:
+   *
+   * <ul>
+   *   <li>APPLIED → UNDER_REVIEW
+   *   <li>UNDER_REVIEW → SHORTLISTED
+   *   <li>SHORTLISTED → HIRED
+   *   <li>SHORTLISTED → REJECTED
+   * </ul>
+   *
+   * <p>Authorization:
+   *
+   * <ul>
+   *   <li>RECRUITER must belong to the organization that owns the job associated with the
+   *       application
+   *   <li>ADMIN can update any application
+   *   <li>CANDIDATE cannot update status (use withdraw instead)
+   * </ul>
+   *
+   * <p>After persisting the status change, triggers a notification via Notification Service for
+   * statuses UNDER_REVIEW, SHORTLISTED, HIRED, REJECTED. Notification delivery is best-effort and
+   * does not roll back the application status transition on failure.
+   *
+   * @param applicationId the application to update
+   * @param newStatus the target status
+   * @param callerOrgId the org UUID from JWT (null if not a recruiter)
+   * @param isAdmin whether the caller has ADMIN role
+   * @return the updated application
+   * @throws ApplicationNotFoundException if not found
+   * @throws ApplicationForbiddenException if caller lacks access
+   * @throws IllegalApplicationStateException if illegal transition
+   */
+  @Transactional
+  public Application updateStatus(
+      UUID applicationId, ApplicationStatus newStatus, UUID callerOrgId, boolean isAdmin) {
+    Application application = load(applicationId);
+
+    if (!isAdmin) {
+      // Recruiter must own the job
+      if (callerOrgId == null) {
+        throw new ApplicationForbiddenException(
+            "Recruiter must have an organization to update application status.");
+      }
+      JobClient.JobResponse job;
+      try {
+        job = jobClient.getJob(application.getJobId());
+      } catch (feign.FeignException.NotFound e) {
+        throw new ApplicationNotFoundException("Job not found for application: " + applicationId);
+      }
+      if (!callerOrgId.equals(job.ownerOrgId())) {
+        AuditService.authorizationFailure(
+            "application",
+            applicationId,
+            callerOrgId,
+            "Recruiter does not own the job for this application");
+        throw new ApplicationForbiddenException(
+            "Recruiter does not own the job for this application.");
+      }
+    }
+
+    // Apply the transition
+    String oldStatus = application.getStatus().name();
+    switch (newStatus) {
+      case UNDER_REVIEW -> application.moveToUnderReview();
+      case SHORTLISTED -> application.shortlist();
+      case HIRED -> application.hire();
+      case REJECTED -> application.reject();
+      case APPLIED, WITHDRAWN ->
+          throw new IllegalApplicationStateException(
+              "Cannot transition to "
+                  + newStatus
+                  + " via recruiter-driven update; this application is "
+                  + application.getStatus()
+                  + ".",
+              application.getStatus(),
+              "updateStatus");
+      default -> throw new IllegalArgumentException("Unknown status: " + newStatus);
+    }
+
+    // Persist the status change
+    Application savedApplication = applicationRepository.save(application);
+
+    // Audit the status change
+    AuditService.application(
+        AuditService.ApplicationEvent.STATUS_CHANGE,
+        isAdmin ? null : callerOrgId,
+        applicationId,
+        AuditService.Outcome.SUCCESS,
+        "oldStatus=" + oldStatus + ",newStatus=" + newStatus.name());
+
+    // Trigger notification for status changes that require candidate notification
+    // Notification delivery is best-effort - failures do not roll back the application transaction
+    if (isNotificationStatus(newStatus)) {
+      try {
+        notificationClient.sendNotification(
+            new ApplicationStatusChangeRequest(
+                application.getCandidateId(),
+                application.getApplicationId(),
+                newStatus.toString()));
+        log.info(
+            "Triggered notification for application {} status change to {}",
+            application.getApplicationId(),
+            newStatus);
+      } catch (Exception e) {
+        // Log but don't fail the application status update
+        log.warn(
+            "Failed to send notification for application {} status change to {}: {}",
+            application.getApplicationId(),
+            newStatus,
+            e.getMessage(),
+            e);
+      }
+    }
+
+    return savedApplication;
   }
 
   /** Lists applications for a candidate. */
   @Transactional(readOnly = true)
   public Page<Application> listForCandidate(UUID candidateId, Pageable pageable) {
     return applicationRepository.findByCandidateId(candidateId, pageable);
-  }
-
-  /**
-   * Lists applications for a recruiter's organization (by job ownership). This requires joining
-   * with Job Service, so we filter by job IDs owned by the org. For Review-1 MVP, we delegate to
-   * Job Service per job — a more efficient approach would be a shared DB query or async sync, but
-   * that's a later optimization.
-   */
-  @Transactional(readOnly = true)
-  public Page<Application> listForRecruiter(UUID orgId, Pageable pageable) {
-    // For MVP: fetch all applications and filter by job ownership
-    // This is acceptable for Review-1 demo scale; optimize later if needed
-    return applicationRepository.findAll(
-        (root, query, cb) -> {
-          // We can't easily join across services in JPA, so this is a placeholder
-          // The real implementation would either:
-          // 1. Use a shared DB view (not per ADR-0008)
-          // 2. Fetch job IDs from Job Service first, then query by job_id IN (...)
-          // 3. Use async sync to maintain a local copy
-          return cb.conjunction(); // No-op for now - return all, filter in service
-        },
-        pageable);
   }
 
   // --- helpers -------------------------------------------------------------------
@@ -169,5 +294,20 @@ public class ApplicationService {
       throw new ApplicationForbiddenException("This application belongs to another candidate.");
     }
     return application;
+  }
+
+  /**
+   * Determines if an application status should trigger a notification.
+   *
+   * <p>Notifications are sent for: UNDER_REVIEW, SHORTLISTED, HIRED, REJECTED.
+   *
+   * @param status the application status to check
+   * @return true if a notification should be sent
+   */
+  private boolean isNotificationStatus(ApplicationStatus status) {
+    return status == ApplicationStatus.UNDER_REVIEW
+        || status == ApplicationStatus.SHORTLISTED
+        || status == ApplicationStatus.HIRED
+        || status == ApplicationStatus.REJECTED;
   }
 }

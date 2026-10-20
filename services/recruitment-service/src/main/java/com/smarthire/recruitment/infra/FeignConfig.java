@@ -7,9 +7,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.oauth2.server.resource.authentication.JwtAuthenticationToken;
 
-/**
- * Feign configuration to forward the Authorization header for inter-service calls.
- */
+/** Feign configuration to forward the Authorization header for inter-service calls. */
 @Configuration
 public class FeignConfig {
 

@@ -2,6 +2,9 @@ package com.smarthire.recruitment.api;
 
 import com.smarthire.common.web.CorrelationId;
 import com.smarthire.recruitment.domain.IllegalRecruitmentStateException;
+import com.smarthire.recruitment.infra.ApplicationClient;
+import com.smarthire.recruitment.infra.JobClient;
+import com.smarthire.recruitment.service.ApplicationSyncConflictException;
 import com.smarthire.recruitment.service.RecruitmentConflictException;
 import com.smarthire.recruitment.service.RecruitmentForbiddenException;
 import com.smarthire.recruitment.service.RecruitmentNotFoundException;
@@ -105,6 +108,37 @@ public class RecruitmentExceptionHandler {
       problem.setProperty("attemptedAction", ex.getAttemptedAction());
     }
     return problem;
+  }
+
+  /**
+   * Application Service refused the transition a recruitment decision requires. Reported as 409 so
+   * the caller learns the decision was not applied, rather than receiving a success that left the
+   * application unchanged.
+   */
+  @ExceptionHandler(ApplicationSyncConflictException.class)
+  public ProblemDetail handleApplicationSyncConflict(
+      ApplicationSyncConflictException ex, HttpServletRequest request) {
+    return problem(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+  }
+
+  @ExceptionHandler(ApplicationClient.ApplicationServiceUnavailableException.class)
+  public ProblemDetail handleApplicationServiceUnavailable(
+      ApplicationClient.ApplicationServiceUnavailableException ex, HttpServletRequest request) {
+    return problem(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        "Service Unavailable",
+        "Application service is temporarily unavailable. Please try again later.",
+        request);
+  }
+
+  @ExceptionHandler(JobClient.JobServiceUnavailableException.class)
+  public ProblemDetail handleJobServiceUnavailable(
+      JobClient.JobServiceUnavailableException ex, HttpServletRequest request) {
+    return problem(
+        HttpStatus.SERVICE_UNAVAILABLE,
+        "Service Unavailable",
+        "Job service is temporarily unavailable. Please try again later.",
+        request);
   }
 
   @ExceptionHandler(MethodArgumentNotValidException.class)

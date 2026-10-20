@@ -1,0 +1,45 @@
+# Production profile overrides for Application Service
+# Activates when 'prod' profile is active: --spring.profiles.active=prod
+
+spring:
+  datasource:
+    url: ${APP_SVC_DB_URL}
+    username: ${APP_SVC_DB_USER}
+    password: ${APP_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+
+smarthire:
+  application:
+    jwt:
+      jwk-set-uri: ${APP_JWK_SET_URI}
+      issuer: ${AUTH_JWT_ISSUER}
+      audience: ${AUTH_JWT_AUDIENCE}
+
+# Resilience4j production tuning
+resilience4j:
+  circuitbreaker:
+    instances:
+      jobService:
+        waitDurationInOpenState: 60s
+        failureRateThreshold: 50
+      notificationService:
+        waitDurationInOpenState: 60s
+        failureRateThreshold: 50
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: never
+    prometheus:
+      enabled: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL}

@@ -7,6 +7,14 @@ import com.smarthire.recruitment.api.dto.RecruitmentResponse;
 import com.smarthire.recruitment.domain.Recruitment;
 import com.smarthire.recruitment.security.RecruitmentPrincipal;
 import com.smarthire.recruitment.service.RecruitmentService;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
@@ -14,6 +22,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PagedModel;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -44,6 +53,8 @@ import org.springframework.web.bind.annotation.RestController;
  */
 @RestController
 @RequestMapping("/api/v1/recruitments")
+@Tag(name = "Recruitment Management", description = "Endpoints for managing recruitment processes")
+@SecurityRequirement(name = "bearerAuth")
 public class RecruitmentController {
 
   /** Bound so a caller cannot ask for an unbounded page. */
@@ -63,6 +74,40 @@ public class RecruitmentController {
    * anyone else receives 404, so the endpoint cannot be used to probe for another organization's
    * application identifiers.
    */
+  @Operation(
+      summary = "Shortlist an application",
+      description =
+          "Creates a recruitment record by shortlisting an application. Only recruiters of the owning organization may shortlist.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "201",
+            description = "Recruitment created successfully",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = RecruitmentResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden - requires RECRUITER role",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Application not found or not owned by caller's organization",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Conflict - application already shortlisted",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
   @PostMapping
   @PreAuthorize("hasRole('RECRUITER')")
   public ResponseEntity<RecruitmentResponse> shortlist(
@@ -83,6 +128,28 @@ public class RecruitmentController {
    * identifiers cannot be probed. No {@code @PreAuthorize} here on purpose: the decision is
    * object-level, not role-level, and is made in the service against the stored owner.
    */
+  @Operation(
+      summary = "Get a recruitment by ID",
+      description =
+          "Returns a single recruitment. Visible to recruiters of the owning organization, the candidate, and ADMIN. Others receive 404.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Recruitment retrieved successfully",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = RecruitmentResponse.class))),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Recruitment not found",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
   @GetMapping("/{recruitmentId}")
   public ResponseEntity<RecruitmentResponse> getRecruitment(
       @PathVariable UUID recruitmentId, @AuthenticationPrincipal Jwt jwt) {
@@ -101,10 +168,32 @@ public class RecruitmentController {
    * it. Returns the Spring Data page envelope because a pageable listing has to report total size
    * and page position somewhere.
    */
+  @Operation(
+      summary = "List recruitments with pagination",
+      description =
+          "Returns a paginated list of recruitments visible to the caller. Recruiters see their organization's recruitments, candidates see their own, admins see all. Supports pagination.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Recruitments retrieved successfully",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = PagedModel.class))),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
   @GetMapping
   public PagedModel<RecruitmentResponse> listRecruitments(
-      @RequestParam(defaultValue = "0") int page,
-      @RequestParam(defaultValue = "20") int size,
+      @Parameter(description = "Zero-based page index, default is 0")
+          @RequestParam(defaultValue = "0")
+          int page,
+      @Parameter(description = "Page size, default is 20, max is 100")
+          @RequestParam(defaultValue = "20")
+          int size,
       @AuthenticationPrincipal Jwt jwt) {
     RecruitmentPrincipal principal = RecruitmentPrincipal.from(jwt);
     // Sorted by recruitmentId so paging is stable across requests.
@@ -121,6 +210,40 @@ public class RecruitmentController {
    * Advances the interview lifecycle: {@code NOT_SCHEDULED → SCHEDULED}, {@code SCHEDULED →
    * COMPLETED}, {@code SCHEDULED → NO_SHOW}. Any other transition is rejected with 409.
    */
+  @Operation(
+      summary = "Update interview status",
+      description =
+          "Updates the interview status of a recruitment. Valid transitions: NOT_SCHEDULED → SCHEDULED, SCHEDULED → COMPLETED, SCHEDULED → NO_SHOW.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Interview status updated successfully",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = RecruitmentResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden - requires RECRUITER role",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Recruitment not found",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Conflict - illegal state transition",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
   @PatchMapping("/{recruitmentId}/interview-status")
   @PreAuthorize("hasRole('RECRUITER')")
   public ResponseEntity<RecruitmentResponse> updateInterviewStatus(
@@ -138,6 +261,40 @@ public class RecruitmentController {
    * Decides the outcome: {@code PENDING → HIRED} or {@code PENDING → REJECTED}. Both are terminal,
    * so a second decision is rejected with 409.
    */
+  @Operation(
+      summary = "Update final recruitment status",
+      description =
+          "Decides the final outcome of a recruitment: PENDING → HIRED or PENDING → REJECTED. Both are terminal.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Final status updated successfully",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = RecruitmentResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden - requires RECRUITER role",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Recruitment not found",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Conflict - illegal state transition (already decided)",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
   @PatchMapping("/{recruitmentId}/final-status")
   @PreAuthorize("hasRole('RECRUITER')")
   public ResponseEntity<RecruitmentResponse> updateFinalStatus(

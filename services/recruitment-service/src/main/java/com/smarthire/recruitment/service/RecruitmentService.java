@@ -1,5 +1,6 @@
 package com.smarthire.recruitment.service;
 
+import com.smarthire.common.audit.AuditService;
 import com.smarthire.recruitment.domain.FinalStatus;
 import com.smarthire.recruitment.domain.IllegalRecruitmentStateException;
 import com.smarthire.recruitment.domain.InterviewStatus;
@@ -9,6 +10,8 @@ import com.smarthire.recruitment.infra.JobClient;
 import com.smarthire.recruitment.infra.RecruitmentRepository;
 import feign.FeignException;
 import java.util.UUID;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -48,6 +51,8 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 public class RecruitmentService {
+
+  private static final Logger log = LoggerFactory.getLogger(RecruitmentService.class);
 
   private final RecruitmentRepository recruitmentRepository;
   private final ApplicationClient applicationClient;
@@ -123,7 +128,14 @@ public class RecruitmentService {
       // Flush inside the call so the UNIQUE(application_id) violation surfaces here, as a 409,
       // rather than at commit time where it would escape this method as a 500. Two concurrent
       // shortlists of one application therefore produce one recruitment and one conflict.
-      return recruitmentRepository.saveAndFlush(recruitment);
+      Recruitment saved = recruitmentRepository.saveAndFlush(recruitment);
+      AuditService.recruitment(
+          AuditService.RecruitmentEvent.SHORTLIST,
+          callerOrgId,
+          saved.getRecruitmentId(),
+          AuditService.Outcome.SUCCESS,
+          "applicationId=" + applicationId);
+      return saved;
     } catch (DataIntegrityViolationException race) {
       throw new RecruitmentConflictException(
           "This application has already been shortlisted: " + applicationId);
@@ -193,6 +205,7 @@ public class RecruitmentService {
   public Recruitment updateInterviewStatus(
       UUID recruitmentId, InterviewStatus status, UUID callerOrgId) {
     Recruitment recruitment = loadOwned(recruitmentId, callerOrgId);
+    String oldStatus = recruitment.getInterviewStatus().name();
     switch (status) {
       case SCHEDULED -> recruitment.scheduleInterview();
       case COMPLETED -> recruitment.completeInterview();
@@ -205,19 +218,54 @@ public class RecruitmentService {
               recruitment.getFinalStatus().name(),
               "updateInterviewStatus:NOT_SCHEDULED");
     }
-    return recruitmentRepository.save(recruitment);
+    Recruitment saved = recruitmentRepository.save(recruitment);
+    AuditService.recruitment(
+        AuditService.RecruitmentEvent.INTERVIEW_STATUS_CHANGE,
+        callerOrgId,
+        recruitmentId,
+        AuditService.Outcome.SUCCESS,
+        "oldStatus=" + oldStatus + ",newStatus=" + status.name());
+    return saved;
   }
 
   /**
    * Decides the outcome: {@code PENDING → HIRED | REJECTED}, both terminal. Only a recruiter of the
    * owning organization may call it.
    *
+   * <p>Deciding a recruitment and settling its application are one operation from the caller's
+   * point of view, so they are performed together. Once the aggregate accepts the transition, the
+   * application is moved through its own API via {@link ApplicationClient} — never by writing to
+   * the application service's database — and Application Service stays the sole authority on
+   * whether the application may take that state.
+   *
+   * <ul>
+   *   <li>HIRED → Application status HIRED
+   *   <li>REJECTED → Application status REJECTED
+   * </ul>
+   *
+   * <p>A failed synchronization aborts the whole call: the exception propagates out of this
+   * {@code @Transactional} method, the recruitment change is rolled back, and the caller receives
+   * an error. Neither aggregate is left half-settled, and the caller is never told the hire
+   * succeeded while the application still reads APPLIED. {@code
+   * ApplicationServiceUnavailableException} maps to an RFC 9457 503; a refusal by the application
+   * state machine maps to 409.
+   *
+   * <p>What this does not cover is the opposite order — the application commits and this
+   * transaction then fails to commit. Closing that window needs a transactional outbox and a
+   * reconciler, which are out of scope for R1.
+   *
    * @throws RecruitmentNotFoundException if it does not exist or belongs to another organization
    * @throws IllegalRecruitmentStateException if the recruitment has already been decided
+   * @throws ApplicationSyncConflictException if Application Service refused the transition
+   * @throws ApplicationClient.ApplicationServiceUnavailableException if Application Service could
+   *     not be reached
    */
   @Transactional
   public Recruitment updateFinalStatus(UUID recruitmentId, FinalStatus status, UUID callerOrgId) {
     Recruitment recruitment = loadOwned(recruitmentId, callerOrgId);
+
+    // Apply the recruitment final status transition
+    String oldStatus = recruitment.getFinalStatus().name();
     switch (status) {
       case HIRED -> recruitment.hire();
       case REJECTED -> recruitment.reject();
@@ -229,7 +277,76 @@ public class RecruitmentService {
               recruitment.getFinalStatus().name(),
               "updateFinalStatus:PENDING");
     }
-    return recruitmentRepository.save(recruitment);
+
+    // Persist first, so that a synchronization failure rolls the decision back instead of leaving
+    // the recruitment decided and its application untouched.
+    Recruitment saved = recruitmentRepository.save(recruitment);
+
+    // Audit the final status change
+    AuditService.recruitment(
+        AuditService.RecruitmentEvent.FINAL_STATUS_CHANGE,
+        callerOrgId,
+        recruitmentId,
+        AuditService.Outcome.SUCCESS,
+        "oldStatus=" + oldStatus + ",newStatus=" + status.name());
+
+    // Synchronize application status. Any failure here propagates and rolls the save back.
+    synchronizeApplicationStatus(saved, status);
+
+    return saved;
+  }
+
+  /**
+   * Moves the application to the status the recruitment decision implies.
+   *
+   * <p>Failures are never swallowed. {@code ApplicationServiceUnavailableException} is deliberately
+   * left to propagate untouched, because it is already the Resilience4j contract: an open circuit,
+   * a full bulkhead and exhausted retries all arrive here as that one type, which the exception
+   * handler renders as a 503. The {@code FeignException} branches are the path taken when the
+   * circuit-breaker fallback is not in play, and they translate the downstream status rather than
+   * discarding it — a refusal by the application's own state machine is a 409, not an outage.
+   *
+   * @param recruitment the saved recruitment with updated final status
+   * @param finalStatus the new final status (HIRED or REJECTED)
+   */
+  private void synchronizeApplicationStatus(Recruitment recruitment, FinalStatus finalStatus) {
+    UUID applicationId = recruitment.getApplicationId();
+    String targetApplicationStatus = finalStatus == FinalStatus.HIRED ? "HIRED" : "REJECTED";
+
+    log.info(
+        "Synchronizing application {} status to {} for recruitment {} (final status: {})",
+        applicationId,
+        targetApplicationStatus,
+        recruitment.getRecruitmentId(),
+        finalStatus);
+
+    ApplicationClient.ApplicationResponse updated;
+    try {
+      updated =
+          applicationClient.updateStatus(
+              applicationId, new ApplicationClient.StatusUpdateRequest(targetApplicationStatus));
+    } catch (FeignException.NotFound notFound) {
+      throw new RecruitmentNotFoundException("Application not found: " + applicationId);
+    } catch (FeignException.Conflict | FeignException.BadRequest refused) {
+      throw new ApplicationSyncConflictException(
+          "Application "
+              + applicationId
+              + " cannot be moved to "
+              + targetApplicationStatus
+              + "; the recruitment decision was not applied.");
+    } catch (FeignException other) {
+      throw new ApplicationClient.ApplicationServiceUnavailableException(
+          "Application service rejected the status update for application "
+              + applicationId
+              + ": "
+              + other.status());
+    }
+
+    log.info(
+        "Synchronized application {} status to {} (application reports status {})",
+        applicationId,
+        targetApplicationStatus,
+        updated == null ? "unknown" : updated.status());
   }
 
   // ===================== Helpers =====================
@@ -249,6 +366,8 @@ public class RecruitmentService {
   private Recruitment loadOwned(UUID recruitmentId, UUID callerOrgId) {
     Recruitment recruitment = load(recruitmentId);
     if (!recruitment.isOwnedBy(callerOrgId)) {
+      AuditService.authorizationFailure(
+          "recruitment", recruitmentId, callerOrgId, "Organization does not own this recruitment");
       throw new RecruitmentNotFoundException("Recruitment not found: " + recruitmentId);
     }
     return recruitment;

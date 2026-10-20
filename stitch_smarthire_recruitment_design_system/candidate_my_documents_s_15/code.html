@@ -1,0 +1,650 @@
+<!DOCTYPE html>
+
+<html class="h-full" lang="en"><head><meta charset="utf-8"/><meta content="width=device-width, initial-scale=1.0" name="viewport"/><meta content="web_dashboard" name="shell-type"/><title>SmartHire Workspace</title><link href="https://fonts.googleapis.com" rel="preconnect"/><link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap" rel="stylesheet"/><link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/><style>@layer base{html,body{margin:0;padding:0;}body{overscroll-behavior:none;}main>:first-child{margin-top:0!important;}main>:last-child{margin-bottom:0!important;}}::-webkit-scrollbar{display:none;}</style><script src="https://cdn.tailwindcss.com"></script><script id="tailwind-config">tailwind.config={darkMode:"class",theme:{extend:{"colors":{"danger-800":"#6B1616","surface-container":"#f3edea","primary-fixed-dim":"#bbc3ff","secondary-fixed-dim":"#7cd5d3","on-primary-container":"#b5beff","error":"#ba1a1a","warning-200":"#F2DCA8","success-200":"#B7DEC6","c-surface-sunken":"#F4F2F0","info-600":"#1E5EA8","tertiary-fixed":"#dee0ff","surface-tint":"#4d59a1","surface-bright":"#fef8f6","error-container":"#ffdad6","c-primary-800":"#252C5A","tertiary":"#25327b","secondary":"#006a69","outline":"#767682","warning-50":"#FDF3E0","surface-container-highest":"#e7e1df","surface-variant":"#e7e1df","surface-container-low":"#f9f2f0","primary-fixed":"#dee0ff","c-primary-300":"#9BA4D4","warning-800":"#5E3D00","on-tertiary":"#ffffff","c-primary-100":"#DCE0F0","on-tertiary-container":"#b6beff","danger-200":"#F0C2C2","primary-container":"#3e4a91","info-50":"#E8F0FA","on-secondary-container":"#00706f","on-primary-fixed":"#01105b","on-secondary-fixed-variant":"#00504f","on-primary":"#ffffff","on-error":"#ffffff","c-overlay":"rgba(28, 26, 25, 0.48)","surface":"#fef8f6","c-border-strong":"#CBC5BF","danger-500":"#C53030","on-secondary-fixed":"#002020","on-error-container":"#93000a","warning-600":"#8A5A00","secondary-fixed":"#98f2f0","c-bg":"#FBFAF9","inverse-on-surface":"#f6efed","tertiary-container":"#3e4a94","on-secondary":"#ffffff","on-tertiary-fixed":"#000f5d","success-50":"#E7F4EC","outline-variant":"#c6c5d2","on-background":"#1d1b1a","surface-container-lowest":"#ffffff","background":"#fef8f6","c-accent-50":"#E6F2F2","on-tertiary-fixed-variant":"#34408a","c-text-subtle":"#928C86","on-surface":"#1d1b1a","danger-700":"#841C1C","c-primary-50":"#EEF0F8","inverse-surface":"#32302f","c-text-muted":"#6B6560","c-surface":"#FFFFFF","c-primary-700":"#313A75","on-primary-fixed-variant":"#354187","on-surface-variant":"#454651","c-primary-900":"#1A1F40","info-200":"#BBD3EF","inverse-primary":"#bbc3ff","danger-50":"#FBEAEA","success-600":"#1A6B3C","success-700":"#145430","c-border":"#E3DFDB","info-700":"#174A85","danger-600":"#A32424","secondary-container":"#98f2f0","primary":"#263278","tertiary-fixed-dim":"#bbc3ff","surface-dim":"#dfd9d7","surface-container-high":"#ede7e5","c-accent-700":"#0A5F5E"},"borderRadius":{"DEFAULT":"0.125rem","lg":"0.25rem","xl":"0.5rem","full":"0.75rem"},"spacing":{"space-xl":"1.5rem","margin-mobile":"1rem","space-xs":"0.25rem","space-3xl":"4rem","gutter":"1.5rem","space-sm":"0.5rem","margin":"1.5rem","space-lg":"1rem","space-2xl":"2rem","gutter-mobile":"1rem","space-md":"0.75rem"},"fontFamily":{"headline-sm":["Inter"],"overline":["Inter"],"headline-lg":["Inter"],"headline-md":["Inter"],"display":["Inter"],"body-strong":["Inter"],"code-sm":["JetBrains Mono"],"caption":["Inter"],"body-md":["Inter"],"body-lg":["Inter"],"label-md":["Inter"]},"fontSize":{"headline-sm":["18px",{"lineHeight":"26px","letterSpacing":"0","fontWeight":"600"}],"overline":["12px",{"lineHeight":"16px","letterSpacing":"0.02em","fontWeight":"600"}],"headline-lg":["24px",{"lineHeight":"32px","letterSpacing":"-0.01em","fontWeight":"600"}],"headline-md":["20px",{"lineHeight":"28px","letterSpacing":"-0.01em","fontWeight":"600"}],"display":["30px",{"lineHeight":"36px","letterSpacing":"-0.01em","fontWeight":"600"}],"body-strong":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"500"}],"code-sm":["12px",{"lineHeight":"16px","letterSpacing":"0","fontWeight":"400"}],"caption":["12px",{"lineHeight":"16px","letterSpacing":"0.01em","fontWeight":"400"}],"body-lg":["16px",{"lineHeight":"24px","letterSpacing":"0","fontWeight":"400"}],"body-md":["14px",{"lineHeight":"20px","letterSpacing":"0","fontWeight":"400"}],"label-md":["13px",{"lineHeight":"18px","letterSpacing":"0.01em","fontWeight":"600"}]}}}</script></head><body class="bg-c-bg font-body-md text-on-surface antialiased min-h-screen"><aside class="fixed left-0 top-0 h-full w-16 md:w-60 bg-c-primary-900 text-c-bg z-50 flex flex-col shadow-[0_1px_8px_rgba(0,0,0,0.04)]"><div class="h-14 px-4 flex items-center justify-between overflow-hidden"><div class="flex items-center gap-space-sm min-w-0"><img alt="SmartHire Brand Logo" class="h-7 w-auto object-contain shrink-0" src="https://lh3.googleusercontent.com/aida/AEtjO1VVWUOqmiAQdkmhpWVXgXYXyzwtWUUVsNpnnCJtyZkNSTvikns_spHQheNmh3URSDnLXg6HPtIq09RU9abGN6_tlaaI91pCxCp7pHXSRUQVJnqJwtiHAA1N6WpgTCBgteHg27dQl0s3d6g8ZrDNqr2RgmnsQfE033NaALmTFoZwfMZ93oazdz8ncIWgnf4MrDcNH_UHs6FSIyGF3TIq6F-nIa5h2L4WaI_Vymu4RvBUQnNwHSsrrwIPlHg"/><span class="hidden md:inline font-headline-sm text-headline-sm text-surface font-semibold tracking-tight truncate">SmartHire</span></div><button class="md:hidden p-1 text-c-text-subtle hover:text-surface" type="button"><span class="material-symbols-outlined text-[20px]">menu</span></button></div><div class="px-3 py-space-sm"><div class="hidden md:block px-2 py-1 mb-2 font-overline text-overline uppercase tracking-wider text-c-primary-300">Navigation Menu</div><nav class="flex flex-col gap-1" data-active-classes="bg-primary-container text-on-primary font-body-strong shadow-sm"><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="candidate-applications" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">assignment</span><span class="hidden md:inline font-body-md text-body-md truncate">My applications</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="candidate-progress" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">timeline</span><span class="hidden md:inline font-body-md text-body-md truncate">My progress</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="recruiter-jobs" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">work</span><span class="hidden md:inline font-body-md text-body-md truncate">Job postings</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="recruiter-recruitments" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">groups</span><span class="hidden md:inline font-body-md text-body-md truncate">Recruitments</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="admin-overview" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">shield</span><span class="hidden md:inline font-body-md text-body-md truncate">Overview</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="admin-lookup" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">saved_search</span><span class="hidden md:inline font-body-md text-body-md truncate">Record lookup</span></a><a class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="browse-jobs" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">search</span><span class="hidden md:inline font-body-md text-body-md truncate">Browse jobs</span></a></nav></div><div class="mt-auto p-3 flex flex-col gap-2"><div class="hidden md:flex flex-col gap-1.5 p-2.5 rounded-xl bg-c-primary-800/60"><div class="flex items-center justify-between text-c-text-subtle font-caption text-caption"><span class="uppercase font-overline text-overline">System Spec</span><span class="font-code-sm text-code-sm">v2.4</span></div><a class="inline-flex items-center gap-1 font-caption text-caption text-c-primary-300 hover:text-surface transition-colors" href="#"><span class="material-symbols-outlined text-[14px]">description</span>API documentation ↗</a><a class="inline-flex items-center gap-1 font-caption text-caption text-c-primary-300 hover:text-surface transition-colors" href="#"><span class="material-symbols-outlined text-[14px]">hub</span>Service registry ↗</a></div><a class="flex items-center gap-3 px-3 py-2 rounded-xl text-surface-container-highest hover:bg-c-primary-800 hover:text-surface transition-all" data-path="user-profile" href="#"><span class="material-symbols-outlined text-[20px] shrink-0">account_circle</span><span class="hidden md:inline font-body-md text-body-md truncate">Profile</span></a></div></aside><div class="pl-16 md:pl-60 min-h-screen flex flex-col"><header class="fixed top-0 left-16 md:left-60 right-0 h-14 bg-c-surface shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 px-margin flex items-center justify-between"><div class="flex items-center gap-space-sm"><div class="flex items-center gap-2"><span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-c-accent-50 text-c-accent-700 font-overline text-overline uppercase tracking-wider"><span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>Active Workspace</span><span class="hidden sm:inline font-code-sm text-code-sm text-c-text-muted bg-c-surface-sunken px-2 py-0.5 rounded-lg">org_smarthire_core</span></div></div><div class="flex items-center gap-space-md"><div class="hidden lg:flex items-center gap-space-xs text-right"><span class="font-body-strong text-body-strong text-on-surface">alex.chen@example.com</span><span class="font-caption text-caption text-c-text-subtle">(Role: Candidate)</span></div><a class="inline-flex items-center gap-1 px-space-md py-1.5 rounded-xl font-label-md text-label-md text-danger-700 bg-danger-50 hover:bg-danger-200 hover:text-danger-800 transition-colors" data-path="sign-in" href="#"><span class="material-symbols-outlined text-[16px]">logout</span><span class="hidden sm:inline">Sign out</span></a><div class="w-8 h-8 rounded-full bg-primary flex items-center justify-center shrink-0"><span class="material-symbols-outlined text-on-primary text-[18px]">person</span></div></div></header><main class="flex-1 pt-14 w-full bg-c-bg"><div class="flex flex-col w-full">
+<div class="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 flex flex-col gap-8">
+<!-- Top Contextual Banner: Architectural Reality & GAP-02 Disclosure -->
+<div class="rounded-xl bg-c-surface shadow-sm overflow-hidden flex flex-col md:flex-row">
+<div class="w-2 md:w-2.5 bg-secondary shrink-0"></div>
+<div class="p-5 sm:p-6 flex-1 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+<div class="flex items-start gap-4">
+<div class="w-10 h-10 rounded-lg bg-c-accent-50 text-c-accent-700 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[22px]">policy</span>
+</div>
+<div class="flex flex-col gap-1 max-w-3xl">
+<div class="flex items-center gap-2 flex-wrap">
+<span class="font-overline text-overline uppercase tracking-wider text-c-accent-700 bg-c-accent-50 px-2 py-0.5 rounded-full">RFC Storage Contract &amp; GAP-02</span>
+<span class="font-code-sm text-code-sm text-c-text-muted">document-service:v2.4</span>
+</div>
+<p class="font-body-md text-body-md text-on-surface">
+              Artifacts are immutable once verified (up to <span class="font-body-strong text-body-strong">10 MB</span>; PDF, DOC, DOCX). In accordance with <span class="font-code-sm text-code-sm text-primary">GAP-02</span>, recruiters cannot freely browse your complete vault; specific files are accessed solely via time-limited signed cryptographic tokens generated during official application submission.
+            </p>
+</div>
+</div>
+<div class="flex items-center gap-2 self-end sm:self-center shrink-0">
+<span class="font-caption text-caption text-c-text-subtle bg-c-surface-sunken px-2.5 py-1 rounded">Vault ID: cnd_9942a78e</span>
+</div>
+</div>
+</div>
+<!-- Page Header & Action Bar -->
+<div class="flex flex-col lg:flex-row lg:items-end justify-between gap-6 pb-2">
+<div class="flex flex-col gap-2">
+<div class="flex items-center gap-2 font-overline text-overline text-c-text-subtle uppercase tracking-wider">
+<span>Candidate Space</span>
+<span>/</span>
+<span class="text-primary font-semibold">Vault Repository</span>
+</div>
+<h1 class="font-display text-display text-on-surface font-semibold tracking-tight">My documents</h1>
+<p class="font-body-lg text-body-lg text-c-text-muted max-w-2xl">
+          Store résumés, cover letters, and verified credentials for cross-role job applications and compliance evaluations.
+        </p>
+</div>
+<div class="flex flex-wrap items-center gap-3">
+<button class="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-xl font-label-md text-label-md text-on-primary bg-primary hover:bg-c-primary-700 active:bg-c-primary-800 shadow-sm transition-all" id="btn-open-upload" type="button">
+<span class="material-symbols-outlined text-[18px]">upload_file</span>
+<span>Upload document</span>
+</button>
+</div>
+</div>
+<!-- Storage Telemetry & Quota Status Card (Institutional Density) -->
+<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+<div class="bg-c-surface rounded-xl p-4 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-c-text-subtle mb-3">
+<span class="font-overline text-overline uppercase tracking-wider">Total Stored</span>
+<span class="material-symbols-outlined text-[18px]">folder_special</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-on-surface font-semibold">3</span>
+<span class="font-caption text-caption text-c-text-muted">active files</span>
+</div>
+<div class="mt-2 text-c-text-subtle font-code-sm text-code-sm">Indexed in vault</div>
+</div>
+<div class="bg-c-surface rounded-xl p-4 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-c-text-subtle mb-3">
+<span class="font-overline text-overline uppercase tracking-wider">Allocated Volume</span>
+<span class="material-symbols-outlined text-[18px]">data_usage</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-lg text-headline-lg text-on-surface font-semibold">3.82</span>
+<span class="font-caption text-caption text-c-text-muted">MB / 50.0 MB</span>
+</div>
+<div class="w-full bg-c-surface-sunken rounded-full h-1.5 mt-2 overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 7.6%;"></div>
+</div>
+</div>
+<div class="bg-c-surface rounded-xl p-4 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-c-text-subtle mb-3">
+<span class="font-overline text-overline uppercase tracking-wider">Primary Specimen</span>
+<span class="material-symbols-outlined text-[18px]">badge</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-body-strong text-body-strong text-on-surface truncate">alex-chen-cv-2025.pdf</span>
+</div>
+<div class="mt-2 flex items-center gap-1.5 text-success-700 font-caption text-caption">
+<span class="w-1.5 h-1.5 rounded-full bg-success-600"></span>
+<span>Attached to 2 workflows</span>
+</div>
+</div>
+<div class="bg-c-surface rounded-xl p-4 shadow-sm flex flex-col justify-between">
+<div class="flex items-center justify-between text-c-text-subtle mb-3">
+<span class="font-overline text-overline uppercase tracking-wider">Retention Status</span>
+<span class="material-symbols-outlined text-[18px]">verified_user</span>
+</div>
+<div class="flex items-baseline gap-2">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">Compliant</span>
+</div>
+<div class="mt-2 text-c-text-muted font-caption text-caption">SHA-256 integrity checked</div>
+</div>
+</div>
+<!-- Interactive Workspace Section -->
+<div class="bg-c-surface rounded-xl shadow-sm overflow-hidden flex flex-col">
+<!-- Filter Segmented Control & Search Bar -->
+<div class="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-c-surface">
+<!-- TypeTabs -->
+<div class="flex items-center gap-1 overflow-x-auto pb-1 lg:pb-0 scrollbar-none" id="type-tabs" role="tablist">
+<button class="tab-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-on-primary bg-primary shadow-sm transition-all shrink-0" data-type="ALL" type="button">
+<span>All</span>
+<span class="px-1.5 py-0.2 bg-c-primary-800 text-c-primary-100 rounded text-[11px] font-code-sm">3</span>
+</button>
+<button class="tab-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-c-text-muted hover:text-on-surface hover:bg-c-surface-sunken transition-all shrink-0" data-type="RESUME" type="button">
+<span>Résumé</span>
+<span class="px-1.5 py-0.2 bg-c-surface-sunken text-c-text-subtle rounded text-[11px] font-code-sm">1</span>
+</button>
+<button class="tab-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-c-text-muted hover:text-on-surface hover:bg-c-surface-sunken transition-all shrink-0" data-type="COVER_LETTER" type="button">
+<span>Cover letter</span>
+<span class="px-1.5 py-0.2 bg-c-surface-sunken text-c-text-subtle rounded text-[11px] font-code-sm">1</span>
+</button>
+<button class="tab-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-c-text-muted hover:text-on-surface hover:bg-c-surface-sunken transition-all shrink-0" data-type="PORTFOLIO" type="button">
+<span>Portfolio</span>
+<span class="px-1.5 py-0.2 bg-c-surface-sunken text-c-text-subtle rounded text-[11px] font-code-sm">1</span>
+</button>
+<button class="tab-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-c-text-muted hover:text-on-surface hover:bg-c-surface-sunken transition-all shrink-0" data-type="CERTIFICATE" type="button">
+<span>Certificate</span>
+<span class="px-1.5 py-0.2 bg-c-surface-sunken text-c-text-subtle rounded text-[11px] font-code-sm">0</span>
+</button>
+<button class="tab-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-c-text-muted hover:text-on-surface hover:bg-c-surface-sunken transition-all shrink-0" data-type="OTHER" type="button">
+<span>Other</span>
+<span class="px-1.5 py-0.2 bg-c-surface-sunken text-c-text-subtle rounded text-[11px] font-code-sm">0</span>
+</button>
+</div>
+<!-- Query filter & endpoint indicator -->
+<div class="flex items-center gap-3">
+<div class="relative w-full sm:w-64">
+<span class="material-symbols-outlined text-[18px] text-c-text-subtle absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none">search</span>
+<input class="w-full h-9 pl-9 pr-3 rounded-lg bg-c-surface-sunken font-body-md text-body-md text-on-surface placeholder-c-text-subtle focus:outline-none focus:ring-2 focus:ring-primary/40 transition-all" id="document-search" placeholder="Filter by filename..." type="search"/>
+</div>
+<div class="hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded bg-c-surface-sunken font-code-sm text-code-sm text-c-text-subtle" title="Active REST invocation protocol">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+<span id="endpoint-label">GET /documents (Page)</span>
+</div>
+</div>
+</div>
+<!-- Document Table (Responsive Matrix) -->
+<div class="overflow-x-auto w-full">
+<table class="w-full text-left border-collapse" id="documents-table">
+<thead>
+<tr class="h-11 bg-c-surface-sunken text-c-text-subtle font-overline text-overline uppercase tracking-wider">
+<th class="px-6 py-3 min-w-[280px]" scope="col">File Name &amp; Spec</th>
+<th class="px-6 py-3 min-w-[150px]" scope="col">Document Type</th>
+<th class="px-6 py-3 min-w-[110px]" scope="col">File Size</th>
+<th class="px-6 py-3 min-w-[210px]" scope="col">Uploaded Timestamp</th>
+<th class="px-6 py-3 text-right min-w-[140px]" scope="col">Actions</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-c-surface-sunken font-body-md text-body-md text-on-surface" id="documents-tbody">
+<!-- Row 1: Resume -->
+<tr class="h-14 hover:bg-c-surface-sunken/40 transition-colors" data-doctype="RESUME" data-filename="alex-chen-cv-2025.pdf">
+<td class="px-6 py-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-danger-50 text-danger-700 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-body-strong text-body-strong text-on-surface truncate">alex-chen-cv-2025.pdf</span>
+<span class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-c-surface-sunken text-c-text-muted">PDF</span>
+</div>
+<div class="flex items-center gap-2 font-code-sm text-code-sm text-c-text-subtle">
+<span>doc_91bf8d21</span>
+<span>•</span>
+<span>SHA256: 8a4c…02d1</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-c-primary-50 text-c-primary-700 font-overline text-overline uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+                  RÉSUMÉ
+                </span>
+</td>
+<td class="px-6 py-3 font-code-sm text-code-sm text-c-text-muted">
+                1.84 MB
+              </td>
+<td class="px-6 py-3">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong">14 Oct 2025, 09:30 UTC</span>
+<span class="font-caption text-caption text-c-text-subtle">2 days ago</span>
+</div>
+</td>
+<td class="px-6 py-3 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="btn-download p-2 rounded-lg text-c-text-muted hover:text-primary hover:bg-c-surface-sunken transition-colors" data-file="alex-chen-cv-2025.pdf" title="Download secure blob" type="button">
+<span class="material-symbols-outlined text-[19px]">download</span>
+</button>
+<button class="btn-delete p-2 rounded-lg text-c-text-muted hover:text-danger-600 hover:bg-danger-50 transition-colors" data-file="alex-chen-cv-2025.pdf" data-id="doc_91bf8d21" title="Delete record" type="button">
+<span class="material-symbols-outlined text-[19px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 2: Cover Letter -->
+<tr class="h-14 hover:bg-c-surface-sunken/40 transition-colors" data-doctype="COVER_LETTER" data-filename="chen-senior-swe-letter.docx">
+<td class="px-6 py-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-info-50 text-info-700 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">description</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-body-strong text-body-strong text-on-surface truncate">chen-senior-swe-letter.docx</span>
+<span class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-c-surface-sunken text-c-text-muted">DOCX</span>
+</div>
+<div class="flex items-center gap-2 font-code-sm text-code-sm text-c-text-subtle">
+<span>doc_34ba98fa</span>
+<span>•</span>
+<span>SHA256: e312…78ab</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-c-accent-50 text-c-accent-700 font-overline text-overline uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-secondary"></span>
+                  COVER LETTER
+                </span>
+</td>
+<td class="px-6 py-3 font-code-sm text-code-sm text-c-text-muted">
+                420 KB
+              </td>
+<td class="px-6 py-3">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong">12 Oct 2025, 14:15 UTC</span>
+<span class="font-caption text-caption text-c-text-subtle">4 days ago</span>
+</div>
+</td>
+<td class="px-6 py-3 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="btn-download p-2 rounded-lg text-c-text-muted hover:text-primary hover:bg-c-surface-sunken transition-colors" data-file="chen-senior-swe-letter.docx" title="Download secure blob" type="button">
+<span class="material-symbols-outlined text-[19px]">download</span>
+</button>
+<button class="btn-delete p-2 rounded-lg text-c-text-muted hover:text-danger-600 hover:bg-danger-50 transition-colors" data-file="chen-senior-swe-letter.docx" data-id="doc_34ba98fa" title="Delete record" type="button">
+<span class="material-symbols-outlined text-[19px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+<!-- Row 3: Portfolio -->
+<tr class="h-14 hover:bg-c-surface-sunken/40 transition-colors" data-doctype="PORTFOLIO" data-filename="chen-distributed-systems-case-studies.pdf">
+<td class="px-6 py-3">
+<div class="flex items-center gap-3">
+<div class="w-9 h-9 rounded-lg bg-danger-50 text-danger-700 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">picture_as_pdf</span>
+</div>
+<div class="flex flex-col min-w-0">
+<div class="flex items-center gap-2">
+<span class="font-body-strong text-body-strong text-on-surface truncate">chen-distributed-systems-case-studies.pdf</span>
+<span class="font-code-sm text-code-sm px-1.5 py-0.5 rounded bg-c-surface-sunken text-c-text-muted">PDF</span>
+</div>
+<div class="flex items-center gap-2 font-code-sm text-code-sm text-c-text-subtle">
+<span>doc_55ee8910</span>
+<span>•</span>
+<span>SHA256: fa89…b1c4</span>
+</div>
+</div>
+</div>
+</td>
+<td class="px-6 py-3">
+<span class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-warning-50 text-warning-800 font-overline text-overline uppercase tracking-wider">
+<span class="w-1.5 h-1.5 rounded-full bg-warning-600"></span>
+                  PORTFOLIO
+                </span>
+</td>
+<td class="px-6 py-3 font-code-sm text-code-sm text-c-text-muted">
+                1.56 MB
+              </td>
+<td class="px-6 py-3">
+<div class="flex flex-col">
+<span class="font-body-strong text-body-strong">08 Oct 2025, 11:04 UTC</span>
+<span class="font-caption text-caption text-c-text-subtle">8 days ago</span>
+</div>
+</td>
+<td class="px-6 py-3 text-right">
+<div class="inline-flex items-center gap-1">
+<button class="btn-download p-2 rounded-lg text-c-text-muted hover:text-primary hover:bg-c-surface-sunken transition-colors" data-file="chen-distributed-systems-case-studies.pdf" title="Download secure blob" type="button">
+<span class="material-symbols-outlined text-[19px]">download</span>
+</button>
+<button class="btn-delete p-2 rounded-lg text-c-text-muted hover:text-danger-600 hover:bg-danger-50 transition-colors" data-file="chen-distributed-systems-case-studies.pdf" data-id="doc_55ee8910" title="Delete record" type="button">
+<span class="material-symbols-outlined text-[19px]">delete</span>
+</button>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Empty State Container (Hidden initially) -->
+<div class="hidden p-12 text-center flex flex-col items-center justify-center gap-3" id="table-empty-state">
+<div class="w-12 h-12 rounded-full bg-c-surface-sunken text-c-text-subtle flex items-center justify-center">
+<span class="material-symbols-outlined text-[28px]">folder_off</span>
+</div>
+<div class="font-headline-sm text-headline-sm text-on-surface">No matching documents found</div>
+<p class="font-body-md text-body-md text-c-text-muted max-w-sm">No files uploaded under this category filter. Upload a new document or switch tabs.</p>
+</div>
+</div>
+<!-- Pagination & Metadata Footer -->
+<div class="px-6 py-3.5 bg-c-surface-sunken/50 flex flex-col sm:flex-row items-center justify-between gap-4">
+<div class="flex items-center gap-4 text-c-text-muted font-caption text-caption">
+<span id="pagination-counter">Showing <strong class="text-on-surface font-body-strong">1–3</strong> of <strong class="text-on-surface font-body-strong">3</strong> items</span>
+<div class="hidden sm:flex items-center gap-2">
+<span>Rows per page:</span>
+<select class="bg-c-surface text-on-surface rounded px-2 py-1 font-caption text-caption focus:outline-none">
+<option value="20">20</option>
+<option value="50">50</option>
+<option value="100">100 (max)</option>
+</select>
+</div>
+</div>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1.5 rounded-lg bg-c-surface text-c-text-subtle font-label-md text-label-md cursor-not-allowed" disabled="" type="button">
+            Previous
+          </button>
+<span class="px-3 py-1 rounded bg-primary text-on-primary font-code-sm text-code-sm">1</span>
+<button class="px-3 py-1.5 rounded-lg bg-c-surface text-c-text-subtle font-label-md text-label-md cursor-not-allowed" disabled="" type="button">
+            Next
+          </button>
+</div>
+</div>
+</div>
+<!-- Supplementary Informational Note: Cryptographic Verification -->
+<div class="rounded-xl p-5 bg-c-surface shadow-sm flex flex-col sm:flex-row items-start gap-4">
+<div class="w-8 h-8 rounded-lg bg-c-primary-50 text-primary flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[20px]">enhanced_encryption</span>
+</div>
+<div class="flex-1 flex flex-col gap-1">
+<span class="font-headline-sm text-headline-sm text-on-surface font-semibold">End-to-end transport isolation</span>
+<p class="font-body-md text-body-md text-c-text-muted">
+          All document downloads utilize pre-signed S3 blob handles valid for 180 seconds. Deletions propagate synchronously through the candidate profile service, revoking referenced hashes in pending drafts.
+        </p>
+</div>
+</div>
+</div>
+<!-- Upload Modal Dialog (Complies with 520px envelope rule) -->
+<div class="fixed inset-0 z-50 bg-c-overlay backdrop-blur-sm hidden items-center justify-center p-4" id="upload-dialog">
+<div class="w-full max-w-[520px] bg-c-surface rounded-xl shadow-xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+<!-- Modal Header -->
+<div class="px-6 py-4 bg-c-surface flex items-center justify-between border-b border-c-surface-sunken">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[22px]">upload_file</span>
+<h2 class="font-headline-md text-headline-md text-on-surface font-semibold">Upload document</h2>
+</div>
+<button class="p-1 rounded-lg text-c-text-subtle hover:text-on-surface hover:bg-c-surface-sunken" id="btn-close-upload" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</div>
+<!-- Modal Body -->
+<form class="p-6 flex flex-col gap-5" id="upload-form">
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface" for="doc-type-select">Document Type <span class="text-danger-600">*</span></label>
+<select class="w-full h-10 px-3 rounded-lg bg-c-surface-sunken font-body-md text-body-md text-on-surface focus:outline-none focus:ring-2 focus:ring-primary/40" id="doc-type-select" required="">
+<option value="RESUME">Résumé</option>
+<option value="COVER_LETTER">Cover Letter</option>
+<option value="PORTFOLIO">Portfolio</option>
+<option value="CERTIFICATE">Certificate</option>
+<option value="OTHER">Other</option>
+</select>
+<span class="font-caption text-caption text-c-text-subtle">Categorizes file access controls and matching pipelines.</span>
+</div>
+<div class="flex flex-col gap-1.5">
+<label class="font-label-md text-label-md text-on-surface">File Selection <span class="text-danger-600">*</span></label>
+<div class="rounded-xl p-6 bg-c-surface-sunken/60 flex flex-col items-center justify-center text-center gap-2 cursor-pointer hover:bg-c-surface-sunken transition-colors" id="drop-zone">
+<span class="material-symbols-outlined text-[36px] text-c-primary-300">cloud_upload</span>
+<div class="font-body-strong text-body-strong text-on-surface">Click to browse or drop file here</div>
+<div class="font-caption text-caption text-c-text-muted">PDF, DOC, DOCX up to 10 MB per RFC limits</div>
+<input accept=".pdf,.doc,.docx" class="hidden" id="file-input" type="file"/>
+</div>
+<div class="hidden mt-1 px-3 py-1.5 rounded bg-c-primary-50 text-c-primary-700 font-code-sm text-code-sm flex items-center justify-between" id="selected-file-label">
+<span class="truncate max-w-[320px]" id="selected-file-name">selected-document.pdf</span>
+<span class="text-c-text-subtle" id="selected-file-size">1.2 MB</span>
+</div>
+</div>
+<!-- Progress Indicator (Hidden during preparation) -->
+<div class="hidden flex flex-col gap-1.5" id="upload-progress-container">
+<div class="flex justify-between font-caption text-caption text-c-text-muted">
+<span>Uploading to document-service...</span>
+<span id="upload-percent">65%</span>
+</div>
+<div class="w-full bg-c-surface-sunken rounded-full h-1.5 overflow-hidden">
+<div class="bg-primary h-full rounded-full transition-all duration-300" id="upload-progress-bar" style="width: 65%;"></div>
+</div>
+</div>
+<div class="p-3 rounded-lg bg-c-surface-sunken font-caption text-caption text-c-text-muted flex items-start gap-2">
+<span class="material-symbols-outlined text-[16px] text-secondary shrink-0 mt-0.5">info</span>
+<span>Uploaded documents inherit cryptographic checksums automatically. Checksums are verified across recruiters' signed evaluation sessions.</span>
+</div>
+<!-- Modal Actions -->
+<div class="flex items-center justify-end gap-3 pt-2">
+<button class="px-4 py-2 rounded-xl font-label-md text-label-md text-on-surface hover:bg-c-surface-sunken transition-colors" id="btn-cancel-upload" type="button">
+            Cancel
+          </button>
+<button class="px-5 py-2 rounded-xl font-label-md text-label-md text-on-primary bg-primary hover:bg-c-primary-700 active:bg-c-primary-800 transition-colors shadow-sm" id="btn-submit-upload" type="submit">
+            Save document
+          </button>
+</div>
+</form>
+</div>
+</div>
+<!-- Delete Confirmation Modal (520px envelope) -->
+<div class="fixed inset-0 z-50 bg-c-overlay backdrop-blur-sm hidden items-center justify-center p-4" id="delete-dialog">
+<div class="w-full max-w-[480px] bg-c-surface rounded-xl shadow-xl overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-150">
+<div class="p-6 flex flex-col gap-4">
+<div class="w-12 h-12 rounded-full bg-danger-50 text-danger-700 flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[26px]">warning</span>
+</div>
+<div class="flex flex-col gap-1">
+<h3 class="font-headline-sm text-headline-sm text-on-surface font-semibold">Delete document artifact</h3>
+<p class="font-body-md text-body-md text-c-text-muted">
+            Are you sure you want to remove <span class="font-body-strong text-body-strong text-on-surface" id="delete-target-filename">filename.pdf</span>? Any unsubmitted job application drafts referencing this document will require re-selection.
+          </p>
+</div>
+<div class="p-3 rounded-lg bg-c-surface-sunken font-code-sm text-code-sm text-c-text-subtle">
+          ID: <span id="delete-target-id">doc_xxxxxx</span>
+</div>
+<div class="flex items-center justify-end gap-3 pt-2">
+<button class="px-4 py-2 rounded-xl font-label-md text-label-md text-on-surface hover:bg-c-surface-sunken transition-colors" id="btn-cancel-delete" type="button">
+            Cancel
+          </button>
+<button class="px-5 py-2 rounded-xl font-label-md text-label-md text-on-primary bg-danger-600 hover:bg-danger-700 active:bg-danger-800 transition-colors shadow-sm" id="btn-confirm-delete" type="button">
+            Delete file
+          </button>
+</div>
+</div>
+</div>
+</div>
+<!-- Toast Notification Indicator -->
+<div class="fixed bottom-6 right-6 z-50 transform translate-y-16 opacity-0 transition-all duration-300 pointer-events-none" id="toast-notification">
+<div class="bg-c-primary-900 text-c-bg px-4 py-3 rounded-xl shadow-xl flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary text-[20px]" id="toast-icon">check_circle</span>
+<span class="font-body-md text-body-md" id="toast-message">Action completed successfully.</span>
+</div>
+</div>
+</div>
+<script>
+  (function () {
+    // Tab switching and endpoint indicator logic
+    const tabs = document.querySelectorAll('.tab-button');
+    const endpointLabel = document.getElementById('endpoint-label');
+    const tableRows = document.querySelectorAll('#documents-tbody tr');
+    const emptyState = document.getElementById('table-empty-state');
+    const paginationCounter = document.getElementById('pagination-counter');
+    const searchInput = document.getElementById('document-search');
+
+    let activeType = 'ALL';
+    let searchQuery = '';
+
+    function showToast(message, isError = false) {
+      const toast = document.getElementById('toast-notification');
+      const msgEl = document.getElementById('toast-message');
+      const iconEl = document.getElementById('toast-icon');
+
+      msgEl.textContent = message;
+      iconEl.textContent = isError ? 'error' : 'check_circle';
+      iconEl.className = isError ? 'material-symbols-outlined text-danger-500 text-[20px]' : 'material-symbols-outlined text-secondary text-[20px]';
+
+      toast.classList.remove('translate-y-16', 'opacity-0');
+      toast.classList.add('translate-y-0', 'opacity-100');
+
+      setTimeout(() => {
+        toast.classList.remove('translate-y-0', 'opacity-100');
+        toast.classList.add('translate-y-16', 'opacity-0');
+      }, 3500);
+    }
+
+    function renderTable() {
+      let visibleCount = 0;
+      tableRows.forEach(row => {
+        const rowType = row.getAttribute('data-doctype');
+        const rowFile = row.getAttribute('data-filename').toLowerCase();
+
+        const matchesType = (activeType === 'ALL' || rowType === activeType);
+        const matchesSearch = rowFile.includes(searchQuery);
+
+        if (matchesType && matchesSearch) {
+          row.style.display = '';
+          visibleCount++;
+        } else {
+          row.style.display = 'none';
+        }
+      });
+
+      if (visibleCount === 0) {
+        emptyState.classList.remove('hidden');
+      } else {
+        emptyState.classList.add('hidden');
+      }
+
+      paginationCounter.innerHTML = `Showing <strong class="text-on-surface font-body-strong">1–${visibleCount}</strong> of <strong class="text-on-surface font-body-strong">${visibleCount}</strong> items`;
+    }
+
+    tabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        tabs.forEach(t => {
+          t.className = 'tab-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-c-text-muted hover:text-on-surface hover:bg-c-surface-sunken transition-all shrink-0';
+          const badge = t.querySelector('span:last-child');
+          if (badge) {
+            badge.className = 'px-1.5 py-0.2 bg-c-surface-sunken text-c-text-subtle rounded text-[11px] font-code-sm';
+          }
+        });
+
+        tab.className = 'tab-button inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-label-md text-label-md text-on-primary bg-primary shadow-sm transition-all shrink-0';
+        const badge = tab.querySelector('span:last-child');
+        if (badge) {
+          badge.className = 'px-1.5 py-0.2 bg-c-primary-800 text-c-primary-100 rounded text-[11px] font-code-sm';
+        }
+
+        activeType = tab.getAttribute('data-type');
+        if (activeType === 'ALL') {
+          endpointLabel.textContent = 'GET /documents (Page)';
+        } else {
+          endpointLabel.textContent = `GET /documents/type/${activeType} (List)`;
+        }
+        renderTable();
+      });
+    });
+
+    searchInput.addEventListener('input', (e) => {
+      searchQuery = e.target.value.trim().toLowerCase();
+      renderTable();
+    });
+
+    // Upload Modal Handling
+    const uploadDialog = document.getElementById('upload-dialog');
+    const openUploadBtn = document.getElementById('btn-open-upload');
+    const closeUploadBtn = document.getElementById('btn-close-upload');
+    const cancelUploadBtn = document.getElementById('btn-cancel-upload');
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const selectedFileLabel = document.getElementById('selected-file-label');
+    const selectedFileName = document.getElementById('selected-file-name');
+    const selectedFileSize = document.getElementById('selected-file-size');
+    const uploadForm = document.getElementById('upload-form');
+    const progressContainer = document.getElementById('upload-progress-container');
+    const progressBar = document.getElementById('upload-progress-bar');
+    const percentLabel = document.getElementById('upload-percent');
+
+    function openModal() {
+      uploadDialog.classList.remove('hidden');
+      uploadDialog.classList.add('flex');
+    }
+
+    function closeModal() {
+      uploadDialog.classList.add('hidden');
+      uploadDialog.classList.remove('flex');
+      fileInput.value = '';
+      selectedFileLabel.classList.add('hidden');
+      progressContainer.classList.add('hidden');
+    }
+
+    openUploadBtn.addEventListener('click', openModal);
+    closeUploadBtn.addEventListener('click', closeModal);
+    cancelUploadBtn.addEventListener('click', closeModal);
+
+    dropZone.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files && fileInput.files[0]) {
+        const file = fileInput.files[0];
+        if (file.size > 10 * 1024 * 1024) {
+          showToast('File size exceeds the 10 MB limit (RFC standard).', true);
+          fileInput.value = '';
+          return;
+        }
+        selectedFileName.textContent = file.name;
+        selectedFileSize.textContent = `${(file.size / (1024 * 1024)).toFixed(2)} MB`;
+        selectedFileLabel.classList.remove('hidden');
+      }
+    });
+
+    uploadForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!fileInput.files || fileInput.files.length === 0) {
+        showToast('Please select a file to upload.', true);
+        return;
+      }
+
+      progressContainer.classList.remove('hidden');
+      let progress = 0;
+      const interval = setInterval(() => {
+        progress += 25;
+        progressBar.style.width = `${progress}%`;
+        percentLabel.textContent = `${progress}%`;
+
+        if (progress >= 100) {
+          clearInterval(interval);
+          setTimeout(() => {
+            closeModal();
+            showToast('Document securely uploaded and checksum validated.');
+          }, 300);
+        }
+      }, 150);
+    });
+
+    // Delete Handling
+    const deleteDialog = document.getElementById('delete-dialog');
+    const cancelDeleteBtn = document.getElementById('btn-cancel-delete');
+    const confirmDeleteBtn = document.getElementById('btn-confirm-delete');
+    const deleteTargetName = document.getElementById('delete-target-filename');
+    const deleteTargetId = document.getElementById('delete-target-id');
+    let rowToDelete = null;
+
+    document.querySelectorAll('.btn-delete').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const row = e.target.closest('tr');
+        rowToDelete = row;
+        const filename = btn.getAttribute('data-file');
+        const docId = btn.getAttribute('data-id');
+
+        deleteTargetName.textContent = filename;
+        deleteTargetId.textContent = docId;
+
+        deleteDialog.classList.remove('hidden');
+        deleteDialog.classList.add('flex');
+      });
+    });
+
+    cancelDeleteBtn.addEventListener('click', () => {
+      deleteDialog.classList.add('hidden');
+      deleteDialog.classList.remove('flex');
+      rowToDelete = null;
+    });
+
+    confirmDeleteBtn.addEventListener('click', () => {
+      if (rowToDelete) {
+        rowToDelete.remove();
+        showToast('Document record deleted from vault.');
+        renderTable();
+      }
+      deleteDialog.classList.add('hidden');
+      deleteDialog.classList.remove('flex');
+    });
+
+    // Download blob fetch simulation
+    document.querySelectorAll('.btn-download').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        const file = btn.getAttribute('data-file');
+        showToast(`Preparing presigned download token for ${file}...`);
+      });
+    });
+
+  })();
+</script></main></div></body></html>

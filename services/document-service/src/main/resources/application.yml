@@ -1,0 +1,73 @@
+spring:
+  application:
+    name: document-service
+  datasource:
+    url: ${DOC_SVC_DB_URL:jdbc:postgresql://localhost:5432/smarthire}
+    username: ${DOC_SVC_DB_USER:smarthire}
+    # No default: the password must be supplied via the environment (governance §17 — no secrets in config).
+    password: ${DOC_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: document_svc
+  flyway:
+    enabled: true
+    schemas: document_svc
+    default-schema: document_svc
+    create-schemas: true
+  mvc:
+    problemdetails:
+      enabled: true
+  servlet:
+    multipart:
+      max-file-size: ${DOC_MAX_FILE_SIZE:10MB}
+      max-request-size: ${DOC_MAX_FILE_SIZE:10MB}
+
+server:
+  port: 8085
+
+# Resource-server JWT verification (ADR-0009, decision 4 — defense-in-depth behind the gateway).
+# Mirrors the gateway's offline verification: keys are fetched from the auth-service JWKS over a
+# direct HTTP URL (not lb://, the decoder's key fetch does not pass through the load balancer), and
+# iss/aud are pinned to the values auth-service signs, so a token minted for another audience is
+# rejected here too.
+smarthire:
+  document:
+    jwt:
+      jwk-set-uri: ${DOC_JWK_SET_URI:http://localhost:8082/oauth2/jwks}
+      issuer: ${AUTH_JWT_ISSUER:https://smarthire.local/auth}
+      audience: ${AUTH_JWT_AUDIENCE:smarthire}
+    storage:
+      type: local
+      local:
+        root-dir: ${DOC_STORAGE_ROOT:/tmp/smarthire/documents}
+    upload:
+      max-file-size: ${DOC_MAX_FILE_SIZE:10MB}
+      allowed-content-types: ${DOC_ALLOWED_CONTENT_TYPES:application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99

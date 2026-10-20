@@ -1,0 +1,111 @@
+package com.smarthire.document;
+
+import static com.tngtech.archunit.core.domain.JavaClass.Predicates.resideInAPackage;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.classes;
+import static com.tngtech.archunit.lang.syntax.ArchRuleDefinition.noClasses;
+
+import com.tngtech.archunit.base.DescribedPredicate;
+import com.tngtech.archunit.core.domain.JavaClass;
+import com.tngtech.archunit.core.importer.ImportOption;
+import com.tngtech.archunit.junit.AnalyzeClasses;
+import com.tngtech.archunit.junit.ArchTest;
+import com.tngtech.archunit.lang.ArchRule;
+
+/** Architecture fitness rules for document-service (governance §46). */
+@AnalyzeClasses(
+    packages = "com.smarthire.document",
+    importOptions = ImportOption.DoNotIncludeTests.class)
+class ArchitectureTest {
+
+  private static final DescribedPredicate<JavaClass> IN_DOMAIN = resideInAPackage("..domain..");
+
+  @ArchTest
+  static final ArchRule domainDependsOnNothingAboveIt =
+      noClasses()
+          .that()
+          .resideInAPackage("..domain..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("..service..", "..api..", "..infra..", "..security..", "..config..");
+
+  @ArchTest
+  static final ArchRule serviceDoesNotDependOnApi =
+      noClasses()
+          .that()
+          .resideInAPackage("..service..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAPackage("..api..");
+
+  @ArchTest
+  static final ArchRule infraDoesNotDependOnApiOrService =
+      noClasses()
+          .that()
+          .resideInAPackage("..infra..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("..api..", "..service..");
+
+  @ArchTest
+  static final ArchRule controllersResideInApiPackage =
+      classes().that().haveSimpleNameEndingWith("Controller").should().resideInAPackage("..api..");
+
+  @ArchTest
+  static final ArchRule entitiesResideInDomainPackage =
+      classes()
+          .that()
+          .areAnnotatedWith("jakarta.persistence.Entity")
+          .should()
+          .resideInAPackage("..domain..");
+
+  @ArchTest
+  static final ArchRule repositoriesResideInInfraPackage =
+      classes()
+          .that()
+          .areAssignableTo(org.springframework.data.repository.Repository.class)
+          .should()
+          .resideInAPackage("..infra..");
+
+  /**
+   * The blob store is reached only through {@code DocumentStorage}, so a swap to object storage
+   * cannot leave a direct filesystem or SDK call behind in the service layer.
+   */
+  @ArchTest
+  static final ArchRule storageIsReachedThroughItsPort =
+      noClasses()
+          .that()
+          .resideInAPackage("..service..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage("java.nio.file..");
+
+  @ArchTest
+  static final ArchRule feignClientsLiveOnlyInInfra =
+      noClasses()
+          .that()
+          .resideOutsideOfPackage("..infra..")
+          .should()
+          .dependOnClassesThat()
+          .haveFullyQualifiedName("org.springframework.cloud.openfeign.FeignClient")
+          .allowEmptyShould(true);
+
+  /**
+   * No service reaches into another service's code. Document metadata is a candidate's own record;
+   * nothing here needs another aggregate's internals, and a direct import would be the first step
+   * toward sharing a database.
+   */
+  @ArchTest
+  static final ArchRule noCrossServiceImports =
+      noClasses()
+          .that()
+          .resideInAPackage("com.smarthire.document..")
+          .should()
+          .dependOnClassesThat()
+          .resideInAnyPackage(
+              "com.smarthire.auth..",
+              "com.smarthire.job..",
+              "com.smarthire.application..",
+              "com.smarthire.recruitment..",
+              "com.smarthire.notification..")
+          .allowEmptyShould(true);
+}

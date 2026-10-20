@@ -1,0 +1,74 @@
+spring:
+  application:
+    name: notification-service
+  datasource:
+    url: ${NOTIF_SVC_DB_URL:jdbc:postgresql://localhost:5432/smarthire}
+    username: ${NOTIF_SVC_DB_USER:smarthire}
+    # No default: the password must be supplied via the environment (governance §17 — no secrets in config).
+    password: ${NOTIF_SVC_DB_PASSWORD}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        default_schema: notification_svc
+  flyway:
+    enabled: true
+    schemas: notification_svc
+    default-schema: notification_svc
+    create-schemas: true
+  mvc:
+    problemdetails:
+      enabled: true
+
+server:
+  port: 8086
+
+# Resource-server JWT verification (ADR-0009, decision 4 — defense-in-depth behind the gateway).
+# Mirrors the gateway's offline verification: keys are fetched from the auth-service JWKS over a
+# direct HTTP URL (not lb://, the decoder's key fetch does not pass through the load balancer), and
+# iss/aud are pinned to the values auth-service signs, so a token minted for another audience is
+# rejected here too.
+smarthire:
+  notification:
+    jwt:
+      jwk-set-uri: ${NOTIF_JWK_SET_URI:http://localhost:8082/oauth2/jwks}
+      issuer: ${AUTH_JWT_ISSUER:https://smarthire.local/auth}
+      audience: ${AUTH_JWT_AUDIENCE:smarthire}
+
+eureka:
+  client:
+    service-url:
+      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,metrics,prometheus
+  endpoint:
+    health:
+      probes:
+        enabled: true
+      show-details: when_authorized
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+      percentiles:
+        http.server.requests: 0.5,0.95,0.99
+
+# Notification sender configuration
+notification:
+  sender:
+    type: ${NOTIFICATION_SENDER_TYPE:logging}
+    # For future SMTP sender (not implemented in R1)
+    smtp:
+      host: ${NOTIFICATION_SMTP_HOST:localhost}
+      port: ${NOTIFICATION_SMTP_PORT:25}
+      username: ${NOTIFICATION_SMTP_USERNAME:}
+      password: ${NOTIFICATION_SMTP_PASSWORD:}
+      from: ${NOTIFICATION_SMTP_FROM:noreply@smarthire.local}
