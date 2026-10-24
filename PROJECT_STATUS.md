@@ -2,6 +2,13 @@
 
 Current project position. Facts verified from the repository are marked [V]; facts inherited from prior agent reports are marked [R] (reported, pending independent re-verification); anything not verifiable from the current working tree is marked unknown/pending.
 
+## Publish state — 2026-10-24 [V]
+
+- `README.md` rewritten as the industry-standard project entry point; `frontend/README.md` updated to the current design system and 49-test suite.
+- Source, tests, documentation, and environment template committed in `5ab61a0` and pushed to `origin/main`.
+- Local scratch and backup artifacts removed; `.freebuff/` ignored. The working tree is clean after this publish-state commit.
+- Verified `git rev-parse HEAD` equals `git rev-parse origin/main` after the push.
+
 ## UI — branded select control [V]
 
 - Replaced the native select menus for sign-in role, document type, recruiter status filters, and pagination with the accessible `Select` combobox in `frontend/src/components/ui/Select.tsx`.
