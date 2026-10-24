@@ -2,9 +2,9 @@ spring:
   application:
     name: ai-service
   datasource:
-    url: ${AI_SVC_DB_URL:jdbc:postgresql://localhost:5432/smarthire}
-    username: ${AI_SVC_DB_USER:postgres}
-    password: ${AI_SVC_DB_PASSWORD:postgres}
+    url: ${AI_SVC_DB_URL:jdbc:postgresql://postgres:5432/smarthire}
+    username: ${POSTGRES_USER:postgres}
+    password: ${POSTGRES_PASSWORD:postgres}
   jpa:
     hibernate:
       ddl-auto: validate
@@ -22,7 +22,7 @@ spring:
         enabled: true
   data:
     redis:
-      host: ${REDIS_HOST:localhost}
+      host: ${REDIS_HOST:redis}
       port: ${REDIS_PORT:6379}
 
 server:
@@ -31,7 +31,7 @@ server:
 eureka:
   client:
     service-url:
-      defaultZone: ${EUREKA_SERVER_URL:http://localhost:8761/eureka}
+      defaultZone: ${EUREKA_SERVER_URL:http://service-registry:8761/eureka}
   instance:
     prefer-ip-address: true
 
@@ -59,7 +59,7 @@ management:
 smarthire:
   ai:
     jwt:
-      jwk-set-uri: ${AI_JWK_SET_URI:http://localhost:8082/oauth2/jwks}
+      jwk-set-uri: ${AI_JWK_SET_URI:http://auth-service:8082/oauth2/jwks}
       issuer: ${AUTH_JWT_ISSUER:https://smarthire.local/auth}
       audience: ${AUTH_JWT_AUDIENCE:smarthire}
     # Feature flag to disable AI endpoints without disabling core workflows (governance §49).

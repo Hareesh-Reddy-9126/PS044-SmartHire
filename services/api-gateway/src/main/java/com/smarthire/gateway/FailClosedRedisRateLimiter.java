@@ -1,5 +1,6 @@
 package com.smarthire.gateway;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.Map;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
 import org.springframework.data.redis.core.ReactiveStringRedisTemplate;
@@ -23,6 +24,10 @@ public class FailClosedRedisRateLimiter extends RedisRateLimiter {
   private final RedisRateLimiter delegate;
   private final ReactiveStringRedisTemplate redisTemplate;
 
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP2",
+      justification =
+          "Spring-injected singleton collaborators are intentionally retained by this DI wrapper.")
   public FailClosedRedisRateLimiter(
       RedisRateLimiter delegate, ReactiveStringRedisTemplate redisTemplate) {
     // Parent constructor requires replenishRate and burstCapacity; values are irrelevant since
@@ -39,11 +44,13 @@ public class FailClosedRedisRateLimiter extends RedisRateLimiter {
     // and "key not found" (empty result but connection OK).
     return redisTemplate
         .execute(connection -> connection.ping())
+        .next()
         .onErrorResume(e -> Mono.empty()) // Redis unreachable -> empty
-        .flatMap(pong -> {
-          // If ping succeeded (even if pong is null/empty), Redis is reachable
-          return delegate.isAllowed(routeId, id);
-        })
+        .flatMap(
+            pong -> {
+              // If ping succeeded (even if pong is null/empty), Redis is reachable
+              return delegate.isAllowed(routeId, id);
+            })
         .switchIfEmpty(
             Mono.error(
                 new ResponseStatusException(

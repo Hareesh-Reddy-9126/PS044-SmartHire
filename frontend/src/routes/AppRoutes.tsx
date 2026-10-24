@@ -1,39 +1,64 @@
 import React from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Navigate, Route, Routes } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Layout, PublicLayout, AuthLayout } from '../components/layout/Layout';
+import { AuthLayout, Layout, PublicLayout } from '../components/layout/Layout';
+import { Spinner } from '../components/ui/Spinner';
 import { LoginPage } from '../pages/auth/LoginPage';
 import { RegisterPage } from '../pages/auth/RegisterPage';
+import { LandingPage } from '../pages/public/LandingPage';
 import { JobBrowsePage } from '../pages/public/JobBrowsePage';
+import { JobDetailPage } from '../pages/public/JobDetailPage';
+import { CandidateApplicationsPage } from '../pages/candidate/CandidateApplicationsPage';
+import { ApplicationDetailPage } from '../pages/candidate/ApplicationDetailPage';
+import { DocumentsPage } from '../pages/candidate/DocumentsPage';
+import { NotificationDetailPage } from '../pages/candidate/NotificationDetailPage';
+import { NotificationsPage } from '../pages/candidate/NotificationsPage';
+import { ProgressDetailPage } from '../pages/candidate/ProgressDetailPage';
+import { ProgressPage } from '../pages/candidate/ProgressPage';
+import { ApplicationSubmitPage } from '../pages/candidate/ApplicationSubmitPage';
+import { CandidateProfilePage } from '../pages/candidate/CandidateProfilePage';
+import { RecruiterJobsPage } from '../pages/recruiter/RecruiterJobsPage';
+import { JobCreatePage } from '../pages/recruiter/JobCreatePage';
+import { JobEditPage } from '../pages/recruiter/JobEditPage';
+import { RecruiterJobDetailPage } from '../pages/recruiter/RecruiterJobDetailPage';
+import { RecruiterApplicationLookupPage } from '../pages/recruiter/RecruiterApplicationLookupPage';
+import { RecruiterRecruitmentsPage } from '../pages/recruiter/RecruiterRecruitmentsPage';
+import { RecruiterRecruitmentDetailPage } from '../pages/recruiter/RecruiterRecruitmentDetailPage';
+import { RecruiterProfilePage } from '../pages/recruiter/RecruiterProfilePage';
+import { AdminOverviewPage } from '../pages/admin/AdminOverviewPage';
+import { AdminRecruitmentsPage } from '../pages/admin/AdminRecruitmentsPage';
+import { AdminRecruitmentDetailPage } from '../pages/admin/AdminRecruitmentDetailPage';
+import { AdminLookupPage } from '../pages/admin/AdminLookupPage';
+import { AdminProfilePage } from '../pages/admin/AdminProfilePage';
+import {
+  ForbiddenPage,
+  NotFoundPage,
+  OfflinePage,
+  SessionExpiredPage,
+  UnexpectedErrorPage,
+} from '../pages/shared/ErrorPages';
+import { roleHome } from '../utils/roles';
 
-// Placeholder pages for unimplemented routes
-const PlaceholderPage = ({ title, description }: { title: string; description: string }) => (
-  <Layout>
-    <div className="text-center py-12">
-      <h1 className="font-headline-lg text-headline-lg text-on-surface mb-2">{title}</h1>
-      <p className="font-body-md text-body-md text-c-text-muted">{description}</p>
-      <div className="mt-4 p-4 bg-c-surface-sunken rounded-lg text-c-text-muted font-caption text-caption">
-        This screen is not yet implemented in Phase 1.
-      </div>
-    </div>
-  </Layout>
-);
-
-export const ProtectedRoute = ({ children, allowedRoles }: { children: React.ReactNode; allowedRoles?: string[] }) => {
+export const ProtectedRoute = ({
+  children,
+  allowedRoles,
+}: {
+  children: React.ReactNode;
+  allowedRoles?: string[];
+}) => {
   const { user, isLoading, isAuthenticated } = useAuth();
 
   if (isLoading) {
     return (
-      <Layout>
-        <div className="min-h-[60vh] flex items-center justify-center">
-          <div className="animate-spin rounded-full h-8 w-8 border-2 border-primary border-t-transparent" />
-        </div>
-      </Layout>
+      <div className="min-h-screen flex items-center justify-center bg-c-bg">
+        <Spinner className="h-7 w-7 text-c-primary-700" label="Checking your session" />
+      </div>
     );
   }
 
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace state={{ from: window.location.pathname }} />;
+    const returnPath = `${window.location.pathname}${window.location.search}`;
+    return <Navigate to={`/login?next=${encodeURIComponent(returnPath)}`} replace />;
   }
 
   if (allowedRoles && !allowedRoles.some(role => user?.roles.includes(role))) {
@@ -43,77 +68,262 @@ export const ProtectedRoute = ({ children, allowedRoles }: { children: React.Rea
   return <>{children}</>;
 };
 
+const CandidateRoute = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute allowedRoles={['CANDIDATE']}>
+    <Layout>{children}</Layout>
+  </ProtectedRoute>
+);
+
+const RecruiterRoute = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute allowedRoles={['RECRUITER']}>
+    <Layout>{children}</Layout>
+  </ProtectedRoute>
+);
+
+const AdminRoute = ({ children }: { children: React.ReactNode }) => (
+  <ProtectedRoute allowedRoles={['ADMIN']}>
+    <Layout>{children}</Layout>
+  </ProtectedRoute>
+);
+
+function WorkspaceRedirect() {
+  const { user, isLoading, isAuthenticated } = useAuth();
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-c-bg">
+        <Spinner className="h-7 w-7 text-c-primary-700" label="Loading workspace" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+
+  return <Navigate to={roleHome(user?.roles)} replace />;
+}
+
 export function AppRoutes() {
   return (
     <Routes>
-      {/* Public routes */}
+      {/* Public */}
+      <Route path="/" element={<PublicLayout><LandingPage /></PublicLayout>} />
       <Route path="/jobs" element={<PublicLayout><JobBrowsePage /></PublicLayout>} />
-      <Route path="/jobs/:jobId" element={<PublicLayout><PlaceholderPage title="Job Detail" description="Job detail page" /></PublicLayout>} />
-      <Route path="/jobs/:jobId/apply" element={<AuthLayout><PlaceholderPage title="Apply to Job" description="Application form" /></AuthLayout>} />
-      
-      {/* Auth routes */}
+      <Route path="/jobs/:jobId" element={<PublicLayout><JobDetailPage /></PublicLayout>} />
+      <Route
+        path="/jobs/:jobId/apply"
+        element={
+          <CandidateRoute>
+            <ApplicationSubmitPage />
+          </CandidateRoute>
+        }
+      />
+
+      {/* Auth */}
       <Route path="/login" element={<AuthLayout><LoginPage /></AuthLayout>} />
       <Route path="/register" element={<AuthLayout><RegisterPage /></AuthLayout>} />
-      <Route path="/session-expired" element={<AuthLayout><PlaceholderPage title="Session Expired" description="Session expired interstitial" /></AuthLayout>} />
-      
-      {/* Error routes - public layout but with error styling */}
-      <Route path="/403" element={<PublicLayout><PlaceholderPage title="Forbidden" description="Access denied" /></PublicLayout>} />
-      <Route path="/404" element={<PublicLayout><PlaceholderPage title="Not Found" description="Page not found" /></PublicLayout>} />
-      <Route path="/error" element={<PublicLayout><PlaceholderPage title="Error" description="Unexpected error" /></PublicLayout>} />
-      <Route path="/offline" element={<PublicLayout><PlaceholderPage title="Offline" description="Network unreachable" /></PublicLayout>} />
-
-      {/* Candidate routes */}
-      <Route 
-        path="/candidate/*" 
+      <Route
+        path="/session-expired"
         element={
-          <ProtectedRoute allowedRoles={['CANDIDATE']}>
-            <PlaceholderPage title="Candidate Area" description="Candidate dashboard area" />
-          </ProtectedRoute>
-        } 
+          <AuthLayout>
+            <SessionExpiredPage />
+          </AuthLayout>
+        }
       />
-      <Route path="/candidate/applications" element={<ProtectedRoute allowedRoles={['CANDIDATE']}><PlaceholderPage title="My Applications" description="Candidate applications list" /></ProtectedRoute>} />
-      <Route path="/candidate/applications/:id" element={<ProtectedRoute allowedRoles={['CANDIDATE']}><PlaceholderPage title="Application Detail" description="Application detail view" /></ProtectedRoute>} />
-      <Route path="/candidate/progress" element={<ProtectedRoute allowedRoles={['CANDIDATE']}><PlaceholderPage title="My Progress" description="Recruitment progress" /></ProtectedRoute>} />
-      <Route path="/candidate/progress/:id" element={<ProtectedRoute allowedRoles={['CANDIDATE']}><PlaceholderPage title="Progress Detail" description="Recruitment progress detail" /></ProtectedRoute>} />
-      <Route path="/candidate/documents" element={<ProtectedRoute allowedRoles={['CANDIDATE']}><PlaceholderPage title="My Documents" description="Document management" /></ProtectedRoute>} />
-      <Route path="/candidate/notifications" element={<ProtectedRoute allowedRoles={['CANDIDATE']}><PlaceholderPage title="Notifications" description="Notification list" /></ProtectedRoute>} />
-      <Route path="/candidate/profile" element={<ProtectedRoute allowedRoles={['CANDIDATE']}><PlaceholderPage title="Profile" description="Read-only profile" /></ProtectedRoute>} />
 
-      {/* Recruiter routes */}
-      <Route 
-        path="/recruiter/*" 
+      {/* Errors */}
+      <Route path="/403" element={<PublicLayout><ForbiddenPage /></PublicLayout>} />
+      <Route path="/404" element={<PublicLayout><NotFoundPage /></PublicLayout>} />
+      <Route path="/error" element={<PublicLayout><UnexpectedErrorPage /></PublicLayout>} />
+      <Route path="/offline" element={<PublicLayout><OfflinePage /></PublicLayout>} />
+
+      {/* Candidate */}
+      <Route path="/candidate" element={<Navigate to="/candidate/applications" replace />} />
+      <Route
+        path="/candidate/applications"
         element={
-          <ProtectedRoute allowedRoles={['RECRUITER']}>
-            <PlaceholderPage title="Recruiter Area" description="Recruiter dashboard area" />
-          </ProtectedRoute>
-        } 
+          <CandidateRoute>
+            <CandidateApplicationsPage />
+          </CandidateRoute>
+        }
       />
-      <Route path="/recruiter/jobs" element={<ProtectedRoute allowedRoles={['RECRUITER']}><PlaceholderPage title="Job Postings" description="Recruiter job postings" /></ProtectedRoute>} />
-      <Route path="/recruiter/jobs/new" element={<ProtectedRoute allowedRoles={['RECRUITER']}><PlaceholderPage title="Create Job" description="Create new job posting" /></ProtectedRoute>} />
-      <Route path="/recruiter/jobs/:jobId" element={<ProtectedRoute allowedRoles={['RECRUITER']}><PlaceholderPage title="Job Detail" description="Recruiter job detail" /></ProtectedRoute>} />
-      <Route path="/recruiter/jobs/:jobId/edit" element={<ProtectedRoute allowedRoles={['RECRUITER']}><PlaceholderPage title="Edit Job" description="Edit job posting" /></ProtectedRoute>} />
-      <Route path="/recruiter/applications" element={<ProtectedRoute allowedRoles={['RECRUITER']}><PlaceholderPage title="Application Lookup" description="Lookup application by ID" /></ProtectedRoute>} />
-      <Route path="/recruiter/applications/:id" element={<ProtectedRoute allowedRoles={['RECRUITER']}><PlaceholderPage title="Application Review" description="Review application" /></ProtectedRoute>} />
-      <Route path="/recruiter/recruitments" element={<ProtectedRoute allowedRoles={['RECRUITER']}><PlaceholderPage title="Recruitments" description="Recruitment list" /></ProtectedRoute>} />
-      <Route path="/recruiter/recruitments/:id" element={<ProtectedRoute allowedRoles={['RECRUITER']}><PlaceholderPage title="Recruitment Workflow" description="Recruitment workflow detail" /></ProtectedRoute>} />
-      <Route path="/recruiter/profile" element={<ProtectedRoute allowedRoles={['RECRUITER']}><PlaceholderPage title="Profile" description="Read-only profile" /></ProtectedRoute>} />
-
-      {/* Admin routes */}
-      <Route 
-        path="/admin/*" 
+      <Route
+        path="/candidate/applications/:applicationId"
         element={
-          <ProtectedRoute allowedRoles={['ADMIN']}>
-            <PlaceholderPage title="Admin Area" description="Admin dashboard area" />
-          </ProtectedRoute>
-        } 
+          <CandidateRoute>
+            <ApplicationDetailPage />
+          </CandidateRoute>
+        }
       />
-      <Route path="/admin/overview" element={<ProtectedRoute allowedRoles={['ADMIN']}><PlaceholderPage title="Admin Overview" description="Admin overview" /></ProtectedRoute>} />
-      <Route path="/admin/recruitments" element={<ProtectedRoute allowedRoles={['ADMIN']}><PlaceholderPage title="All Recruitments" description="All recruitments list" /></ProtectedRoute>} />
-      <Route path="/admin/lookup" element={<ProtectedRoute allowedRoles={['ADMIN']}><PlaceholderPage title="Record Lookup" description="Lookup by ID" /></ProtectedRoute>} />
-      <Route path="/admin/profile" element={<ProtectedRoute allowedRoles={['ADMIN']}><PlaceholderPage title="Profile" description="Read-only profile" /></ProtectedRoute>} />
+      <Route
+        path="/candidate/progress"
+        element={
+          <CandidateRoute>
+            <ProgressPage />
+          </CandidateRoute>
+        }
+      />
+      <Route
+        path="/candidate/progress/:recruitmentId"
+        element={
+          <CandidateRoute>
+            <ProgressDetailPage />
+          </CandidateRoute>
+        }
+      />
+      <Route
+        path="/candidate/documents"
+        element={
+          <CandidateRoute>
+            <DocumentsPage />
+          </CandidateRoute>
+        }
+      />
+      <Route
+        path="/candidate/notifications"
+        element={
+          <CandidateRoute>
+            <NotificationsPage />
+          </CandidateRoute>
+        }
+      />
+      <Route
+        path="/candidate/notifications/:notificationId"
+        element={
+          <CandidateRoute>
+            <NotificationDetailPage />
+          </CandidateRoute>
+        }
+      />
+      <Route
+        path="/candidate/profile"
+        element={
+          <CandidateRoute>
+            <CandidateProfilePage />
+          </CandidateRoute>
+        }
+      />
 
-      {/* Redirect root to jobs */}
-      <Route path="/" element={<Navigate to="/jobs" replace />} />
+      {/* Recruiter */}
+      <Route path="/recruiter" element={<Navigate to="/recruiter/jobs" replace />} />
+      <Route
+        path="/recruiter/jobs"
+        element={
+          <RecruiterRoute>
+            <RecruiterJobsPage />
+          </RecruiterRoute>
+        }
+      />
+      <Route
+        path="/recruiter/jobs/new"
+        element={
+          <RecruiterRoute>
+            <JobCreatePage />
+          </RecruiterRoute>
+        }
+      />
+      <Route
+        path="/recruiter/jobs/:jobId"
+        element={
+          <RecruiterRoute>
+            <RecruiterJobDetailPage />
+          </RecruiterRoute>
+        }
+      />
+      <Route
+        path="/recruiter/jobs/:jobId/edit"
+        element={
+          <RecruiterRoute>
+            <JobEditPage />
+          </RecruiterRoute>
+        }
+      />
+      <Route
+        path="/recruiter/applications"
+        element={
+          <RecruiterRoute>
+            <RecruiterApplicationLookupPage />
+          </RecruiterRoute>
+        }
+      />
+      <Route
+        path="/recruiter/applications/:applicationId"
+        element={
+          <RecruiterRoute>
+            <RecruiterApplicationLookupPage />
+          </RecruiterRoute>
+        }
+      />
+      <Route
+        path="/recruiter/recruitments"
+        element={
+          <RecruiterRoute>
+            <RecruiterRecruitmentsPage />
+          </RecruiterRoute>
+        }
+      />
+      <Route
+        path="/recruiter/recruitments/:recruitmentId"
+        element={
+          <RecruiterRoute>
+            <RecruiterRecruitmentDetailPage />
+          </RecruiterRoute>
+        }
+      />
+      <Route
+        path="/recruiter/profile"
+        element={
+          <RecruiterRoute>
+            <RecruiterProfilePage />
+          </RecruiterRoute>
+        }
+      />
+
+      {/* Admin */}
+      <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />
+      <Route
+        path="/admin/overview"
+        element={
+          <AdminRoute>
+            <AdminOverviewPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/recruitments"
+        element={
+          <AdminRoute>
+            <AdminRecruitmentsPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/recruitments/:recruitmentId"
+        element={
+          <AdminRoute>
+            <AdminRecruitmentDetailPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/lookup"
+        element={
+          <AdminRoute>
+            <AdminLookupPage />
+          </AdminRoute>
+        }
+      />
+      <Route
+        path="/admin/profile"
+        element={
+          <AdminRoute>
+            <AdminProfilePage />
+          </AdminRoute>
+        }
+      />
+
+      <Route path="/workspace" element={<WorkspaceRedirect />} />
       <Route path="*" element={<Navigate to="/404" replace />} />
     </Routes>
   );

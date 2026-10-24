@@ -8,6 +8,7 @@ import com.smarthire.recruitment.service.ApplicationSyncConflictException;
 import com.smarthire.recruitment.service.RecruitmentConflictException;
 import com.smarthire.recruitment.service.RecruitmentForbiddenException;
 import com.smarthire.recruitment.service.RecruitmentNotFoundException;
+import com.smarthire.recruitment.service.RecruitmentScheduleException;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
 import org.slf4j.MDC;
@@ -86,6 +87,12 @@ public class RecruitmentExceptionHandler {
   @ExceptionHandler(RecruitmentConflictException.class)
   public ProblemDetail handleConflict(RecruitmentConflictException ex, HttpServletRequest request) {
     return problem(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
+  }
+
+  @ExceptionHandler(RecruitmentScheduleException.class)
+  public ProblemDetail handleScheduleValidation(
+      RecruitmentScheduleException ex, HttpServletRequest request) {
+    return problem(HttpStatus.BAD_REQUEST, "Bad Request", ex.getMessage(), request);
   }
 
   /**

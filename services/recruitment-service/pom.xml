@@ -57,6 +57,15 @@
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-openfeign</artifactId>
     </dependency>
+    <!--
+      Apache HttpClient 5 as the Feign transport. OpenFeign's default client is built on
+      HttpURLConnection, which throws "Invalid HTTP method: PATCH" for every PATCH request, so
+      without this dependency ApplicationClient.updateStatus can never reach application-service.
+    -->
+    <dependency>
+      <groupId>io.github.openfeign</groupId>
+      <artifactId>feign-hc5</artifactId>
+    </dependency>
     <dependency>
       <groupId>org.springframework.cloud</groupId>
       <artifactId>spring-cloud-starter-circuitbreaker-resilience4j</artifactId>

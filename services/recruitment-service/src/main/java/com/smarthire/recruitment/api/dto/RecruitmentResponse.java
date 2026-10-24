@@ -1,7 +1,10 @@
 package com.smarthire.recruitment.api.dto;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.smarthire.recruitment.domain.Recruitment;
 import io.swagger.v3.oas.annotations.media.Schema;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 
 /**
@@ -44,6 +47,11 @@ public record RecruitmentResponse(
             description = "Current interview status",
             example = "SCHEDULED")
         String interviewStatus,
+    @Schema(description = "Scheduled interview date") LocalDate interviewDate,
+    @Schema(description = "Scheduled interview start time") @JsonFormat(pattern = "HH:mm")
+        LocalTime interviewStartTime,
+    @Schema(description = "Scheduled interviewer") String interviewer,
+    @Schema(description = "Scheduled interview location") String interviewLocation,
     @Schema(name = "finalStatus", description = "Final outcome status", example = "HIRED")
         String finalStatus) {
 
@@ -54,6 +62,10 @@ public record RecruitmentResponse(
         recruitment.getJobId(),
         recruitment.getCandidateId(),
         recruitment.getInterviewStatus().name(),
+        recruitment.getInterviewDate(),
+        recruitment.getInterviewStartTime(),
+        recruitment.getInterviewer(),
+        recruitment.getInterviewLocation(),
         recruitment.getFinalStatus().name());
   }
 }

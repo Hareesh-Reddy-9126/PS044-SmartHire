@@ -1,18 +1,17 @@
 package com.smarthire.ai.infra;
 
-import com.smarthire.ai.api.dto.MatchScoreRequest;
-import com.smarthire.ai.api.dto.MatchScoreResponse;
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.smarthire.ai.api.dto.CandidateSummaryRequest;
 import com.smarthire.ai.api.dto.CandidateSummaryResponse;
 import com.smarthire.ai.api.dto.JdAssistRequest;
 import com.smarthire.ai.api.dto.JdAssistResponse;
+import com.smarthire.ai.api.dto.MatchScoreRequest;
+import com.smarthire.ai.api.dto.MatchScoreResponse;
 import com.smarthire.ai.api.dto.ResumeParseRequest;
 import com.smarthire.ai.api.dto.ResumeParseResponse;
-import org.junit.jupiter.api.Test;
-
 import java.util.UUID;
-
-import static org.assertj.core.api.Assertions.assertThat;
+import org.junit.jupiter.api.Test;
 
 /**
  * Tests for {@link MockAiProvider}.
@@ -72,11 +71,12 @@ class MockAiProviderTest {
 
   @Test
   void assistJd() {
-    JdAssistRequest request = new JdAssistRequest(
-        "Senior Software Engineer",
-        "Senior",
-        "We need a Senior Software Engineer.",
-        "professional");
+    JdAssistRequest request =
+        new JdAssistRequest(
+            "Senior Software Engineer",
+            "Senior",
+            "We need a Senior Software Engineer.",
+            "professional");
 
     JdAssistResponse response = provider.assistJd(request);
 

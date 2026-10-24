@@ -175,6 +175,21 @@ public class AuthService {
     return userRepository.findById(userId).map(user -> user.getRole() == Role.ADMIN).orElse(false);
   }
 
+  /**
+   * Resolves the current email for a user id. Backs the internal user-directory endpoint used by
+   * notification-service, which must address candidate notifications to a real mailbox rather than
+   * a value derived from the id.
+   *
+   * @throws UserNotFoundException when no such user exists
+   */
+  @Transactional(readOnly = true)
+  public String emailOf(UUID userId) {
+    return userRepository
+        .findById(userId)
+        .map(User::getEmail)
+        .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+  }
+
   private AuthTokens issueFor(User user) {
     IssuedToken access = jwtIssuer.issue(user.getId(), roles(user), user.getOrgId());
     String refresh = refreshTokenService.issue(user.getId());

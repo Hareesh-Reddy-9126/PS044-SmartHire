@@ -179,6 +179,26 @@ class AuthServiceTest {
   }
 
   @Test
+  void emailOfReturnsTheStoredAddress() {
+    UUID userId = UUID.randomUUID();
+    when(userRepository.findById(userId))
+        .thenReturn(
+            Optional.of(new User(userId, "ada@example.com", "HASHED", Role.CANDIDATE, null, NOW)));
+
+    assertThat(service.emailOf(userId)).isEqualTo("ada@example.com");
+  }
+
+  @Test
+  void emailOfRejectsAnUnknownUser() {
+    UUID userId = UUID.randomUUID();
+    when(userRepository.findById(userId)).thenReturn(Optional.empty());
+
+    assertThatThrownBy(() -> service.emailOf(userId))
+        .isInstanceOf(UserNotFoundException.class)
+        .hasMessage("User not found: " + userId);
+  }
+
+  @Test
   void refreshRotatesTheTokenAndIssuesANewAccessToken() {
     UUID userId = UUID.randomUUID();
     when(refreshTokenService.rotate("old-refresh"))

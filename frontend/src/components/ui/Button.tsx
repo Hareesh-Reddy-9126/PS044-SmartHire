@@ -1,62 +1,72 @@
 import React from 'react';
+import { Spinner } from './Spinner';
 
-interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'danger';
-  size?: 'sm' | 'md' | 'lg';
+export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'ghost';
+export type ButtonSize = 'sm' | 'md' | 'lg';
+
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: ButtonVariant;
+  size?: ButtonSize;
   isLoading?: boolean;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  fullWidth?: boolean;
 }
 
-export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
-  ({ 
-    variant = 'primary', 
-    size = 'md', 
-    isLoading = false, 
-    leftIcon, 
-    rightIcon, 
-    children, 
+const VARIANT_CLASS: Record<ButtonVariant, string> = {
+  primary: 'btn btn-primary',
+  secondary: 'btn btn-secondary',
+  danger: 'btn btn-danger',
+  ghost: 'btn btn-ghost',
+};
+
+const SIZE_CLASS: Record<ButtonSize, string> = {
+  sm: 'btn-sm',
+  md: 'btn-md',
+  lg: 'btn-lg',
+};
+
+/**
+ * The application's only button primitive.
+ *
+ * `type` is deliberately not defaulted: a button inside a form must keep the
+ * platform default of `submit`, which callers rely on for implicit submission.
+ */
+export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(function Button(
+  {
+    variant = 'primary',
+    size = 'md',
+    isLoading = false,
+    leftIcon,
+    rightIcon,
+    fullWidth = false,
     className = '',
     disabled,
-    ...props 
-  }, ref) => {
-    const baseClasses = 'btn focus-ring';
-    const variantClasses = {
-      primary: 'btn-primary',
-      secondary: 'btn-secondary',
-      danger: 'btn-danger',
-    };
-    const sizeClasses = {
-      sm: 'btn-sm',
-      md: '',
-      lg: 'btn-lg',
-    };
-
-    return (
-      <button
-        ref={ref}
-        className={`${baseClasses} ${variantClasses[variant]} ${sizeClasses[size]} ${className}`}
-        disabled={disabled || isLoading}
-        {...props}
-      >
-        {isLoading ? (
-          <>
-            <svg className="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
-              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z" />
-            </svg>
-            <span>Loading...</span>
-          </>
-        ) : (
-          <>
-            {leftIcon && <span className="flex-shrink-0">{leftIcon}</span>}
-            {children}
-            {rightIcon && <span className="flex-shrink-0">{rightIcon}</span>}
-          </>
-        )}
-      </button>
-    );
-  }
-);
-
-Button.displayName = 'Button';
+    children,
+    ...rest
+  },
+  ref
+) {
+  return (
+    <button
+      ref={ref}
+      className={`btn ${VARIANT_CLASS[variant]} ${SIZE_CLASS[size]} ${fullWidth ? 'w-full' : ''} ${className}`}
+      disabled={disabled || isLoading}
+      aria-busy={isLoading || undefined}
+      {...rest}
+    >
+      {isLoading ? (
+        <>
+          <Spinner className="h-4 w-4" />
+          {children}
+        </>
+      ) : (
+        <>
+          {leftIcon}
+          {children}
+          {rightIcon}
+        </>
+      )}
+    </button>
+  );
+});

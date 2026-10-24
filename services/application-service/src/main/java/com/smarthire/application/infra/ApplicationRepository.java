@@ -24,6 +24,8 @@ public interface ApplicationRepository
 
   Page<Application> findByCandidateId(UUID candidateId, Pageable pageable);
 
+  Page<Application> findByJobId(UUID jobId, Pageable pageable);
+
   List<Application> findByCandidateId(UUID candidateId);
 
   List<Application> findByJobId(UUID jobId);

@@ -11,9 +11,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 /**
  * OpenFeign client for Application Service.
  *
- * <p>Calls {@code GET /api/v1/applications/{applicationId}} to read application details for
- * match scoring and candidate summaries. Protected by Resilience4j circuit breaker, retry, and
- * bulkhead for fault tolerance.
+ * <p>Calls {@code GET /api/v1/applications/{applicationId}} to read application details for match
+ * scoring and candidate summaries. Protected by Resilience4j circuit breaker, retry, and bulkhead
+ * for fault tolerance.
  */
 @FeignClient(name = "APPLICATION-SERVICE")
 public interface ApplicationClient {
@@ -30,9 +30,7 @@ public interface ApplicationClient {
   @Bulkhead(name = "applicationService")
   ApplicationResponse getApplication(@PathVariable("applicationId") UUID applicationId);
 
-  /**
-   * Fallback for circuit breaker / bulkhead when Application Service is unavailable.
-   */
+  /** Fallback for circuit breaker / bulkhead when Application Service is unavailable. */
   default ApplicationResponse getApplicationFallback(UUID applicationId, Exception ex) {
     throw new ApplicationServiceUnavailableException(
         "Application service unavailable: " + ex.getMessage());
@@ -40,11 +38,7 @@ public interface ApplicationClient {
 
   /** Mirror of application-service's {@code ApplicationResponse}. */
   record ApplicationResponse(
-      UUID applicationId,
-      UUID jobId,
-      UUID candidateId,
-      String resumeLink,
-      String status) {}
+      UUID applicationId, UUID jobId, UUID candidateId, String resumeLink, String status) {}
 
   /** Exception thrown when Application Service is unavailable. */
   class ApplicationServiceUnavailableException extends RuntimeException {

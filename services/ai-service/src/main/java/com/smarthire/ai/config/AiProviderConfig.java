@@ -8,10 +8,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Profile;
 
 /**
- * AI provider configuration. Selects the provider implementation based on
- * {@code smarthire.ai.provider} property.
+ * AI provider configuration. Selects the provider implementation based on {@code
+ * smarthire.ai.provider} property.
  *
  * <p>Supported providers:
+ *
  * <ul>
  *   <li>{@code mock} — deterministic mock for local development and testing (default)
  *   <li>{@code claude} — Anthropic Claude (requires {@code AI_CLAUDE_API_KEY}, not implemented)
@@ -39,11 +40,13 @@ public class AiProviderConfig {
       case "mock" -> new MockAiProvider();
       case "claude" -> {
         // TODO: Implement real Claude provider when AI_CLAUDE_API_KEY is available
-        // throw new IllegalStateException("Claude provider not yet implemented; set AI_PROVIDER=mock");
+        // throw new IllegalStateException("Claude provider not yet implemented; set
+        // AI_PROVIDER=mock");
         yield new MockAiProvider(); // Temporary fallback
       }
-      default -> throw new IllegalArgumentException(
-          "Unknown AI provider: " + provider + ". Supported: mock, claude");
+      default ->
+          throw new IllegalArgumentException(
+              "Unknown AI provider: " + provider + ". Supported: mock, claude");
     };
   }
 }

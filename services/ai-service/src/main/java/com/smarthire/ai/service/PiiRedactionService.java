@@ -9,10 +9,11 @@ import org.springframework.stereotype.Component;
 /**
  * PII redaction utility for sanitizing untrusted text before sending to AI providers.
  *
- * <p>Redacts common PII patterns: email addresses, phone numbers, SSNs, physical addresses,
- * and personal names (heuristic). Uses regex-based pattern matching with replacement tokens.
+ * <p>Redacts common PII patterns: email addresses, phone numbers, SSNs, physical addresses, and
+ * personal names (heuristic). Uses regex-based pattern matching with replacement tokens.
  *
  * <p><b>Limitations:</b>
+ *
  * <ul>
  *   <li>Regex-based redaction is heuristic, not guaranteed complete
  *   <li>Names are detected via capitalization heuristics — false positives/negatives expected
@@ -20,8 +21,8 @@ import org.springframework.stereotype.Component;
  *   <li>Context-aware NER would be more accurate but requires additional dependencies
  * </ul>
  *
- * <p>This utility provides a best-effort safety layer. The AI provider interface contract
- * requires that implementations treat all input as untrusted and apply their own defenses.
+ * <p>This utility provides a best-effort safety layer. The AI provider interface contract requires
+ * that implementations treat all input as untrusted and apply their own defenses.
  */
 @Component
 public class PiiRedactionService {
@@ -54,8 +55,7 @@ public class PiiRedactionService {
   // Name heuristic: Two or three capitalized words (First [Middle] Last)
   // This is a heuristic and will have false positives/negatives
   private static final Pattern NAME_PATTERN =
-      Pattern.compile(
-          "(?<!\\w)(?:[A-Z][a-z]+\\s+){1,2}[A-Z][a-z]+(?!\\w)");
+      Pattern.compile("(?<!\\w)(?:[A-Z][a-z]+\\s+){1,2}[A-Z][a-z]+(?!\\w)");
 
   // Replacement tokens
   private static final String EMAIL_REPLACEMENT = "[EMAIL_REDACTED]";
@@ -88,7 +88,10 @@ public class PiiRedactionService {
     result = redactNames(result);
 
     if (!result.equals(text)) {
-      log.debug("PII redaction applied: original length={}, redacted length={}", text.length(), result.length());
+      log.debug(
+          "PII redaction applied: original length={}, redacted length={}",
+          text.length(),
+          result.length());
     }
 
     return result;
@@ -115,17 +118,80 @@ public class PiiRedactionService {
   }
 
   /**
-   * List of common words that match the name pattern but aren't personal names.
+   * Whether a name-pattern match is really a run of known technical or job-title terms (e.g.
+   * "Spring Boot", "Senior Architect"). The name pattern only matches two or more capitalized
+   * words, so the allow-list has to be applied per word; every word must be a known term, so a real
+   * name that merely contains one (e.g. "John Spring") is still redacted.
    */
-  private boolean isCommonFalsePositive(String word) {
-    return switch (word.toLowerCase()) {
-      case "java", "spring", "boot", "react", "angular", "vue", "node", "python", "sql", "aws",
-           "azure", "gcp", "docker", "kubernetes", "jenkins", "git", "jira", "confluence",
-           "github", "gitlab", "bitbucket", "linux", "windows", "macos", "ubuntu", "debian",
-           "postgresql", "mysql", "mongodb", "redis", "kafka", "rabbitmq", "elasticsearch",
-           "rest", "graphql", "grpc", "microservices", "ci", "cd", "ci/cd", "agile", "scrum",
-           "kanban", "junior", "senior", "lead", "principal", "staff", "architect", "manager",
-           "director", "vp", "cto", "ceo", "cfo", "coo" -> true;
+  private boolean isCommonFalsePositive(String match) {
+    for (String word : match.split("\s+")) {
+      if (!isKnownNonNameTerm(word)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  /** Common words that match the name pattern's capitalization but aren't personal names. */
+  private boolean isKnownNonNameTerm(String word) {
+    return switch (word.toLowerCase(java.util.Locale.ROOT)) {
+      case "java",
+              "spring",
+              "boot",
+              "react",
+              "angular",
+              "vue",
+              "node",
+              "python",
+              "sql",
+              "aws",
+              "azure",
+              "gcp",
+              "docker",
+              "kubernetes",
+              "jenkins",
+              "git",
+              "jira",
+              "confluence",
+              "github",
+              "gitlab",
+              "bitbucket",
+              "linux",
+              "windows",
+              "macos",
+              "ubuntu",
+              "debian",
+              "postgresql",
+              "mysql",
+              "mongodb",
+              "redis",
+              "kafka",
+              "rabbitmq",
+              "elasticsearch",
+              "rest",
+              "graphql",
+              "grpc",
+              "microservices",
+              "ci",
+              "cd",
+              "ci/cd",
+              "agile",
+              "scrum",
+              "kanban",
+              "junior",
+              "senior",
+              "lead",
+              "principal",
+              "staff",
+              "architect",
+              "manager",
+              "director",
+              "vp",
+              "cto",
+              "ceo",
+              "cfo",
+              "coo" ->
+          true;
       default -> false;
     };
   }

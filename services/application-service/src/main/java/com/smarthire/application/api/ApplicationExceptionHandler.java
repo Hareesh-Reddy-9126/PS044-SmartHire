@@ -1,6 +1,5 @@
 package com.smarthire.application.api;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smarthire.application.infra.JobClient;
 import com.smarthire.application.service.ApplicationForbiddenException;
 import com.smarthire.application.service.ApplicationNotFoundException;
@@ -39,12 +38,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 @Component
 @Order(Ordered.HIGHEST_PRECEDENCE)
 public class ApplicationExceptionHandler {
-
-  private final ObjectMapper objectMapper;
-
-  public ApplicationExceptionHandler(ObjectMapper objectMapper) {
-    this.objectMapper = objectMapper;
-  }
 
   @ExceptionHandler(ApplicationNotFoundException.class)
   public ProblemDetail handleNotFound(ApplicationNotFoundException ex, HttpServletRequest request) {

@@ -3,6 +3,7 @@ package com.smarthire.auth.api;
 import com.smarthire.auth.service.EmailAlreadyExistsException;
 import com.smarthire.auth.service.InvalidCredentialsException;
 import com.smarthire.auth.service.InvalidTokenException;
+import com.smarthire.auth.service.UserNotFoundException;
 import com.smarthire.common.web.CorrelationId;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
@@ -32,6 +33,11 @@ public class AuthExceptionHandler {
   @ExceptionHandler(InvalidTokenException.class)
   public ProblemDetail handleInvalidToken(InvalidTokenException ex) {
     return problem(HttpStatus.UNAUTHORIZED, "Invalid token", "The supplied token is invalid.");
+  }
+
+  @ExceptionHandler(UserNotFoundException.class)
+  public ProblemDetail handleUserNotFound(UserNotFoundException ex) {
+    return problem(HttpStatus.NOT_FOUND, "User not found", ex.getMessage());
   }
 
   private static ProblemDetail problem(HttpStatus status, String title, String detail) {

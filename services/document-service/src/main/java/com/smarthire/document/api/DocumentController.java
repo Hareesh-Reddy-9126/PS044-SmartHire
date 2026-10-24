@@ -6,6 +6,7 @@ import com.smarthire.document.domain.DocumentType;
 import com.smarthire.document.security.DocumentPrincipal;
 import com.smarthire.document.service.DocumentForbiddenException;
 import com.smarthire.document.service.DocumentService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -56,6 +57,10 @@ public class DocumentController {
 
   private final DocumentService documentService;
 
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP2",
+      justification =
+          "DocumentService is a Spring-managed collaborator and is never exposed or mutated by this controller.")
   public DocumentController(DocumentService documentService) {
     this.documentService = documentService;
   }

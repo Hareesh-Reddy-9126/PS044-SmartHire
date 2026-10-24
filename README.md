@@ -1,300 +1,389 @@
-<!--
-SmartHire README — enhanced with 3D cards, CSS animations, SVG illustrations, and top-repo design inspiration.
-GitHub strips <script> and <style> in READMEs, so all motion is achieved with inline SVG/CSS and animated assets.
--->
-<div align="center">
-
 # SmartHire
 
-**Online Job Recruitment Platform — Microservices & SOA**
+### Employment decision architecture
 
-A production-grade, full-stack job recruitment system built with **Spring Boot 3.x**, **Spring Cloud**, **PostgreSQL**, **Redis**, **React + TypeScript + Vite**, and **Docker Compose**. Auth, job posting, applications, recruitment workflows, documents, and notifications — all behind a single API Gateway with Eureka service discovery.
+**SmartHire** is a full-stack, microservices recruitment platform for candidates, recruiters, and administrators. It covers public job discovery, applications, interview scheduling, documents, notifications, and AI-assisted matching in one accountable hiring record.
 
-</div>
+[![CI](https://github.com/Hareesh-Reddy-9126/PS044-SmartHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Hareesh-Reddy-9126/PS044-SmartHire/actions/workflows/ci.yml)
+[![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
+[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.1-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
+[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=111111)](https://react.dev/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
+[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
 
----
-
-<div align="center">
-
-[![Java](https://img.shields.io/badge/Java-21-007396?style=for-the-badge&logo=java&logoColor=white)](https://adoptium.net/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.x-6DB33F?style=for-the-badge&logo=spring-boot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![Spring Cloud](https://img.shields.io/badge/Spring%20Cloud-2023.x-6DB33F?style=for-the-badge&logo=spring&logoColor=white)](https://spring.io/projects/spring-cloud)
-[![React](https://img.shields.io/badge/React-18-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?style=for-the-badge&logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Vite](https://img.shields.io/badge/Vite-5-646CFF?style=for-the-badge&logo=vite&logoColor=white)](https://vitejs.dev/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
-[![Redis](https://img.shields.io/badge/Redis-7-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?style=for-the-badge&logo=docker&logoColor=white)](https://www.docker.com/)
-[![Maven](https://img.shields.io/badge/Maven-3.9-C71A36?style=for-the-badge&logo=apache-maven&logoColor=white)](https://maven.apache.org/)
-
-</div>
+> **Project 44** — 24SDCS03A/R, SOA Programming and Microservices (AY 2026–27).
 
 ---
 
-## 🚀 One-line demo
+## Contents
 
-```bash
-# 1. Clone
-git clone https://github.com/Hareesh-Reddy-9126/PS044-SmartHire.git
-cd PS044-SmartHire
+- [Overview](#overview)
+- [Feature highlights](#feature-highlights)
+- [Architecture](#architecture)
+- [Technology stack](#technology-stack)
+- [Repository layout](#repository-layout)
+- [Quick start](#quick-start)
+- [Configuration](#configuration)
+- [Roles and routes](#roles-and-routes)
+- [Frontend](#frontend)
+- [API surface](#api-surface)
+- [Quality and testing](#quality-and-testing)
+- [Security](#security)
+- [Known limitations](#known-limitations)
+- [Documentation](#documentation)
+- [Contributing](#contributing)
 
-# 2. Configure environment
-cp deploy/.env.example deploy/.env
-# edit deploy/.env -> set POSTGRES_USER / POSTGRES_PASSWORD
+---
 
-# 3. Start the whole stack
-docker compose -f deploy/docker-compose.yml --env-file deploy/.env up --build
+## Overview
 
-# 4. Smoke test through the gateway
-curl http://localhost:8080/api/v1/jobs
+SmartHire is built as a set of independently deployable Spring Boot services behind a single Spring Cloud Gateway, with a React single-page application as the client.
+
+The platform has three authenticated workspaces:
+
+- **Candidate** — discover roles, apply, track application and interview progress, manage documents, and read notifications.
+- **Recruiter** — create and manage job postings, review applicants by job, run the recruitment workflow, schedule interviews, and record final decisions.
+- **Administrator** — monitor the recruitment pipeline, inspect recruitments, look up applications, and manage the account profile.
+
+The backend is the source of truth for authorization. The frontend route guards improve navigation but are not a security boundary.
+
+## Feature highlights
+
+| Area | Capabilities |
+|---|---|
+| Public discovery | Paginated job search, location and status filters, job detail pages, responsive public shell |
+| Candidate workspace | Applications list and detail, apply and withdraw, progress timeline, document upload/download/delete, notifications, profile |
+| Recruiter workspace | Job CRUD and lifecycle actions, job-scoped applicant list, application lookup, recruitment creation, interview scheduling, interview status and final decision |
+| Admin workspace | Recruitment overview, recruitment detail, application lookup, profile |
+| Identity | RS256 JWT access tokens, JWKS verification, Redis-backed refresh sessions and revocation, role-based access control |
+| Reliability | Eureka discovery, OpenFeign clients, Resilience4j circuit breakers/retries/bulkheads, RFC 9457 error responses, correlation IDs |
+| AI service | Deterministic mock provider by default; optional Claude provider, PII redaction, prompt-injection defenses, and a kill switch |
+| Frontend system | Custom “decision record” visual language, accessible primitives, responsive app/auth/public shells, reduced-motion support |
+
+## Architecture
+
+```mermaid
+flowchart LR
+    Browser["React SPA<br/>Vite :5173"] --> Gateway["API Gateway<br/>:8080"]
+    Gateway --> Eureka["Eureka<br/>:8761"]
+    Gateway --> Auth["auth-service<br/>:8082"]
+    Gateway --> Jobs["job-service<br/>:8081"]
+    Gateway --> Apps["application-service<br/>:8083"]
+    Gateway --> Recruit["recruitment-service<br/>:8084"]
+    Gateway --> Docs["document-service<br/>:8085"]
+    Gateway --> Notes["notification-service<br/>:8086"]
+    Gateway --> AI["ai-service<br/>:8087"]
+
+    Auth --> Redis[("Redis 7")]
+    Auth --> PG[("PostgreSQL 16")]
+    Jobs --> PG
+    Apps --> PG
+    Recruit --> PG
+    Docs --> PG
+    Notes --> PG
+    AI --> PG
+
+    Apps -. OpenFeign .-> Jobs
+    Apps -. OpenFeign .-> Notes
+    Recruit -. OpenFeign .-> Apps
+    Recruit -. OpenFeign .-> Jobs
+    AI -. OpenFeign .-> Apps
+    AI -. OpenFeign .-> Jobs
+    AI -. OpenFeign .-> Docs
 ```
 
----
+- The **API Gateway** is the only public backend entry point. It routes to services through Eureka and verifies JWTs against the auth-service JWKS.
+- Each service owns its **PostgreSQL schema** and Flyway migration history.
+- **Redis** holds refresh-token state and the shared JWT `jti` denylist.
+- **OpenFeign** calls are protected with Resilience4j fault-tolerance policies.
+- **Document storage** is an abstraction with a local volume in the Compose stack; it can be replaced without changing the API.
+- **AI** runs as an optional service with a kill switch and a deterministic mock provider for local development.
 
-## ✨ Features
+## Technology stack
 
-<div align="center">
+| Layer | Technologies |
+|---|---|
+| Frontend | React 18, TypeScript 5, Vite 5, React Router 6, Tailwind CSS 3, Vitest, Testing Library |
+| Backend | Java 21, Spring Boot 3.4.1, Spring Cloud 2024.0.0 (Moorgate), Spring Security 6, Spring Data JPA, Flyway, OpenFeign, Resilience4j |
+| Data | PostgreSQL 16 (per-service schemas), Redis 7 |
+| API and discovery | REST, RFC 9457 Problem Details, springdoc OpenAPI, Eureka, correlation IDs |
+| Delivery | Docker Compose, GitHub Actions, Maven multi-module build, Spotless, SpotBugs, OWASP Dependency-Check |
 
-<table>
-  <tr>
-    <td>
-      <div class="card3d">
-        <div class="face front">🔐<br/><b>Auth & JWT</b></div>
-        <div class="face back">Register, login, refresh, JWKS, role-based access (candidate/recruiter/admin).</div>
-      </div>
-    </td>
-    <td>
-      <div class="card3d">
-        <div class="face front">💼<br/><b>Jobs</b></div>
-        <div class="face back">Create, publish, browse, filter, paginate, search job postings.</div>
-      </div>
-    </td>
-    <td>
-      <div class="card3d">
-        <div class="face front">📄<br/><b>Applications</b></div>
-        <div class="face back">Apply to jobs, track status, recruiter review pipeline.</div>
-      </div>
-    </td>
-  </tr>
-  <tr>
-    <td>
-      <div class="card3d">
-        <div class="face front">🤝<br/><b>Recruitment</b></div>
-        <div class="face back">Schedule interviews, complete interviews, set final hire/reject status.</div>
-      </div>
-    </td>
-    <td>
-      <div class="card3d">
-        <div class="face front">📎<br/><b>Documents</b></div>
-        <div class="face back">Resume upload, document storage, recruiter/candidate access rules.</div>
-      </div>
-    </td>
-    <td>
-      <div class="card3d">
-        <div class="face front">🔔<br/><b>Notifications</b></div>
-        <div class="face back">Status updates, email/websocket alerts to candidates and recruiters.</div>
-      </div>
-    </td>
-  </tr>
-</table>
-
-</div>
-
-<style>
-.card3d {
-  perspective: 1000px;
-  display: inline-block;
-  width: 210px;
-  height: 140px;
-  position: relative;
-  transition: transform 0.25s;
-}
-.card3d:hover { transform: rotateY(10deg) rotateX(5deg) scale(1.03); }
-.card3d .face {
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  border-radius: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-direction: column;
-  gap: 6px;
-  font-family: system-ui, -apple-system, sans-serif;
-  font-size: 12px;
-  line-height: 1.3;
-  color: #fff;
-  box-shadow: 0 8px 24px rgba(0,0,0,0.18);
-  border: 1px solid rgba(255,255,255,0.25);
-}
-.card3d .front { background: linear-gradient(135deg, #4f46e5 0%, #06b6d4 100%); }
-.card3d .back  { background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%); transform: rotateY(180deg); }
-.card3d .face b { display: block; margin-top: 4px; font-size: 14px; }
-</style>
-
----
-
-## 🧱 Architecture
-
-<div align="center">
+## Repository layout
 
 ```text
-  Browser / Postman
-        │
-        ▼
-┌─────────────────────┐     ┌──────────────────┐
-│   API Gateway       │────▶│  Eureka Server   │
-│  (port 8080)        │     │  (port 8761)     │
-└──────────┬──────────┘     └──────────────────┘
-           │
-      ┌────┴────┐
-      ▼         ▼
-┌─────────┐ ┌──────────┐ ┌──────────────┐ ┌──────────────┐ ┌────────────┐
-│ Auth    │ │ Job      │ │ Application  │ │ Recruitment  │ │ Other svc  │
-│ Service │ │ Service  │ │ Service      │ │ Service      │ │ …          │
-└────┬────┘ └────┬─────┘ └──────┬───────┘ └──────┬───────┘ └─────┬──────┘
-     │           │              │                │               │
-     └───────────┴──────────────┴────────────────┴─────────────┘
-                     │
-          ┌──────────┴──────────┐
-          ▼                     ▼
-     PostgreSQL 16           Redis 7
-  (per-service schemas)   (refresh tokens, denylist)
+.
+├── common/                     # Shared correlation-ID filter and problem-details support
+├── services/
+│   ├── service-registry/       # Eureka discovery server
+│   ├── api-gateway/            # Single public entry point, edge security and routing
+│   ├── auth-service/           # Accounts, JWT/JWKS, refresh sessions, seeding
+│   ├── job-service/            # Job aggregate and lifecycle
+│   ├── application-service/    # Applications, status transitions, downstream notifications
+│   ├── recruitment-service/    # Recruitment workflow and interviews
+│   ├── document-service/       # Document metadata and local storage adapter
+│   ├── notification-service/   # Notification records and delivery adapter
+│   └── ai-service/             # Matching, parsing, AI provider abstraction, safety controls
+├── frontend/                   # React SPA and design system
+├── deploy/                     # Docker Compose, environment template, Postman assets
+├── docs/                       # Architecture, discovery, governance, roadmap
+├── .github/workflows/          # CI pipeline
+└── pom.xml                     # Maven aggregator
 ```
 
-</div>
-
-> **Service mesh:** API Gateway → Eureka discovery → Feign inter-service calls → per-service PostgreSQL schemas. JWT issued by Auth Service, validated at the gateway and per service.
-
----
-
-## 🛠 Tech stack
-
-| Layer | Technology |
-|---|---|
-| Backend | Java 21, Spring Boot 3.x, Spring Cloud, Spring Security 6, Spring Data JPA, OpenFeign |
-| Frontend | React 18, TypeScript, Vite, Tailwind CSS, React Router |
-| API docs | OpenAPI / Swagger (springdoc) |
-| Messaging/Store | Redis (refresh tokens, rate limiting, denylist) |
-| Database | PostgreSQL 16 (one schema per service) |
-| Container | Docker, Docker Compose v2 |
-| Build | Maven, Spotless, SpotBugs, ArchUnit, Testcontainers |
-| Testing | JUnit 5, WebMvc, Vitest + React Testing Library |
-
----
-
-## 📦 Modules
-
-| Module | Port | Responsibility |
-|---|---|---|
-| `common` | — | Correlation-id filter + RFC 9457 Problem Details advice |
-| `services/service-registry` | 8761 | Eureka service discovery |
-| `services/api-gateway` | 8080 | Spring Cloud Gateway, routing, security, rate limiting |
-| `services/auth-service` | internal | JWT issuance, JWKS, registration, roles |
-| `services/job-service` | internal | Job CRUD, `job_svc` schema |
-| `services/application-service` | internal | Applications, `application_svc` schema |
-| `services/recruitment-service` | internal | Recruitment workflow, `recruitment_svc` schema |
-| `services/document-service` | internal | Document management |
-| `services/notification-service` | internal | Notifications |
-| `frontend` | 5173 | React SPA (Vite dev server) |
-
----
-
-## ▶️ Run the demo stack
+## Quick start
 
 ### Prerequisites
-- Docker + Docker Compose v2
-- (Optional) JDK 21 + Maven 3.9+ to rebuild or run tests
 
-### Steps
+- JDK 21
+- Maven 3.9+
+- Node.js 18+ and npm 9+
+- Docker Desktop with Docker Compose v2
 
-1. **Create your environment file** (git-ignored — never commit secrets):
-   ```bash
-   cp deploy/.env.example deploy/.env
-   ```
-   Edit `deploy/.env` and set `POSTGRES_USER` and `POSTGRES_PASSWORD`.
-
-2. **Start everything:**
-   ```bash
-   # With pgAdmin (recommended for DB evidence)
-   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.pgadmin.yml \
-     --env-file deploy/.env up --build
-
-   # Without pgAdmin
-   docker compose -f deploy/docker-compose.yml --env-file deploy/.env up --build
-   ```
-
-3. **Verify through the gateway:**
-   ```bash
-   curl -s http://localhost:8080/api/v1/jobs
-   ```
-
-4. **Eureka dashboard:** <http://localhost:8761>
-
-Wait ~90 s for all containers to become healthy on first build.
-
----
-
-## 🔑 Demo credentials
-
-| Role | Email | Password |
-|---|---|---|
-| Recruiter | `recruiter@smarthire.local` | `Recruiter123!` |
-| Admin | `admin@smarthire.local` | `Admin123!` |
-| Candidate | Register any email | Your chosen password |
-
----
-
-## 🧪 Quality gate
+### 1. Clone the repository
 
 ```bash
-# Full build + unit + integration tests + static analysis
-mvn verify
-
-# Frontend
-cd frontend && npm ci && npm run typecheck && npm run lint && npm run test:run && npm run build
+git clone https://github.com/Hareesh-Reddy-9126/PS044-SmartHire.git
+cd PS044-SmartHire
 ```
 
-Backend integration tests use **Testcontainers** with real PostgreSQL/Redis — no H2 fallback.
+### 2. Create the local environment file
+
+```bash
+cp deploy/.env.example deploy/.env
+```
+
+Fill in at least:
+
+- `POSTGRES_USER`
+- `POSTGRES_PASSWORD`
+
+To create the non-self-service demo roles, also set both values for each account:
+
+- `AUTH_SEED_RECRUITER_EMAIL` and `AUTH_SEED_RECRUITER_PASSWORD`
+- `AUTH_SEED_ADMIN_EMAIL` and `AUTH_SEED_ADMIN_PASSWORD`
+
+The seed profile only creates an account when both its email and password are present. `deploy/.env` is git-ignored and must never be committed.
+
+### 3. Start the backend stack
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
+```
+
+Useful endpoints:
+
+| Endpoint | URL |
+|---|---|
+| API Gateway health | <http://localhost:8080/actuator/health> |
+| Eureka dashboard | <http://localhost:8761> |
+| Public job list | <http://localhost:8080/api/v1/jobs?page=0&size=20> |
+
+The PostgreSQL and Redis ports are intentionally not published to the host by default.
+
+### 4. Start the frontend
+
+```bash
+cd frontend
+npm ci
+npm run dev
+```
+
+Open <http://localhost:5173>. Vite proxies `/api`, `/oauth2`, `/actuator`, and `/v3` to the gateway on port `8080`.
+
+For a non-proxied deployment, set `VITE_API_BASE_URL` to the public gateway URL before building.
+
+### 5. Stop the stack
+
+```bash
+docker compose -f deploy/docker-compose.yml --env-file deploy/.env down
+```
+
+Do not add `-v` unless you intend to delete the PostgreSQL and document volumes.
+
+## Configuration
+
+### Backend environment variables
+
+| Variable | Required | Purpose |
+|---|---|---|
+| `POSTGRES_DB` | No | Database name; Compose defaults to `smarthire` |
+| `POSTGRES_USER` | Yes | Shared application database user |
+| `POSTGRES_PASSWORD` | Yes | Database password; secret |
+| `GATEWAY_CORS_ALLOWED_ORIGINS` | No | Allowed browser origin for the SPA |
+| `AUTH_JWT_PRIVATE_KEY` | No | PKCS#8 PEM signing key; an ephemeral development key is generated when blank |
+| `AUTH_SEED_RECRUITER_EMAIL` / `AUTH_SEED_RECRUITER_PASSWORD` | No | Development recruiter seed account; both required |
+| `AUTH_SEED_ADMIN_EMAIL` / `AUTH_SEED_ADMIN_PASSWORD` | No | Development admin seed account; both required |
+| `SMARTHIRE_AI_ENABLED` | No | AI kill switch |
+| `SMARTHIRE_AI_PROVIDER` | No | `mock` (default) or `claude` |
+| `SMARTHIRE_AI_CLAUDE_API_KEY` | No | Required only for the Claude provider; secret |
+| `SMARTHIRE_AI_CLAUDE_MODEL` | No | Claude model identifier |
+
+### Frontend environment variables
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `VITE_API_BASE_URL` | Empty (Vite proxy) | Absolute gateway base URL for non-proxied deployments |
+| `VITE_DEBUG` | `false` | Additional client-side logging |
+
+Copy `frontend/.env.example` to `frontend/.env.local` for local overrides. Never commit real credentials or keys.
+
+## Roles and routes
+
+| Role | Home | Main routes |
+|---|---|---|
+| Public | `/jobs` | `/`, `/jobs`, `/jobs/:jobId`, `/login`, `/register` |
+| `CANDIDATE` | `/candidate/applications` | Applications, application detail, apply, progress, documents, notifications, profile |
+| `RECRUITER` | `/recruiter/jobs` | Jobs, create/edit job, job detail and applicants, recruitments, application lookup, profile |
+| `ADMIN` | `/admin/overview` | Overview, recruitments, recruitment detail, application lookup, profile |
+
+- `/workspace` redirects authenticated users to their role home.
+- `/403`, `/404`, `/error`, `/offline`, and `/session-expired` are standalone error pages.
+- Client-side route guards live in `frontend/src/utils/roles.ts` and `frontend/src/routes/AppRoutes.tsx`.
+- Backend authorization is enforced independently by the gateway and each service.
+
+## Frontend
+
+The frontend was rebuilt as **“The decision record”** — a calm, editorial system for hiring evidence rather than a generic dashboard skin.
+
+### Design system
+
+- **Palette:** deep evergreen ink, chalk paper, restrained brass.
+- **Typography:** Newsreader for display, Instrument Sans for interface text, IBM Plex Mono for identifiers and metadata.
+- **Surfaces:** public marketing shell, split-screen auth shell, and full-height dark workspace sidebar.
+- **Primitives:** buttons, inputs, cards, badges, tables, tabs, timelines, modals, empty states, pagination, skeletons, and record detail surfaces.
+- **Accessibility:** semantic landmarks, labelled controls, visible focus, keyboard navigation, `aria-live` toasts, reduced-motion support, and no horizontal overflow at mobile widths.
+- **Select control:** a branded accessible combobox with keyboard navigation, typeahead, outside-click dismissal, placement flipping, and a hidden native `<select>` fallback for form/test compatibility.
+
+No UI component framework is used; the system is Tailwind tokens plus project-owned React primitives and Material Symbols icons.
+
+### Verification
+
+From `frontend/`:
+
+```bash
+npm run lint        # ESLint, zero warnings
+npm run typecheck   # tsc --noEmit
+npm run test:run    # 49 Vitest tests across 8 files
+npm run build       # typecheck + production bundle
+```
+
+All four gates currently pass. See [`frontend/README.md`](frontend/README.md) for the full frontend architecture, auth model, route map, and component catalogue.
+
+## API surface
+
+All application calls go through the API Gateway at `/api/v1/*`.
+
+| Prefix | Operations |
+|---|---|
+| `/api/v1/auth/*` | Register, login, refresh, logout, current user |
+| `/api/v1/jobs/*` | List, get, create, update, open, close, reopen |
+| `/api/v1/applications/*` | Candidate list, get, apply, withdraw, recruiter status update, job-scoped list |
+| `/api/v1/recruitments/*` | List, get, create, schedule interview, update interview status, final status |
+| `/api/v1/documents/*` | List, upload, download, delete |
+| `/api/v1/notifications/*` | List and get |
+| `/api/v1/ai/*` | Match score, resume parse, candidate summary, job-description assistance |
+
+Errors use RFC 9457 Problem Details. Responses carry a correlation ID so a browser failure can be traced through gateway and service logs.
+
+Example:
+
+```bash
+curl "http://localhost:8080/api/v1/jobs?page=0&size=20"
+```
+
+## Quality and testing
+
+### Backend
+
+```bash
+mvn -B verify
+mvn -B spotless:check
+mvn -B compile spotbugs:check
+mvn -B -Psecurity-scan verify -DskipTests
+```
+
+- Unit and integration tests use JUnit 5, AssertJ, MockMvc, and Testcontainers where PostgreSQL is required.
+- ArchUnit rules enforce the service architecture.
+- Flyway migrations are validated by the application test context.
+- Integration tests need Docker. If Docker is unavailable, scope unit tests with `-pl` and `-am`.
+
+### Frontend
+
+```bash
+cd frontend
+npm run lint
+npm run typecheck
+npm run test:run
+npm run build
+```
+
+### CI
+
+`.github/workflows/ci.yml` runs on `main` and `develop`:
+
+- Maven verify on JDK 21
+- Spotless
+- SpotBugs
+- OWASP Dependency-Check on pushes and pull requests targeting `main`
+
+Test reports and dependency-check reports are uploaded as workflow artifacts.
+
+### Local JDK note
+
+The build targets Java 21. On a newer host JDK, Surefire/Failsafe may require:
+
+```bash
+mvn test -Dnet.bytebuddy.experimental=true
+```
+
+## Security
+
+- RS256 access tokens are verified with the auth-service JWKS.
+- Access tokens stay in memory in the browser; the refresh token is an HttpOnly cookie.
+- Refresh-token state and JWT revocation live in Redis.
+- Gateway and service-level authorization enforce ownership and role boundaries.
+- No real secrets belong in the repository; use `deploy/.env` or CI secrets.
+- `deploy/.env.example` lists keys only and contains no usable credentials.
+- AI requests pass through PII redaction and prompt-injection defenses; the kill switch can disable the service.
+- Errors do not expose stack traces or internal implementation details.
+
+## Known limitations
+
+- Full `mvn verify` and Testcontainers integration tests require Docker; they cannot run in an environment without a Docker daemon.
+- External email delivery has not been independently verified. The notification service uses a logging delivery adapter in the current configuration.
+- Rapid full-page navigation during silent refresh can replay a just-rotated refresh token; resolving it requires a rotation-grace design decision.
+- AI uses the deterministic mock provider by default. The Claude provider requires a key and has not been exercised in CI.
+- Password reset and profile-edit backend endpoints are not implemented.
+- The admin overview is intentionally limited to verified recruitment data rather than a full analytics suite.
+- The deployment target is Docker Compose; Kubernetes, Helm, and Terraform manifests are out of scope.
+
+## Documentation
+
+| Document | Purpose |
+|---|---|
+| [`PROJECT_CONTEXT.md`](PROJECT_CONTEXT.md) | Durable project context and architecture notes |
+| [`PROJECT_STATUS.md`](PROJECT_STATUS.md) | Current verified status, decisions, and limitations |
+| [`AGENTS.md`](AGENTS.md) | Agent instructions and verified build/test commands |
+| [`frontend/README.md`](frontend/README.md) | Frontend architecture, routes, auth, and design system |
+| [`phase2_report.md`](phase2_report.md) | Phase 2 backend integration report |
+| [`backend_integration_gaps_summary.md`](backend_integration_gaps_summary.md) | Backend integration gap summary |
+| [`docs/architecture/`](docs/architecture/) | Architecture decisions and technical design |
+| [`docs/discovery/`](docs/discovery/) | Product model, requirements, and repository assessment |
+| [`docs/governance/`](docs/governance/) | Engineering governance and AI development strategy |
+| [`docs/roadmap/`](docs/roadmap/) | Implementation roadmap |
+
+## Contributing
+
+1. Create a focused branch from `main`.
+2. Keep changes scoped and preserve existing public contracts.
+3. Add or update tests for behavior changes.
+4. Run the relevant backend and frontend gates before opening a pull request.
+5. Never commit secrets, generated build output, local audit files, or environment files.
+6. Use clear commit messages and describe verification evidence in the pull request.
 
 ---
 
-## 🗺 Roadmap
-
-- [x] Inc 0 — Core job browse through gateway + Eureka
-- [x] Inc 1 — Auth & JWT (login, register, refresh, JWKS)
-- [x] Inc 2 — Applications + recruitment workflow
-- [x] Inc 3 — Documents + notifications
-- [x] Inc 4 — Quality, security, CI hardening
-- [x] Frontend React SPA (login, register, job browse)
-- [ ] Inc 5+ — AI matching, evaluation harness, Kubernetes deployment
-
-See `docs/roadmap` and `docs/design.md` for details.
-
----
-
-## 🤝 Contributing
-
-1. Fork the repo
-2. Create your feature branch (`git checkout -b feat/your-feature`)
-3. Commit your changes (`git commit -m "feat: ..."`)
-4. Push to the branch (`git push origin feat/your-feature`)
-5. Open a Pull Request
-
-Please follow the existing commit style (`feat:`, `fix:`, `docs:`, `chore:`) and run `mvn verify` before opening a PR.
-
----
-
-## 📄 License
-
-MIT License. See `LICENSE` for details.
-
----
-
-<div align="center">
-
-Built with ☕ + ⚛️ for **24SDCS03A/R — SOA Programming and Microservices** (AY 2026-27).
-
-[⭐ Star this repo](https://github.com/Hareesh-Reddy-9126/PS044-SmartHire/stargazers) · [🍴 Fork](https://github.com/Hareesh-Reddy-9126/PS044-SmartHire/fork) · [🐛 Report Bug](https://github.com/Hareesh-Reddy-9126/PS044-SmartHire/issues)
-
-</div>
+Built for **Project 44 — Online Job Recruitment System**.

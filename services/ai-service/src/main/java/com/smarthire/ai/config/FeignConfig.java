@@ -38,9 +38,7 @@ public class FeignConfig {
     };
   }
 
-  /**
-   * Feign logger level for debugging inter-service calls.
-   */
+  /** Feign logger level for debugging inter-service calls. */
   @Bean
   Logger.Level feignLoggerLevel() {
     return Logger.Level.BASIC;

@@ -29,9 +29,7 @@ public interface JobClient {
   @Bulkhead(name = "jobService")
   JobResponse getJob(@PathVariable("jobId") UUID jobId);
 
-  /**
-   * Fallback for circuit breaker / bulkhead when Job Service is unavailable.
-   */
+  /** Fallback for circuit breaker / bulkhead when Job Service is unavailable. */
   default JobResponse getJobFallback(UUID jobId, Exception ex) {
     throw new JobServiceUnavailableException("Job service unavailable: " + ex.getMessage());
   }

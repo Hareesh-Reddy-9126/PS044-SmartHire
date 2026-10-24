@@ -60,10 +60,9 @@ public class GatewayRateLimitConfig {
   @Primary
   public KeyResolver ipKeyResolver() {
     return exchange ->
-        Mono.just(
-            exchange.getRequest().getRemoteAddress() != null
-                ? exchange.getRequest().getRemoteAddress().getAddress().getHostAddress()
-                : "unknown");
+        Mono.justOrEmpty(exchange.getRequest().getRemoteAddress())
+            .map(addr -> addr.getAddress() != null ? addr.getAddress().getHostAddress() : "unknown")
+            .defaultIfEmpty("unknown");
   }
 
   /**

@@ -16,6 +16,8 @@ import com.smarthire.recruitment.domain.Recruitment;
 import com.smarthire.recruitment.infra.ApplicationClient;
 import com.smarthire.recruitment.infra.JobClient;
 import com.smarthire.recruitment.infra.RecruitmentRepository;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -273,6 +275,101 @@ class RecruitmentServiceTest {
               () ->
                   recruitmentService.updateInterviewStatus(
                       RECRUITMENT_ID, InterviewStatus.SCHEDULED, ORG_ID))
+          .isInstanceOf(RecruitmentNotFoundException.class);
+    }
+  }
+
+  @Nested
+  @DisplayName("Schedule interview")
+  class ScheduleInterview {
+
+    @Test
+    @DisplayName("Stores schedule details for an owned unscheduled recruitment")
+    void storesScheduleDetails() {
+      Recruitment recruitment =
+          Recruitment.shortlist(RECRUITMENT_ID, APPLICATION_ID, JOB_ID, ORG_ID, CANDIDATE_ID);
+      when(recruitmentRepository.findByRecruitmentId(RECRUITMENT_ID))
+          .thenReturn(Optional.of(recruitment));
+      when(recruitmentRepository.save(any(Recruitment.class)))
+          .thenAnswer(invocation -> invocation.getArgument(0));
+
+      Recruitment result =
+          recruitmentService.scheduleInterview(
+              RECRUITMENT_ID,
+              LocalDate.of(2099, 4, 15),
+              LocalTime.of(10, 30),
+              "Alex Recruiter",
+              "Room 4B",
+              ORG_ID);
+
+      assertThat(result.getInterviewStatus()).isEqualTo(InterviewStatus.SCHEDULED);
+      assertThat(result.getInterviewDate()).isEqualTo(LocalDate.of(2099, 4, 15));
+      assertThat(result.getInterviewStartTime()).isEqualTo(LocalTime.of(10, 30));
+      assertThat(result.getInterviewer()).isEqualTo("Alex Recruiter");
+      assertThat(result.getInterviewLocation()).isEqualTo("Room 4B");
+    }
+
+    @Test
+    @DisplayName("Rejects a schedule in the past")
+    void rejectsPastSchedule() {
+      Recruitment recruitment =
+          Recruitment.shortlist(RECRUITMENT_ID, APPLICATION_ID, JOB_ID, ORG_ID, CANDIDATE_ID);
+      when(recruitmentRepository.findByRecruitmentId(RECRUITMENT_ID))
+          .thenReturn(Optional.of(recruitment));
+
+      assertThatThrownBy(
+              () ->
+                  recruitmentService.scheduleInterview(
+                      RECRUITMENT_ID,
+                      LocalDate.of(2000, 1, 1),
+                      LocalTime.NOON,
+                      "Alex Recruiter",
+                      "Room 4B",
+                      ORG_ID))
+          .isInstanceOf(RecruitmentScheduleException.class)
+          .hasMessageContaining("must be in the future");
+      verify(recruitmentRepository, never()).save(any(Recruitment.class));
+    }
+
+    @Test
+    @DisplayName("Rejects duplicate scheduling through the aggregate state")
+    void rejectsDuplicateSchedule() {
+      Recruitment recruitment =
+          Recruitment.shortlist(RECRUITMENT_ID, APPLICATION_ID, JOB_ID, ORG_ID, CANDIDATE_ID);
+      recruitment.scheduleInterview();
+      when(recruitmentRepository.findByRecruitmentId(RECRUITMENT_ID))
+          .thenReturn(Optional.of(recruitment));
+
+      assertThatThrownBy(
+              () ->
+                  recruitmentService.scheduleInterview(
+                      RECRUITMENT_ID,
+                      LocalDate.of(2099, 4, 15),
+                      LocalTime.NOON,
+                      "Alex Recruiter",
+                      "Room 4B",
+                      ORG_ID))
+          .isInstanceOf(IllegalRecruitmentStateException.class);
+      verify(recruitmentRepository, never()).save(any(Recruitment.class));
+    }
+
+    @Test
+    @DisplayName("Rejects a recruiter from another organization")
+    void rejectsWrongOrganization() {
+      Recruitment recruitment =
+          Recruitment.shortlist(RECRUITMENT_ID, APPLICATION_ID, JOB_ID, ORG_ID, CANDIDATE_ID);
+      when(recruitmentRepository.findByRecruitmentId(RECRUITMENT_ID))
+          .thenReturn(Optional.of(recruitment));
+
+      assertThatThrownBy(
+              () ->
+                  recruitmentService.scheduleInterview(
+                      RECRUITMENT_ID,
+                      LocalDate.of(2099, 4, 15),
+                      LocalTime.NOON,
+                      "Alex Recruiter",
+                      "Room 4B",
+                      UUID.randomUUID()))
           .isInstanceOf(RecruitmentNotFoundException.class);
     }
   }

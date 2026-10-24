@@ -12,6 +12,15 @@ import org.springframework.security.oauth2.jwt.Jwt;
  */
 public record DocumentPrincipal(UUID candidateId, UUID orgId, List<String> roles) {
 
+  public DocumentPrincipal {
+    roles = roles == null ? null : List.copyOf(roles);
+  }
+
+  @Override
+  public List<String> roles() {
+    return roles == null ? null : List.copyOf(roles);
+  }
+
   /** Creates a principal from a verified JWT. */
   public static DocumentPrincipal from(Jwt jwt) {
     UUID candidateId = parseUuid(jwt.getSubject());

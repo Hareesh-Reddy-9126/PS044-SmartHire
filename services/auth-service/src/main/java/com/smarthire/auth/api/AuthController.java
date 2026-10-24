@@ -16,7 +16,9 @@ import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Duration;
+import java.util.Arrays;
 import java.util.UUID;
+import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -51,9 +53,11 @@ public class AuthController {
   private static final Duration REFRESH_COOKIE_TTL = Duration.ofDays(7);
 
   private final AuthService authService;
+  private final Environment environment;
 
-  public AuthController(AuthService authService) {
+  public AuthController(AuthService authService, Environment environment) {
     this.authService = authService;
+    this.environment = environment;
   }
 
   @Operation(
@@ -220,13 +224,14 @@ public class AuthController {
     return toMeResponse(accessToken);
   }
 
-  private static void addRefreshCookie(
+  private void addRefreshCookie(
       jakarta.servlet.http.HttpServletResponse response, String refreshToken) {
+    boolean secure = !Arrays.asList(environment.getActiveProfiles()).contains("local");
     response.setHeader(
         HttpHeaders.SET_COOKIE,
         ResponseCookie.from(REFRESH_COOKIE, refreshToken)
             .httpOnly(true)
-            .secure(true)
+            .secure(secure)
             .sameSite("Strict")
             .path("/api/v1/auth")
             .maxAge(REFRESH_COOKIE_TTL)
@@ -234,12 +239,13 @@ public class AuthController {
             .toString());
   }
 
-  private static void clearRefreshCookie(jakarta.servlet.http.HttpServletResponse response) {
+  private void clearRefreshCookie(jakarta.servlet.http.HttpServletResponse response) {
+    boolean secure = !Arrays.asList(environment.getActiveProfiles()).contains("local");
     response.setHeader(
         HttpHeaders.SET_COOKIE,
         ResponseCookie.from(REFRESH_COOKIE, "")
             .httpOnly(true)
-            .secure(true)
+            .secure(secure)
             .sameSite("Strict")
             .path("/api/v1/auth")
             .maxAge(Duration.ZERO)

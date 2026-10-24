@@ -3,6 +3,7 @@ package com.smarthire.notification.api;
 import com.smarthire.common.contract.notification.ApplicationStatusChangeRequest;
 import com.smarthire.common.contract.notification.NotificationResponse;
 import com.smarthire.notification.domain.Notification;
+import com.smarthire.notification.infra.UserDirectoryClient;
 import com.smarthire.notification.service.NotificationService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -38,9 +39,12 @@ import org.springframework.web.bind.annotation.RestController;
 public class NotificationInternalController {
 
   private final NotificationService notificationService;
+  private final UserDirectoryClient userDirectoryClient;
 
-  public NotificationInternalController(NotificationService notificationService) {
+  public NotificationInternalController(
+      NotificationService notificationService, UserDirectoryClient userDirectoryClient) {
     this.notificationService = notificationService;
+    this.userDirectoryClient = userDirectoryClient;
   }
 
   /**
@@ -77,12 +81,15 @@ public class NotificationInternalController {
   @PostMapping("/application-status")
   public ResponseEntity<NotificationResponse> processApplicationStatus(
       @RequestBody @Valid ApplicationStatusChangeRequest request) {
-    // For now, we don't have the recipient email from the request
-    // In a real implementation, we would need to get this from Candidate Service or from the
-    // application
-    // For Review-1, we'll use a placeholder or derive it from somewhere
-    String recipientEmail =
-        request.candidateId() + "@example.com"; // TODO: get from Candidate Service
+    // A notification must be addressed to the candidate's real mailbox. The candidate id comes
+    // from application-service; auth-service is the only owner of the email address, so resolve
+    // it here instead of fabricating one from the id. A failed lookup fails the request: sending
+    // to a made-up address would be worse than not sending at all.
+    String recipientEmail = userDirectoryClient.getEmail(request.candidateId()).email();
+    if (recipientEmail == null || recipientEmail.isBlank()) {
+      throw new IllegalStateException(
+          "auth-service returned no email for candidate " + request.candidateId());
+    }
 
     Notification notification =
         notificationService.createAndSendNotification(

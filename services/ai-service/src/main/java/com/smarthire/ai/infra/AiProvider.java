@@ -1,14 +1,13 @@
 package com.smarthire.ai.infra;
 
-import com.smarthire.ai.api.dto.MatchScoreRequest;
-import com.smarthire.ai.api.dto.MatchScoreResponse;
 import com.smarthire.ai.api.dto.CandidateSummaryRequest;
 import com.smarthire.ai.api.dto.CandidateSummaryResponse;
 import com.smarthire.ai.api.dto.JdAssistRequest;
 import com.smarthire.ai.api.dto.JdAssistResponse;
+import com.smarthire.ai.api.dto.MatchScoreRequest;
+import com.smarthire.ai.api.dto.MatchScoreResponse;
 import com.smarthire.ai.api.dto.ResumeParseRequest;
 import com.smarthire.ai.api.dto.ResumeParseResponse;
-import java.util.UUID;
 
 /**
  * Provider-neutral abstraction for AI model integration.
@@ -23,19 +22,13 @@ import java.util.UUID;
  */
 public interface AiProvider {
 
-  /**
-   * Returns the provider identifier (e.g., "mock", "claude", "openai").
-   */
+  /** Returns the provider identifier (e.g., "mock", "claude", "openai"). */
   String getProviderId();
 
-  /**
-   * Returns the model identifier used by this provider (e.g., "claude-3-haiku-20240307").
-   */
+  /** Returns the model identifier used by this provider (e.g., "claude-3-haiku-20240307"). */
   String getModelId();
 
-  /**
-   * Returns the prompt version used by this provider.
-   */
+  /** Returns the prompt version used by this provider. */
   String getPromptVersion();
 
   /**
@@ -75,9 +68,7 @@ public interface AiProvider {
    */
   ResumeParseResponse parseResume(ResumeParseRequest request) throws AiProviderException;
 
-  /**
-   * Exception thrown when the AI provider fails to produce a valid response.
-   */
+  /** Exception thrown when the AI provider fails to produce a valid response. */
   class AiProviderException extends RuntimeException {
     public AiProviderException(String message) {
       super(message);

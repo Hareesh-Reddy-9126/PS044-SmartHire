@@ -279,6 +279,40 @@ public class ApplicationService {
     return applicationRepository.findByCandidateId(candidateId, pageable);
   }
 
+  /**
+   * Lists the applications submitted to one job, for the organization that owns it.
+   *
+   * <p>Application Service does not store the job's owner, so the job is read through {@link
+   * JobClient} and the caller's verified {@code orgId} is compared with {@code ownerOrgId}. A
+   * recruiter of another organization gets the same 404 as a job that does not exist, so the
+   * endpoint cannot be used to discover other organizations' application traffic. ADMIN skips the
+   * ownership check because it already has cross-organization read access.
+   *
+   * @param jobId the job whose applications are requested
+   * @param callerOrgId the organization UUID from the verified JWT (null when absent)
+   * @param isAdmin whether the verified token carries the ADMIN role
+   * @param pageable paging and sort
+   * @return the page of applications for that job
+   * @throws ApplicationNotFoundException if the job does not exist or belongs to another
+   *     organization
+   */
+  @Transactional(readOnly = true)
+  public Page<Application> listForJob(
+      UUID jobId, UUID callerOrgId, boolean isAdmin, Pageable pageable) {
+    JobClient.JobResponse job;
+    try {
+      job = jobClient.getJob(jobId);
+    } catch (feign.FeignException.NotFound notFound) {
+      throw new ApplicationNotFoundException("Job not found: " + jobId);
+    }
+
+    if (!isAdmin && (callerOrgId == null || !callerOrgId.equals(job.ownerOrgId()))) {
+      throw new ApplicationNotFoundException("Job not found: " + jobId);
+    }
+
+    return applicationRepository.findByJobId(jobId, pageable);
+  }
+
   // --- helpers -------------------------------------------------------------------
 
   private Application load(UUID applicationId) {

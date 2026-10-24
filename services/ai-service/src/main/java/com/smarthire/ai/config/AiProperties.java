@@ -1,10 +1,10 @@
 package com.smarthire.ai.config;
 
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-
-import jakarta.validation.constraints.NotBlank;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * AI Service configuration properties.
@@ -40,18 +40,34 @@ public class AiProperties {
     this.provider = provider;
   }
 
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP",
+      justification = "Spring-managed configuration properties object; not mutated after startup"
+  )
   public JwtProperties getJwt() {
     return jwt;
   }
 
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP2",
+      justification = "Spring-injected configuration object; not mutated after injection"
+  )
   public void setJwt(JwtProperties jwt) {
     this.jwt = jwt;
   }
 
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP",
+      justification = "Spring-managed configuration properties object; not mutated after startup"
+  )
   public ClaudeProperties getClaude() {
     return claude;
   }
 
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP2",
+      justification = "Spring-injected configuration object; not mutated after injection"
+  )
   public void setClaude(ClaudeProperties claude) {
     this.claude = claude;
   }
@@ -59,14 +75,11 @@ public class AiProperties {
   @Component
   @ConfigurationProperties(prefix = "smarthire.ai.jwt")
   public static class JwtProperties {
-    @NotBlank
-    private String jwkSetUri = "http://localhost:8082/oauth2/jwks";
+    @NotBlank private String jwkSetUri = "http://localhost:8082/oauth2/jwks";
 
-    @NotBlank
-    private String issuer = "https://smarthire.local/auth";
+    @NotBlank private String issuer = "https://smarthire.local/auth";
 
-    @NotBlank
-    private String audience = "smarthire";
+    @NotBlank private String audience = "smarthire";
 
     public String getJwkSetUri() {
       return jwkSetUri;

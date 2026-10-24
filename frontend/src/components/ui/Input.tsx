@@ -1,86 +1,118 @@
-import React, { forwardRef } from 'react';
+import React, { forwardRef, useId, useState } from 'react';
 
-interface InputProps extends React.InputHTMLAttributes<HTMLInputElement> {
+export interface InputProps extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'size'> {
   label?: string;
   error?: string;
   helperText?: string;
   leftIcon?: React.ReactNode;
   rightIcon?: React.ReactNode;
+  /** Renders a show/hide toggle; only meaningful for `type="password"`. */
   showPasswordToggle?: boolean;
+  /** Purely presentational size; does not affect the native control. */
+  inputSize?: 'sm' | 'md';
 }
 
-export const Input = forwardRef<HTMLInputElement, InputProps>(
-  ({ 
-    label, 
-    error, 
-    helperText, 
-    leftIcon, 
-    rightIcon, 
+export const Input = forwardRef<HTMLInputElement, InputProps>(function Input(
+  {
+    label,
+    error,
+    helperText,
+    leftIcon,
+    rightIcon,
     showPasswordToggle = false,
+    inputSize = 'md',
     className = '',
     id,
-    ...props 
-  }, ref) => {
-    const inputId = id || label?.toLowerCase().replace(/\s+/g, '-');
-    const errorId = error ? `${inputId}-error` : undefined;
-    const helperId = helperText ? `${inputId}-helper` : undefined;
-    const [showPassword, setShowPassword] = React.useState(false);
-    const type = showPasswordToggle && showPassword ? 'text' : props.type || 'text';
+    type = 'text',
+    required,
+    ...rest
+  },
+  ref
+) {
+  const generatedId = useId();
+  const inputId = id || `input-${generatedId}`;
+  const errorId = `${inputId}-error`;
+  const helperId = `${inputId}-helper`;
 
-    return (
-      <div className="flex flex-col">
-        {label && (
-          <label htmlFor={inputId} className="label">
-            {label}
-            {props.required && <span aria-hidden="true" className="text-danger-600">*</span>}
-          </label>
+  const [revealed, setRevealed] = useState(false);
+  const resolvedType = showPasswordToggle && revealed ? 'text' : type;
+  const describedBy = [error ? errorId : null, helperText && !error ? helperId : null]
+    .filter(Boolean)
+    .join(' ');
+
+  return (
+    <div className="flex flex-col w-full">
+      {label && (
+        <label
+          htmlFor={inputId}
+          className={`label ${required ? 'label-required' : ''}`}
+        >
+          {label}
+        </label>
+      )}
+
+      <div className="relative flex items-center">
+        {leftIcon && (
+          <span className="absolute left-3 text-c-text-subtle pointer-events-none flex" aria-hidden="true">
+            {leftIcon}
+          </span>
         )}
-        <div className="relative flex items-center">
-          {leftIcon && (
-            <span className="absolute left-3 text-c-text-subtle pointer-events-none">
-              {leftIcon}
+
+        <input
+          ref={ref}
+          id={inputId}
+          type={resolvedType}
+          required={required}
+          aria-invalid={error ? true : undefined}
+          aria-describedby={describedBy || undefined}
+          className={[
+            'input',
+            inputSize === 'sm' ? 'h-9 text-body-sm' : '',
+            error ? 'input-error' : '',
+            leftIcon ? 'pl-10' : '',
+            rightIcon || showPasswordToggle ? 'pr-10' : '',
+            className,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+          {...rest}
+        />
+
+        {showPasswordToggle && (
+          <button
+            type="button"
+            onClick={() => setRevealed(value => !value)}
+            aria-label={revealed ? 'Hide password' : 'Show password'}
+            aria-pressed={revealed}
+            className="absolute right-1.5 flex h-7 w-7 items-center justify-center rounded text-c-text-muted transition-colors duration-fast hover:bg-c-surface-sunken hover:text-on-surface focus-ring"
+          >
+            <span className="material-symbols-outlined text-[20px]">
+              {revealed ? 'visibility_off' : 'visibility'}
             </span>
-          )}
-          <input
-            ref={ref}
-            id={inputId}
-            className={`input ${error ? 'input-error' : ''} ${leftIcon ? 'pl-10' : ''} ${rightIcon || showPasswordToggle ? 'pr-10' : ''} ${className}`}
-            aria-invalid={error ? 'true' : 'false'}
-            aria-describedby={[errorId, helperId].filter(Boolean).join(' ') || undefined}
-            type={type}
-            {...props}
-          />
-          {showPasswordToggle && (
-            <button
-              type="button"
-              className="absolute right-2 p-1.5 text-c-text-muted hover:text-on-surface transition-colors focus:outline-none focus:ring-1 focus:ring-c-primary-700 rounded"
-              onClick={() => setShowPassword(!showPassword)}
-              aria-label={showPassword ? 'Hide password' : 'Show password'}
-              aria-pressed={showPassword}
-            >
-              <span className="material-symbols-outlined text-[20px] select-none">
-                {showPassword ? 'visibility_off' : 'visibility'}
-              </span>
-            </button>
-          )}
-          {rightIcon && !showPasswordToggle && (
-            <span className="absolute right-3 text-c-text-subtle pointer-events-none">
-              {rightIcon}
-            </span>
-          )}
-        </div>
-        {error && (
-          <p id={errorId} className="error-text" role="alert">
-            <span className="material-symbols-outlined text-[12px] inline align-middle mr-1">error</span>
-            {error}
-          </p>
+          </button>
         )}
-        {helperText && !error && (
-          <p id={helperId} className="helper-text">{helperText}</p>
+
+        {rightIcon && !showPasswordToggle && (
+          <span className="absolute right-3 text-c-text-subtle pointer-events-none flex" aria-hidden="true">
+            {rightIcon}
+          </span>
         )}
       </div>
-    );
-  }
-);
 
-Input.displayName = 'Input';
+      {error && (
+        <p id={errorId} className="error-text" role="alert">
+          <span className="material-symbols-outlined text-[14px] shrink-0" aria-hidden="true">
+            error
+          </span>
+          {error}
+        </p>
+      )}
+
+      {helperText && !error && (
+        <p id={helperId} className="helper-text">
+          {helperText}
+        </p>
+      )}
+    </div>
+  );
+});

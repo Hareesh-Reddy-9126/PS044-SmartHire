@@ -9,6 +9,9 @@ import com.smarthire.recruitment.infra.ApplicationClient;
 import com.smarthire.recruitment.infra.JobClient;
 import com.smarthire.recruitment.infra.RecruitmentRepository;
 import feign.FeignException;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -135,10 +138,53 @@ public class RecruitmentService {
           saved.getRecruitmentId(),
           AuditService.Outcome.SUCCESS,
           "applicationId=" + applicationId);
+
+      // Start the application lifecycle on the path to SHORTLISTED. The aggregate only allows
+      // APPLIED → UNDER_REVIEW → SHORTLISTED, and a recruiter shortlists whatever state the
+      // application is in, so the intermediate step is performed here when it is still APPLIED.
+      // Without it a fresh application is refused by the application state machine (409) and the
+      // recruitment could never be created.
+      if ("APPLIED".equals(application.status())) {
+        updateApplicationStatus(applicationId, "UNDER_REVIEW");
+      }
+      if (!"SHORTLISTED".equals(application.status())) {
+        updateApplicationStatus(applicationId, "SHORTLISTED");
+      }
+
       return saved;
     } catch (DataIntegrityViolationException race) {
       throw new RecruitmentConflictException(
           "This application has already been shortlisted: " + applicationId);
+    }
+  }
+
+  /**
+   * Moves an application to the next status, translating the downstream answer.
+   *
+   * <p>Application Service remains the authority on whether the transition is legal; this method
+   * only decides which HTTP status the caller sees. A refusal by its state machine is a 409 (the
+   * request was understood and declined), a missing application is a 404, and everything else is a
+   * 503 that leaves the local transaction to roll back.
+   */
+  private void updateApplicationStatus(UUID applicationId, String status) {
+    try {
+      applicationClient.updateStatus(
+          applicationId, new ApplicationClient.StatusUpdateRequest(status));
+    } catch (FeignException.NotFound notFound) {
+      throw new RecruitmentNotFoundException("Application not found: " + applicationId);
+    } catch (FeignException.Conflict | FeignException.BadRequest refused) {
+      throw new ApplicationSyncConflictException(
+          "Application "
+              + applicationId
+              + " cannot be moved to "
+              + status
+              + "; the recruitment was not created.");
+    } catch (FeignException other) {
+      throw new ApplicationClient.ApplicationServiceUnavailableException(
+          "Application service rejected the status update for application "
+              + applicationId
+              + ": "
+              + other.status());
     }
   }
 
@@ -225,6 +271,31 @@ public class RecruitmentService {
         recruitmentId,
         AuditService.Outcome.SUCCESS,
         "oldStatus=" + oldStatus + ",newStatus=" + status.name());
+    return saved;
+  }
+
+  /** Schedules an owned recruitment with complete interview details. */
+  @Transactional
+  public Recruitment scheduleInterview(
+      UUID recruitmentId,
+      LocalDate interviewDate,
+      LocalTime interviewStartTime,
+      String interviewer,
+      String interviewLocation,
+      UUID callerOrgId) {
+    Recruitment recruitment = loadOwned(recruitmentId, callerOrgId);
+    if (LocalDateTime.of(interviewDate, interviewStartTime).isBefore(LocalDateTime.now())) {
+      throw new RecruitmentScheduleException("Interview date and time must be in the future.");
+    }
+    recruitment.scheduleInterview(
+        interviewDate, interviewStartTime, interviewer.trim(), interviewLocation.trim());
+    Recruitment saved = recruitmentRepository.save(recruitment);
+    AuditService.recruitment(
+        AuditService.RecruitmentEvent.INTERVIEW_STATUS_CHANGE,
+        callerOrgId,
+        recruitmentId,
+        AuditService.Outcome.SUCCESS,
+        "newStatus=SCHEDULED,interviewDate=" + interviewDate);
     return saved;
   }
 

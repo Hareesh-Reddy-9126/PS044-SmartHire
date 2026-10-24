@@ -8,11 +8,11 @@ import com.smarthire.ai.api.dto.MatchScoreRequest;
 import com.smarthire.ai.api.dto.MatchScoreResponse;
 import com.smarthire.ai.api.dto.ResumeParseRequest;
 import com.smarthire.ai.api.dto.ResumeParseResponse;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 /**
  * Deterministic mock AI provider for local development and testing.
@@ -22,6 +22,7 @@ import org.springframework.stereotype.Component;
  * real-world candidate suitability.
  *
  * <p>Key properties:
+ *
  * <ul>
  *   <li>Deterministic: same input always produces same output
  *   <li>No external dependencies: no network calls, no SDKs
@@ -30,9 +31,10 @@ import org.springframework.stereotype.Component;
  * </ul>
  *
  * <p><b>Not for production use.</b> The real provider implementation must be selected via
- * configuration ({@code smarthire.ai.provider=claude}).
+ * configuration ({@code smarthire.ai.provider=claude}). This class is registered as a Spring bean
+ * exclusively through {@link com.smarthire.ai.config.AiProviderConfig} to avoid duplicate {@code
+ * AiProvider} bean definitions.
  */
-@Component
 public class MockAiProvider implements AiProvider {
 
   private static final Logger log = LoggerFactory.getLogger(MockAiProvider.class);
@@ -58,21 +60,24 @@ public class MockAiProvider implements AiProvider {
 
   @Override
   public MatchScoreResponse computeMatchScore(MatchScoreRequest request) {
-    log.debug("MockAiProvider: computing match score for application={}, job={}",
-        request.applicationId(), request.jobId());
+    log.debug(
+        "MockAiProvider: computing match score for application={}, job={}",
+        request.applicationId(),
+        request.jobId());
 
     // Deterministic score based on UUID hash
     int hash = request.applicationId().hashCode() ^ request.jobId().hashCode();
     int score = Math.abs(hash % 101); // 0-100
 
-    String rationale = String.format(
-        "[MOCK] Candidate %s scored %d/100 for job %s. "
-            + "Rationale: Based on synthetic evaluation of skills overlap, experience alignment, "
-            + "and location match. This is a deterministic mock response — not a real assessment.",
-        request.applicationId(), score, request.jobId());
+    String rationale =
+        String.format(
+            "[MOCK] Candidate %s scored %d/100 for job %s. "
+                + "Rationale: Based on synthetic evaluation of skills overlap, experience alignment, "
+                + "and location match. This is a deterministic mock response — not a real assessment.",
+            request.applicationId(), score, request.jobId());
 
     return new MatchScoreResponse(
-        UUID.randomUUID(),
+        deterministicId("match-score", request.applicationId(), request.jobId()),
         request.applicationId(),
         request.jobId(),
         (short) score,
@@ -84,12 +89,15 @@ public class MockAiProvider implements AiProvider {
 
   @Override
   public CandidateSummaryResponse generateCandidateSummary(CandidateSummaryRequest request) {
-    log.debug("MockAiProvider: generating candidate summary for application={}", request.applicationId());
+    log.debug(
+        "MockAiProvider: generating candidate summary for application={}", request.applicationId());
 
     return new CandidateSummaryResponse(
-        UUID.randomUUID(),
+        deterministicId("candidate-summary", request.applicationId()),
         request.applicationId(),
-        "[MOCK] Summary for candidate application " + request.applicationId() + ". "
+        "[MOCK] Summary for candidate application "
+            + request.applicationId()
+            + ". "
             + "Candidate demonstrates strong technical skills in Java, Spring Boot, and cloud "
             + "technologies. 5+ years of experience in backend development. Bachelor's degree in "
             + "Computer Science. This is a deterministic mock response — not a real assessment.",
@@ -102,16 +110,21 @@ public class MockAiProvider implements AiProvider {
 
   @Override
   public JdAssistResponse assistJd(JdAssistRequest request) {
-    log.debug("MockAiProvider: assisting JD for role={}, seniority={}", request.role(), request.seniority());
+    log.debug(
+        "MockAiProvider: assisting JD for role={}, seniority={}",
+        request.role(),
+        request.seniority());
 
-    String improvedJd = String.format(
-        "%s\n\n[MOCK ENHANCEMENT] This job description has been enhanced with structured "
-            + "requirements, clear responsibilities, and inclusive language. "
-            + "Original draft length: %d chars. This is a deterministic mock response.",
-        request.draftJd(), request.draftJd().length());
+    String improvedJd =
+        String.format(
+            "%s%n%n[MOCK ENHANCEMENT] This job description has been enhanced with structured "
+                + "requirements, clear responsibilities, and inclusive language. "
+                + "Original draft length: %d chars. This is a deterministic mock response.%n",
+            request.draftJd(), request.draftJd().length());
 
     return new JdAssistResponse(
-        UUID.randomUUID(),
+        deterministicId(
+            "jd-assist", request.role(), request.seniority(), request.draftJd(), request.tone()),
         improvedJd,
         MODEL_ID,
         PROMPT_VERSION);
@@ -122,7 +135,7 @@ public class MockAiProvider implements AiProvider {
     log.debug("MockAiProvider: parsing resume for document={}", request.documentId());
 
     return new ResumeParseResponse(
-        UUID.randomUUID(),
+        deterministicId("resume-parse", request.documentId()),
         request.documentId(),
         List.of("Java", "Spring Boot", "Microservices", "PostgreSQL", "Redis", "Docker"),
         List.of(
@@ -132,5 +145,17 @@ public class MockAiProvider implements AiProvider {
         List.of("AWS Certified Solutions Architect", "Oracle Certified Java Developer"),
         MODEL_ID,
         PROMPT_VERSION);
+  }
+
+  /**
+   * Name-based (v3) UUID derived from the request, so identical input always yields an identical
+   * response — a random identifier would break the determinism contract documented above.
+   */
+  private static UUID deterministicId(String operation, Object... inputs) {
+    StringBuilder key = new StringBuilder(PROVIDER_ID).append(':').append(operation);
+    for (Object input : inputs) {
+      key.append(':').append(input);
+    }
+    return UUID.nameUUIDFromBytes(key.toString().getBytes(StandardCharsets.UTF_8));
   }
 }

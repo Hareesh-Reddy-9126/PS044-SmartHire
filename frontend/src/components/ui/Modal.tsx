@@ -1,131 +1,81 @@
-import React, { useEffect, useRef } from 'react';
-import { createPortal } from 'react-dom';
+import React from 'react';
 import { Button } from './Button';
 
-interface ModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-  title: string;
+export interface ModalProps {
   children: React.ReactNode;
-  size?: 'sm' | 'md' | 'lg';
-  footer?: React.ReactNode;
-  closeOnOverlayClick?: boolean;
-  closeOnEscape?: boolean;
+  title?: string;
+  onClose: () => void;
+  className?: string;
 }
 
-export function Modal({ 
-  isOpen, 
-  onClose, 
-  title, 
-  children, 
-  size = 'md', 
-  footer, 
-  closeOnOverlayClick = true,
-  closeOnEscape = true,
-}: ModalProps) {
-  const modalRef = useRef<HTMLDivElement>(null);
-  const previousActiveElement = useRef<HTMLElement | null>(null);
-
-  useEffect(() => {
-    if (isOpen) {
-      previousActiveElement.current = document.activeElement as HTMLElement;
-      document.body.style.overflow = 'hidden';
-      modalRef.current?.focus();
-    } else {
-      document.body.style.overflow = '';
-      previousActiveElement.current?.focus();
-    }
-    return () => {
-      document.body.style.overflow = '';
-    };
-  }, [isOpen]);
-
-  useEffect(() => {
-    if (!isOpen || !closeOnEscape) return;
-    
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      }
-    };
-    
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, closeOnEscape, onClose]);
-
-  if (!isOpen) return null;
-
-  const sizeClasses = {
-    sm: 'max-w-[400px]',
-    md: 'max-w-[520px]',
-    lg: 'max-w-[640px]',
-  };
-
-  const modalContent = (
-    <div className="modal-overlay" onClick={closeOnOverlayClick ? onClose : undefined} role="dialog" aria-modal="true" aria-labelledby="modal-title">
-      <div
-        ref={modalRef}
-        tabIndex={-1}
-        className={`modal ${sizeClasses[size]}`}
-      >
-        <div className="modal-header">
-          <h2 id="modal-title" className="font-headline-sm text-headline-sm text-on-surface">
-            {title}
-          </h2>
-          <button
-            className="p-1 rounded-lg text-c-text-subtle hover:text-on-surface hover:bg-c-surface-sunken transition-colors"
-            onClick={onClose}
-            aria-label="Close dialog"
-          >
-            <span className="material-symbols-outlined text-[20px]">close</span>
-          </button>
-        </div>
-        <div className="modal-body">
-          {children}
-        </div>
-        {footer && (
-          <div className="modal-footer">
-            {footer}
+/**
+ * Modal dialog with backdrop, header, body, and footer sections.
+ */
+export function Modal({ children, title, onClose, className = '' }: ModalProps) {
+  return (
+    <div className="modal-overlay" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div className={`modal ${className}`}>
+        {title && (
+          <div className="modal-header">
+            <h2 className="font-headline-sm text-headline-sm text-on-surface" id="modal-title">
+              {title}
+            </h2>
+            <button
+              type="button"
+              onClick={onClose}
+              className="material-symbols-outlined text-[20px] text-c-text-muted hover:text-c-text"
+              aria-label="Close dialog"
+            >
+              close
+            </button>
           </div>
         )}
+        <div className="modal-body">{children}</div>
       </div>
     </div>
   );
-
-  return createPortal(modalContent, document.body);
 }
 
+/**
+ * Confirmation dialog with title, message, confirm/cancel actions.
+ */
 export function ConfirmDialog({
-  isOpen,
-  onClose,
-  onConfirm,
-  title,
+  title = 'Confirm action',
   message,
+  onConfirm,
+  onCancel,
   confirmLabel = 'Confirm',
   cancelLabel = 'Cancel',
-  variant = 'primary',
-  isLoading = false,
+  confirmLoading = false,
+  className = '',
 }: {
-  isOpen: boolean;
-  onClose: () => void;
-  onConfirm: () => void;
-  title: string;
+  title?: string;
   message: string;
+  onConfirm: () => void;
+  onCancel: () => void;
   confirmLabel?: string;
   cancelLabel?: string;
-  variant?: 'primary' | 'danger';
-  isLoading?: boolean;
+  confirmLoading?: boolean;
+  className?: string;
 }) {
   return (
-    <Modal isOpen={isOpen} onClose={onClose} title={title} size="sm">
-      <p className="font-body-md text-body-md text-c-text-muted">{message}</p>
-      <div slot="footer" className="modal-footer">
-        <Button variant="secondary" onClick={onClose} disabled={isLoading}>
-          {cancelLabel}
-        </Button>
-        <Button variant={variant} onClick={onConfirm} isLoading={isLoading}>
-          {confirmLabel}
-        </Button>
+    <Modal title={title} onClose={onCancel} className={className}>
+      <div className="space-y-4">
+        <p className="font-body-md text-body-md text-on-surface">{message}</p>
+        <div className="flex justify-end gap-3">
+          <Button variant="ghost" onClick={onCancel} size="sm" disabled={confirmLoading}>
+            {cancelLabel}
+          </Button>
+          <Button
+            variant="primary"
+            onClick={onConfirm}
+            size="sm"
+            isLoading={confirmLoading}
+            disabled={confirmLoading}
+          >
+            {confirmLabel}
+          </Button>
+        </div>
       </div>
     </Modal>
   );

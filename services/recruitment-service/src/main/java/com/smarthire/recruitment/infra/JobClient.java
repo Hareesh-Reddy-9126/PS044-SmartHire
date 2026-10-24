@@ -37,7 +37,27 @@ public interface JobClient {
 
   /** Fallback for circuit breaker / bulkhead when Job Service is unavailable. */
   default JobResponse getJobFallback(UUID jobId, Exception ex) {
-    throw new JobServiceUnavailableException("Job service unavailable: " + ex.getMessage());
+    throw unavailable("read", ex);
+  }
+
+  /**
+   * Re-throws a genuine client answer unchanged and converts everything else into "unavailable".
+   *
+   * <p>The circuit breaker invokes the fallback for every exception, including an ordinary 404 from
+   * job-service. Translating that into 503 would tell the caller the service is down and prevent
+   * {@code RecruitmentService} from mapping a deleted job to the same 404 it returns for an unknown
+   * application, which is what keeps another organization's identifiers unprobeable.
+   */
+  private static RuntimeException unavailable(String operation, Exception ex) {
+    if (ex instanceof feign.FeignException feign && feign.status() >= 400 && feign.status() < 500) {
+      return feign;
+    }
+    return new JobServiceUnavailableException(
+        "Job service unavailable during "
+            + operation
+            + ": "
+            + ex.getClass().getSimpleName()
+            + (ex.getMessage() == null ? "" : " (" + ex.getMessage() + ")"));
   }
 
   /** Mirror of job-service's {@code JobResponse}; only {@code ownerOrgId} is actually consulted. */

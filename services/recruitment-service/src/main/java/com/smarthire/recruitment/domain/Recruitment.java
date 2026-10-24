@@ -6,6 +6,8 @@ import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.Id;
 import jakarta.persistence.Table;
+import java.time.LocalDate;
+import java.time.LocalTime;
 import java.util.UUID;
 
 /**
@@ -54,6 +56,18 @@ public class Recruitment {
   @Column(name = "interview_status", nullable = false)
   private InterviewStatus interviewStatus;
 
+  @Column(name = "interview_date")
+  private LocalDate interviewDate;
+
+  @Column(name = "interview_start_time")
+  private LocalTime interviewStartTime;
+
+  @Column(name = "interviewer", length = 200)
+  private String interviewer;
+
+  @Column(name = "interview_location", length = 300)
+  private String interviewLocation;
+
   @Enumerated(EnumType.STRING)
   @Column(name = "final_status", nullable = false)
   private FinalStatus finalStatus;
@@ -70,6 +84,32 @@ public class Recruitment {
       UUID candidateId,
       InterviewStatus interviewStatus,
       FinalStatus finalStatus) {
+    this(
+        recruitmentId,
+        applicationId,
+        jobId,
+        ownerOrgId,
+        candidateId,
+        interviewStatus,
+        finalStatus,
+        null,
+        null,
+        null,
+        null);
+  }
+
+  public Recruitment(
+      UUID recruitmentId,
+      UUID applicationId,
+      UUID jobId,
+      UUID ownerOrgId,
+      UUID candidateId,
+      InterviewStatus interviewStatus,
+      FinalStatus finalStatus,
+      LocalDate interviewDate,
+      LocalTime interviewStartTime,
+      String interviewer,
+      String interviewLocation) {
     this.recruitmentId = recruitmentId;
     this.applicationId = applicationId;
     this.jobId = jobId;
@@ -77,6 +117,10 @@ public class Recruitment {
     this.candidateId = candidateId;
     this.interviewStatus = interviewStatus;
     this.finalStatus = finalStatus;
+    this.interviewDate = interviewDate;
+    this.interviewStartTime = interviewStartTime;
+    this.interviewer = interviewer;
+    this.interviewLocation = interviewLocation;
   }
 
   /**
@@ -127,6 +171,19 @@ public class Recruitment {
           "scheduleInterview");
     }
     interviewStatus = InterviewStatus.SCHEDULED;
+  }
+
+  /** Schedules the interview and stores its recruiter-provided details. */
+  public void scheduleInterview(
+      LocalDate interviewDate,
+      LocalTime interviewStartTime,
+      String interviewer,
+      String interviewLocation) {
+    scheduleInterview();
+    this.interviewDate = interviewDate;
+    this.interviewStartTime = interviewStartTime;
+    this.interviewer = interviewer;
+    this.interviewLocation = interviewLocation;
   }
 
   /**
@@ -225,6 +282,22 @@ public class Recruitment {
 
   public InterviewStatus getInterviewStatus() {
     return interviewStatus;
+  }
+
+  public LocalDate getInterviewDate() {
+    return interviewDate;
+  }
+
+  public LocalTime getInterviewStartTime() {
+    return interviewStartTime;
+  }
+
+  public String getInterviewer() {
+    return interviewer;
+  }
+
+  public String getInterviewLocation() {
+    return interviewLocation;
   }
 
   public FinalStatus getFinalStatus() {

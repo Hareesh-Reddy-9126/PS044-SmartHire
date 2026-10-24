@@ -36,8 +36,14 @@ public interface JobClient {
   /**
    * Fallback for circuit breaker / bulkhead when Job Service is unavailable. Returns a problem
    * detail response indicating the downstream dependency is unavailable.
+   *
+   * <p>A 404 is an answer, not an outage: it is rethrown unchanged so callers can map it to their
+   * own 404 instead of reporting the job service as unavailable.
    */
   default JobResponse getJobFallback(UUID jobId, Exception ex) {
+    if (ex instanceof feign.FeignException.NotFound notFound) {
+      throw notFound;
+    }
     throw new JobServiceUnavailableException("Job service unavailable: " + ex.getMessage());
   }
 

@@ -55,9 +55,11 @@ class NotificationControllerTest {
   private static final UUID OTHER_CANDIDATE_ID =
       UUID.fromString("22222222-2222-2222-2222-222222222222");
   private static final String TOKEN = "test-token";
+  private static final String MALFORMED_SUBJECT_TOKEN = "malformed-token";
 
   private Jwt candidateJwt;
   private Jwt otherCandidateJwt;
+  private Jwt malformedSubjectJwt;
 
   @BeforeEach
   void setUp() {
@@ -79,8 +81,18 @@ class NotificationControllerTest {
             .claim("roles", List.of("CANDIDATE"))
             .build();
 
+    malformedSubjectJwt =
+        Jwt.withTokenValue(MALFORMED_SUBJECT_TOKEN)
+            .header("alg", "RS256")
+            .subject("not-a-uuid")
+            .issuer("https://smarthire.local/auth")
+            .audience(List.of("smarthire"))
+            .claim("roles", List.of("CANDIDATE"))
+            .build();
+
     when(jwtDecoder.decode(TOKEN)).thenReturn(candidateJwt);
     when(jwtDecoder.decode("other-token")).thenReturn(otherCandidateJwt);
+    when(jwtDecoder.decode(MALFORMED_SUBJECT_TOKEN)).thenReturn(malformedSubjectJwt);
   }
 
   private Notification createNotification(
@@ -188,6 +200,15 @@ class NotificationControllerTest {
       mvc.perform(get("/api/v1/notifications").header("Authorization", "Bearer invalid-token"))
           .andExpect(status().isUnauthorized());
     }
+
+    @Test
+    @DisplayName("Returns 401 when JWT subject is not a UUID")
+    void listNotificationsMalformedSubject() throws Exception {
+      mvc.perform(
+              get("/api/v1/notifications")
+                  .header("Authorization", "Bearer " + MALFORMED_SUBJECT_TOKEN))
+          .andExpect(status().isUnauthorized());
+    }
   }
 
   @Nested
@@ -259,6 +280,15 @@ class NotificationControllerTest {
     @DisplayName("Unauthenticated request returns 401")
     void unauthenticated() throws Exception {
       mvc.perform(get("/api/v1/notifications/{id}", NOTIFICATION_ID))
+          .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    @DisplayName("Returns 401 when JWT subject is not a UUID")
+    void getNotificationMalformedSubject() throws Exception {
+      mvc.perform(
+              get("/api/v1/notifications/{id}", NOTIFICATION_ID)
+                  .header("Authorization", "Bearer " + MALFORMED_SUBJECT_TOKEN))
           .andExpect(status().isUnauthorized());
     }
   }

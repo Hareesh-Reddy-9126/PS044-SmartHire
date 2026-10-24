@@ -1,0 +1,28 @@
+# Test configuration for AI Service unit tests.
+#
+# Overrides the production/local datasource so tests can run without a
+# PostgreSQL instance. Flyway is disabled because none of the unit tests
+# require schema migration — they only verify service-layer behavior and
+# context startup.
+spring:
+  datasource:
+    url: jdbc:h2:mem:ai_svc_test;DB_CLOSE_DELAY=-1
+    driver-class-name: org.h2.Driver
+    username: sa
+    password: ""
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  flyway:
+    enabled: false
+
+smarthire:
+  ai:
+    enabled: true
+    provider: mock
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info

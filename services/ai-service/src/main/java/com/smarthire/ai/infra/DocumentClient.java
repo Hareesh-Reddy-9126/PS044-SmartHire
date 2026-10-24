@@ -11,8 +11,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 /**
  * OpenFeign client for Document Service.
  *
- * <p>Calls {@code GET /api/v1/documents/{documentId}/content} to fetch resume content for
- * parsing. Protected by Resilience4j circuit breaker, retry, and bulkhead for fault tolerance.
+ * <p>Calls {@code GET /api/v1/documents/{documentId}/content} to fetch resume content for parsing.
+ * Protected by Resilience4j circuit breaker, retry, and bulkhead for fault tolerance.
  */
 @FeignClient(name = "DOCUMENT-SERVICE")
 public interface DocumentClient {
@@ -41,9 +41,7 @@ public interface DocumentClient {
   @Bulkhead(name = "documentService")
   byte[] getDocumentContent(@PathVariable("documentId") UUID documentId);
 
-  /**
-   * Fallback for circuit breaker / bulkhead when Document Service is unavailable.
-   */
+  /** Fallback for circuit breaker / bulkhead when Document Service is unavailable. */
   default DocumentResponse getDocumentFallback(UUID documentId, Exception ex) {
     throw new DocumentServiceUnavailableException(
         "Document service unavailable: " + ex.getMessage());

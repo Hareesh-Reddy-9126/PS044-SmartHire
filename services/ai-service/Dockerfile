@@ -4,20 +4,27 @@ FROM maven:3.9.6-eclipse-temurin-21 AS builder
 
 WORKDIR /app
 
-# Copy parent pom and common module first for dependency resolution
+# Copy parent pom and strip modules section for standalone build
 COPY pom.xml .
+RUN sed -i '/<modules>/,/<\/modules>/d' pom.xml
+
+# Copy common and ai-service modules
 COPY common/pom.xml common/
-COPY services/ai-service/pom.xml services/ai-service/
-
-# Download dependencies (cached layer)
-RUN mvn -B -pl services/ai-service -am dependency:go-offline -DskipTests
-
-# Copy source code
 COPY common/src common/src
+COPY services/ai-service/pom.xml services/ai-service/
 COPY services/ai-service/src services/ai-service/src
 
+# Install parent pom locally
+RUN mvn -B -f pom.xml install -N -DskipTests -Dspotbugs.skip=true
+
+# Apply Spotless formatting to common module (fixes CRLF/LF issues)
+RUN mvn -B -f common/pom.xml spotless:apply -DskipTests -Dspotbugs.skip=true
+
+# Install common module locally first (required by ai-service)
+RUN mvn -B -f common/pom.xml install -DskipTests -Dspotbugs.skip=true
+
 # Build the service
-RUN mvn -B -pl services/ai-service -am package -DskipTests -Dspotbugs.skip=true
+RUN mvn -B -f services/ai-service/pom.xml package -DskipTests -Dspotbugs.skip=true
 
 # Runtime stage
 FROM eclipse-temurin:21-jre-alpine

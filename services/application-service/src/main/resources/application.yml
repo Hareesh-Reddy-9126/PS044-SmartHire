@@ -64,8 +64,16 @@ management:
 
 # Resilience4j configuration for fault tolerance on inter-service Feign calls.
 # Named instances match the @CircuitBreaker/@Retry/@Bulkhead annotations on Feign clients.
+#
+# Aspect order: CircuitBreaker( Retry( Bulkhead( call ) ) ). Resilience4j's default puts Retry
+# outermost, so the circuit breaker's fallback turns the first failure into a result and Retry
+# never fires. Lower order = outer aspect; the bulkhead keeps its default (innermost).
+#
+# 4xx responses (FeignClientException) are answers, not outages: they are never retried and never
+# counted as circuit-breaker failures.
 resilience4j:
   circuitbreaker:
+    circuitBreakerAspectOrder: 1
     instances:
       jobService:
         registerHealthIndicator: true
@@ -77,6 +85,8 @@ resilience4j:
         failureRateThreshold: 50
         slowCallRateThreshold: 80
         slowCallDurationThreshold: 5s
+        ignoreExceptions:
+          - feign.FeignException$FeignClientException
       notificationService:
         registerHealthIndicator: true
         slidingWindowSize: 10
@@ -87,7 +97,10 @@ resilience4j:
         failureRateThreshold: 50
         slowCallRateThreshold: 80
         slowCallDurationThreshold: 5s
+        ignoreExceptions:
+          - feign.FeignException$FeignClientException
   retry:
+    retryAspectOrder: 2
     instances:
       jobService:
         maxAttempts: 3
@@ -98,6 +111,8 @@ resilience4j:
           - java.io.IOException
           - org.springframework.web.client.ResourceAccessException
           - feign.FeignException
+        ignoreExceptions:
+          - feign.FeignException$FeignClientException
       notificationService:
         maxAttempts: 3
         waitDuration: 500ms
@@ -107,6 +122,8 @@ resilience4j:
           - java.io.IOException
           - org.springframework.web.client.ResourceAccessException
           - feign.FeignException
+        ignoreExceptions:
+          - feign.FeignException$FeignClientException
   bulkhead:
     instances:
       jobService:

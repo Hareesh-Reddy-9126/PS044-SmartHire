@@ -1,40 +1,59 @@
-type StatusType = 
-  | 'OPEN' | 'DRAFT' | 'CLOSED'
-  | 'APPLIED' | 'UNDER_REVIEW' | 'SHORTLISTED' | 'HIRED' | 'REJECTED' | 'WITHDRAWN'
-  | 'NOT_SCHEDULED' | 'SCHEDULED' | 'COMPLETED' | 'NO_SHOW'
-  | 'PENDING';
-
-interface StatusBadgeProps {
-  status: StatusType;
+export interface StatusBadgeProps {
+  status: string;
   size?: 'sm' | 'md';
-  showDot?: boolean;
+  className?: string;
 }
 
-const statusConfig: Record<StatusType, { label: string }> = {
-  OPEN: { label: 'OPEN' },
-  DRAFT: { label: 'DRAFT' },
-  CLOSED: { label: 'CLOSED' },
-  APPLIED: { label: 'APPLIED' },
-  UNDER_REVIEW: { label: 'UNDER_REVIEW' },
-  SHORTLISTED: { label: 'SHORTLISTED' },
-  HIRED: { label: 'HIRED' },
-  REJECTED: { label: 'REJECTED' },
-  WITHDRAWN: { label: 'WITHDRAWN' },
-  NOT_SCHEDULED: { label: 'NOT_SCHEDULED' },
-  SCHEDULED: { label: 'SCHEDULED' },
-  COMPLETED: { label: 'COMPLETED' },
-  NO_SHOW: { label: 'NO_SHOW' },
-  PENDING: { label: 'PENDING' },
-};
-
-export function StatusBadge({ status, size = 'md', showDot = true }: StatusBadgeProps) {
-  const config = statusConfig[status] || { label: status };
-  const className = `status-badge status-${status.toLowerCase()} ${size === 'sm' ? 'text-[10px] px-1.5 h-5' : ''}`;
+/**
+ * The single renderer for every status in the product.
+ *
+ * The raw enum value is shown rather than a prettified label: the wire contract
+ * and the UI stay in one-to-one correspondence, which makes a status easy to
+ * match against an API response or a log line. Styling is supplied by the
+ * stylesheet's `::before` dot, so colour is never the only signal.
+ */
+export function StatusBadge({ status, size = 'md', className = '' }: StatusBadgeProps) {
+  const known = isKnownStatus(status);
+  const tone = known ? `status-${status.toLowerCase()}` : 'status-pending';
 
   return (
-    <span className={className}>
-      {showDot && <span className="w-1.5 h-1.5 rounded-full" aria-hidden="true" />}
-      {config.label}
+    <span
+      className={`status-badge ${tone} ${size === 'sm' ? 'text-[10px] px-1.5 h-5' : ''} ${className}`}
+      title={known ? undefined : `Unrecognised status: ${status}`}
+    >
+      {status}
     </span>
   );
+}
+
+const KNOWN_STATUSES = [
+  // Job
+  'DRAFT',
+  'OPEN',
+  'CLOSED',
+  // Application
+  'APPLIED',
+  'UNDER_REVIEW',
+  'SHORTLISTED',
+  'HIRED',
+  'REJECTED',
+  'WITHDRAWN',
+  // Recruitment — interview lifecycle
+  'NOT_SCHEDULED',
+  'SCHEDULED',
+  'COMPLETED',
+  'NO_SHOW',
+  // Recruitment — decision lifecycle
+  'PENDING',
+  // Notification delivery
+  'SENT',
+  'FAILED',
+] as const;
+
+export type StatusType = (typeof KNOWN_STATUSES)[number];
+
+const STATUS_SET = new Set<string>(KNOWN_STATUSES);
+
+export function isKnownStatus(status: string): status is StatusType {
+  return STATUS_SET.has(status);
 }

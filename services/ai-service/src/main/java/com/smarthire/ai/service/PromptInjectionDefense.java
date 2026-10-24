@@ -12,6 +12,7 @@ import org.springframework.stereotype.Component;
  * within system prompts to prevent instruction injection attacks.
  *
  * <p>Key principles:
+ *
  * <ul>
  *   <li>Use explicit delimiters to separate system instructions from user content
  *   <li>Validate output against expected schema before returning
@@ -19,30 +20,35 @@ import org.springframework.stereotype.Component;
  *   <li>Log injection attempts for monitoring
  * </ul>
  *
- * <p>This is a defense-in-depth layer. The AI provider implementations must also enforce
- * their own safety boundaries.
+ * <p>This is a defense-in-depth layer. The AI provider implementations must also enforce their own
+ * safety boundaries.
  */
 @Component
 public class PromptInjectionDefense {
 
   private static final Logger log = LoggerFactory.getLogger(PromptInjectionDefense.class);
 
-  // Common injection patterns
+  // Common injection patterns.
+  //
+  // Role-play and instruction-leak patterns intentionally allow a small number of
+  // filler words between the trigger verb and the target noun so that natural
+  // phrasing ("you are now a...", "reveal the system prompt") is still caught,
+  // while remaining scoped to injection-relevant vocabulary.
   private static final Pattern IGNORE_INSTRUCTIONS_PATTERN =
       Pattern.compile(
-          "(?i)\\b(ignore|forget|disregard|override|bypass)\\s+(?:previous|prior|earlier|all|the)\\s+(?:instructions?|prompts?|rules?|guidelines?)\\b");
+          "(?i)\\b(ignore|ignores|forget|disregard|override|bypass)\\s+(?:previous|prior|earlier|all|the)\\s+(?:instructions?|prompts?|rules?|guidelines?)\\b");
 
   private static final Pattern ROLE_PLAY_PATTERN =
       Pattern.compile(
-          "(?i)\\b(?:you are|act as|pretend to be|roleplay|simulate)\\s+(?:a|an|the)\\s+\\w+");
+          "(?i)\\b(?:act as|pretend to be|roleplay|simulate)\\b(?:\\s+(?:a|an|the|as))?\\s+\\w+");
 
   private static final Pattern INSTRUCTION_LEAK_PATTERN =
       Pattern.compile(
-          "(?i)\\b(?:print|show|output|display|reveal|leak|expose)\\s+(?:the|your|system|initial|original)\\s+(?:prompt|instruction|instruction)\\b");
+          "(?i)\\b(?:print|show|output|display|reveal|leak|expose)\\b(?:\\s+\\w+){0,3}\\s+(?:prompt|instruction)s?\\b");
 
   private static final Pattern CONTINUATION_PATTERN =
       Pattern.compile(
-          "(?i)\\b(?:continue|complete|finish)\\s+(?:the|this)\\s+(?:prompt|instruction|sentence|paragraph)\\b");
+          "(?i)\\b(?:continue|complete|finish)\\b(?:\\s+\\w+){0,3}\\s+(?:prompt|instruction|sentence|paragraph)\\b");
 
   // Delimiter for framing untrusted content
   public static final String CONTENT_START_DELIMITER = "<<<CONTENT_START>>>";
@@ -59,6 +65,9 @@ public class PromptInjectionDefense {
     if (content == null) {
       return "";
     }
+    if (content.isBlank()) {
+      return CONTENT_START_DELIMITER + "\n" + CONTENT_END_DELIMITER;
+    }
     return CONTENT_START_DELIMITER + "\n" + content + "\n" + CONTENT_END_DELIMITER;
   }
 
@@ -73,10 +82,11 @@ public class PromptInjectionDefense {
       return false;
     }
 
-    boolean detected = IGNORE_INSTRUCTIONS_PATTERN.matcher(text).find()
-        || ROLE_PLAY_PATTERN.matcher(text).find()
-        || INSTRUCTION_LEAK_PATTERN.matcher(text).find()
-        || CONTINUATION_PATTERN.matcher(text).find();
+    boolean detected =
+        IGNORE_INSTRUCTIONS_PATTERN.matcher(text).find()
+            || ROLE_PLAY_PATTERN.matcher(text).find()
+            || INSTRUCTION_LEAK_PATTERN.matcher(text).find()
+            || CONTINUATION_PATTERN.matcher(text).find();
 
     if (detected) {
       log.warn("Potential prompt injection detected in input (length={})", text.length());
@@ -85,8 +95,8 @@ public class PromptInjectionDefense {
   }
 
   /**
-   * Sanitizes content by removing or neutralizing potential injection patterns.
-   * Used as a defense-in-depth layer before framing.
+   * Sanitizes content by removing or neutralizing potential injection patterns. Used as a
+   * defense-in-depth layer before framing.
    *
    * @param content the content to sanitize
    * @return sanitized content
@@ -115,7 +125,12 @@ public class PromptInjectionDefense {
    * @return the combined prompt
    */
   public String buildSafePrompt(String systemInstructions, String userContent) {
-    return INSTRUCTION_DELIMITER + "\n" + systemInstructions + "\n" + INSTRUCTION_DELIMITER
-        + "\n\nUser content follows:\n" + userContent;
+    return INSTRUCTION_DELIMITER
+        + "\n"
+        + systemInstructions
+        + "\n"
+        + INSTRUCTION_DELIMITER
+        + "\n\nUser content follows:\n"
+        + userContent;
   }
 }

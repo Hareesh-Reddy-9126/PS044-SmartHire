@@ -6,6 +6,7 @@ import com.smarthire.document.domain.Document;
 import com.smarthire.document.domain.DocumentType;
 import com.smarthire.document.infra.DocumentRepository;
 import com.smarthire.document.infra.DocumentStorage;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
@@ -41,6 +42,10 @@ public class DocumentService {
   private final DocumentStorage documentStorage;
   private final DocumentUploadProperties uploadProperties;
 
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP2",
+      justification =
+          "DocumentStorage is a Spring-managed collaborator retained for service operations and never exposed to callers.")
   public DocumentService(
       DocumentRepository documentRepository,
       DocumentStorage documentStorage,

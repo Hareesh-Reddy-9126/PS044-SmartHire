@@ -49,15 +49,33 @@ public interface ApplicationClient {
 
   /** Fallback for circuit breaker / bulkhead when Application Service is unavailable. */
   default ApplicationResponse getApplicationFallback(UUID applicationId, Exception ex) {
-    throw new ApplicationServiceUnavailableException(
-        "Application service unavailable: " + ex.getMessage());
+    throw unavailable("read", ex);
   }
 
   /** Fallback for circuit breaker / bulkhead when Application Service is unavailable on update. */
   default ApplicationResponse updateStatusFallback(
       UUID applicationId, StatusUpdateRequest request, Exception ex) {
-    throw new ApplicationServiceUnavailableException(
-        "Application service unavailable: " + ex.getMessage());
+    throw unavailable("status update", ex);
+  }
+
+  /**
+   * Re-throws a genuine client answer unchanged and converts everything else into "unavailable".
+   *
+   * <p>The circuit breaker invokes the fallback for every exception, including an ordinary 404 or
+   * 409 from application-service. Translating those into 503 would tell the caller the service is
+   * down and hide the real, actionable reason (the application does not exist, or its state machine
+   * refused the move), so caller code could never map them to 404/409.
+   */
+  private static RuntimeException unavailable(String operation, Exception ex) {
+    if (ex instanceof feign.FeignException feign && feign.status() >= 400 && feign.status() < 500) {
+      return feign;
+    }
+    return new ApplicationServiceUnavailableException(
+        "Application service unavailable during "
+            + operation
+            + ": "
+            + ex.getClass().getSimpleName()
+            + (ex.getMessage() == null ? "" : " (" + ex.getMessage() + ")"));
   }
 
   /** Mirror of application-service's {@code ApplicationResponse}. */

@@ -30,6 +30,8 @@ import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.http.MediaType;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -186,6 +188,33 @@ class ApplicationControllerWebMvcTest {
   }
 
   // ---------------------------------------------------------------- GET /applications/{id}
+
+  @Nested
+  class ListApplications {
+
+    @Test
+    void candidateCanListOnlyTheirApplications() throws Exception {
+      givenToken(CANDIDATE);
+      when(applicationService.listForCandidate(eq(CANDIDATE_ID), any()))
+          .thenReturn(
+              new PageImpl<>(
+                  List.of(application(ApplicationStatus.APPLIED)), PageRequest.of(0, 20), 1));
+
+      mvc.perform(get("/api/v1/applications").header("Authorization", "Bearer " + CANDIDATE))
+          .andExpect(status().isOk())
+          .andExpect(jsonPath("$.content[0].applicationId").value(APPLICATION_ID.toString()))
+          .andExpect(jsonPath("$.page.totalElements").value(1));
+
+      verify(applicationService).listForCandidate(eq(CANDIDATE_ID), any());
+    }
+
+    @Test
+    void recruiterCannotListCandidateApplications() throws Exception {
+      givenToken(RECRUITER);
+      mvc.perform(get("/api/v1/applications").header("Authorization", "Bearer " + RECRUITER))
+          .andExpect(status().isForbidden());
+    }
+  }
 
   @Nested
   class GetApplication {

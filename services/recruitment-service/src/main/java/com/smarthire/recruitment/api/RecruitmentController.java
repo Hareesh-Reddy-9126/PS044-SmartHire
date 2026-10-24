@@ -1,6 +1,7 @@
 package com.smarthire.recruitment.api;
 
 import com.smarthire.recruitment.api.dto.FinalStatusUpdateRequest;
+import com.smarthire.recruitment.api.dto.InterviewScheduleRequest;
 import com.smarthire.recruitment.api.dto.InterviewStatusUpdateRequest;
 import com.smarthire.recruitment.api.dto.RecruitmentCreateRequest;
 import com.smarthire.recruitment.api.dto.RecruitmentResponse;
@@ -255,6 +256,24 @@ public class RecruitmentController {
         RecruitmentResponse.from(
             recruitmentService.updateInterviewStatus(
                 recruitmentId, request.status(), principal.orgId())));
+  }
+
+  @PatchMapping("/{recruitmentId}/schedule")
+  @PreAuthorize("hasRole('RECRUITER')")
+  public ResponseEntity<RecruitmentResponse> scheduleInterview(
+      @PathVariable UUID recruitmentId,
+      @Valid @RequestBody InterviewScheduleRequest request,
+      @AuthenticationPrincipal Jwt jwt) {
+    RecruitmentPrincipal principal = RecruitmentPrincipal.from(jwt);
+    return ResponseEntity.ok(
+        RecruitmentResponse.from(
+            recruitmentService.scheduleInterview(
+                recruitmentId,
+                request.interviewDate(),
+                request.interviewStartTime(),
+                request.interviewer(),
+                request.interviewLocation(),
+                principal.orgId())));
   }
 
   /**

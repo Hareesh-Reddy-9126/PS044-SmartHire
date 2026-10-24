@@ -10,9 +10,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
-/**
- * Spring Data repository for {@link MatchScore} entities.
- */
+/** Spring Data repository for {@link MatchScore} entities. */
 @Repository
 public interface MatchScoreRepository extends JpaRepository<MatchScore, UUID> {
 
@@ -23,7 +21,8 @@ public interface MatchScoreRepository extends JpaRepository<MatchScore, UUID> {
    * @param jobId the job UUID
    * @return the match score if present
    */
-  @Query("SELECT ms FROM MatchScore ms WHERE ms.applicationId = :applicationId AND ms.jobId = :jobId")
+  @Query(
+      "SELECT ms FROM MatchScore ms WHERE ms.applicationId = :applicationId AND ms.jobId = :jobId")
   Optional<MatchScore> findByApplicationIdAndJobId(UUID applicationId, UUID jobId);
 
   /**

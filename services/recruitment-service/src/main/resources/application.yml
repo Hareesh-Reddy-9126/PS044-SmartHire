@@ -73,8 +73,17 @@ management:
 
 # Resilience4j configuration for fault tolerance on inter-service Feign calls.
 # Named instances match the @CircuitBreaker/@Retry/@Bulkhead annotations on Feign clients.
+#
+# Aspect order: CircuitBreaker( Retry( Bulkhead( call ) ) ). Retry is explicitly inner so a
+# transient outage is retried before the circuit breaker's fallback reports 503. Lower order =
+# outer aspect; the bulkhead keeps its default (innermost).
+#
+# 4xx responses (FeignClientException) are answers, not outages: they are never retried and never
+# counted as circuit-breaker failures. Without this a handful of ordinary 404 lookups would open
+# the circuit and turn subsequent not-found answers into 503s.
 resilience4j:
   circuitbreaker:
+    circuitBreakerAspectOrder: 1
     instances:
       applicationService:
         registerHealthIndicator: true
@@ -86,6 +95,8 @@ resilience4j:
         failureRateThreshold: 50
         slowCallRateThreshold: 80
         slowCallDurationThreshold: 5s
+        ignoreExceptions:
+          - feign.FeignException$FeignClientException
       jobService:
         registerHealthIndicator: true
         slidingWindowSize: 10
@@ -96,7 +107,10 @@ resilience4j:
         failureRateThreshold: 50
         slowCallRateThreshold: 80
         slowCallDurationThreshold: 5s
+        ignoreExceptions:
+          - feign.FeignException$FeignClientException
   retry:
+    retryAspectOrder: 2
     instances:
       applicationService:
         maxAttempts: 3
@@ -107,6 +121,8 @@ resilience4j:
           - java.io.IOException
           - org.springframework.web.client.ResourceAccessException
           - feign.FeignException
+        ignoreExceptions:
+          - feign.FeignException$FeignClientException
       jobService:
         maxAttempts: 3
         waitDuration: 500ms
@@ -116,6 +132,8 @@ resilience4j:
           - java.io.IOException
           - org.springframework.web.client.ResourceAccessException
           - feign.FeignException
+        ignoreExceptions:
+          - feign.FeignException$FeignClientException
   bulkhead:
     instances:
       applicationService:

@@ -24,24 +24,31 @@ public class LocalDocumentStorage implements DocumentStorage {
   private static final Logger log = LoggerFactory.getLogger(LocalDocumentStorage.class);
 
   private final Path rootDir;
+  private final IllegalStateException initializationFailure;
 
   public LocalDocumentStorage(
       @Value("${smarthire.document.storage.local.root-dir:/tmp/smarthire/documents}")
           String rootDir) {
     this.rootDir = Paths.get(rootDir).toAbsolutePath().normalize();
+    IllegalStateException initializationFailure = null;
     try {
       Files.createDirectories(this.rootDir);
       log.info("Document storage initialized at: {}", this.rootDir);
     } catch (IOException e) {
-      throw new IllegalStateException(
-          "Failed to create storage root directory: " + this.rootDir, e);
+      initializationFailure =
+          new IllegalStateException("Failed to create storage root directory: " + this.rootDir, e);
+      log.error("Failed to create storage root directory: {}", this.rootDir, e);
     }
+    this.initializationFailure = initializationFailure;
   }
 
   @Override
   public String store(String storageKey, InputStream content) throws StorageException {
     Path targetPath = resolveAndValidate(storageKey);
     Path parentDir = targetPath.getParent();
+    if (parentDir == null) {
+      throw new StorageException("Cannot determine storage directory for: " + storageKey);
+    }
 
     try {
       Files.createDirectories(parentDir);
@@ -107,6 +114,10 @@ public class LocalDocumentStorage implements DocumentStorage {
    * @throws StorageException if path traversal is detected
    */
   private Path resolveAndValidate(String storageKey) throws StorageException {
+    if (initializationFailure != null) {
+      throw new StorageException("Document storage is unavailable", initializationFailure);
+    }
+
     if (storageKey == null || storageKey.isBlank()) {
       throw new StorageException("Storage key cannot be null or empty");
     }

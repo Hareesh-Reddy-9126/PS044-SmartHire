@@ -15,6 +15,10 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.net.URI;
 import java.util.UUID;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PagedModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -26,6 +30,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
@@ -46,6 +51,81 @@ public class ApplicationController {
 
   public ApplicationController(ApplicationService applicationService) {
     this.applicationService = applicationService;
+  }
+
+  /** Lists only the applications owned by the authenticated candidate. */
+  @Operation(
+      summary = "List the current candidate's applications",
+      description =
+          "Returns a paginated application list scoped to the candidate identity in the verified JWT.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Applications retrieved successfully"),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden - requires CANDIDATE role",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
+  @GetMapping
+  @PreAuthorize("hasRole('CANDIDATE')")
+  public PagedModel<ApplicationResponse> listApplications(
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @AuthenticationPrincipal Jwt jwt) {
+    ApplicationPrincipal principal = ApplicationPrincipal.from(jwt);
+    Pageable pageable =
+        PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, 100), Sort.by("applicationId"));
+    return new PagedModel<>(
+        applicationService
+            .listForCandidate(principal.candidateId(), pageable)
+            .map(ApplicationResponse::from));
+  }
+
+  /**
+   * Lists the applications submitted to one of the caller's jobs.
+   *
+   * <p>This is the recruiter's entry point into the application workflow: without it the only way
+   * to reach an application would be to already know its identifier. The job is read from Job
+   * Service and the caller's organization must own it; anyone else receives 404.
+   */
+  @Operation(
+      summary = "List applications for a job",
+      description =
+          "Returns a paginated list of applications submitted to the given job. Requires RECRUITER (owning organization) or ADMIN.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(responseCode = "200", description = "Applications retrieved successfully"),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden - requires RECRUITER or ADMIN role",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Job not found or not owned by the caller's organization",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
+  @GetMapping("/by-job/{jobId}")
+  @PreAuthorize("hasAnyRole('RECRUITER', 'ADMIN')")
+  public PagedModel<ApplicationResponse> listApplicationsForJob(
+      @PathVariable UUID jobId,
+      @RequestParam(defaultValue = "0") int page,
+      @RequestParam(defaultValue = "20") int size,
+      @AuthenticationPrincipal Jwt jwt) {
+    ApplicationPrincipal principal = ApplicationPrincipal.from(jwt);
+    Pageable pageable =
+        PageRequest.of(Math.max(page, 0), Math.clamp(size, 1, 100), Sort.by("applicationId"));
+    return new PagedModel<>(
+        applicationService
+            .listForJob(jobId, principal.orgId(), principal.isAdmin(), pageable)
+            .map(ApplicationResponse::from));
   }
 
   /**

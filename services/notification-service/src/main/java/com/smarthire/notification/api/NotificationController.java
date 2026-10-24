@@ -26,6 +26,7 @@ import org.springframework.hateoas.PagedModel;
 import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
@@ -96,7 +97,12 @@ public class NotificationController {
   public ResponseEntity<PagedModel<EntityModel<NotificationResponse>>> listNotifications(
       HttpServletRequest request, @AuthenticationPrincipal Jwt jwt, Pageable pageable) {
 
-    UUID candidateId = UUID.fromString(jwt.getSubject());
+    UUID candidateId;
+    try {
+      candidateId = UUID.fromString(jwt.getSubject());
+    } catch (IllegalArgumentException e) {
+      throw new BadCredentialsException("Invalid token subject");
+    }
     log.info(
         "Listing notifications for candidate {} (correlationId: {})",
         candidateId,
@@ -179,7 +185,12 @@ public class NotificationController {
       @AuthenticationPrincipal Jwt jwt,
       @PathVariable UUID notificationId) {
 
-    UUID candidateId = UUID.fromString(jwt.getSubject());
+    UUID candidateId;
+    try {
+      candidateId = UUID.fromString(jwt.getSubject());
+    } catch (IllegalArgumentException e) {
+      throw new BadCredentialsException("Invalid token subject");
+    }
     log.info(
         "Getting notification {} for candidate {} (correlationId: {})",
         notificationId,
@@ -243,6 +254,21 @@ public class NotificationController {
             org.springframework.http.HttpStatus.FORBIDDEN,
             "You do not have permission to access this notification");
     problem.setTitle("Access Denied");
+    problem.setInstance(URI.create(request.getRequestURI()));
+    String correlationId = org.slf4j.MDC.get(CorrelationId.MDC_KEY);
+    if (correlationId != null) {
+      problem.setProperty("correlationId", correlationId);
+    }
+    return problem;
+  }
+
+  @ExceptionHandler(BadCredentialsException.class)
+  public ProblemDetail handleBadCredentials(
+      BadCredentialsException ex, HttpServletRequest request) {
+    ProblemDetail problem =
+        ProblemDetail.forStatusAndDetail(
+            org.springframework.http.HttpStatus.UNAUTHORIZED, "Invalid token subject");
+    problem.setTitle("Unauthorized");
     problem.setInstance(URI.create(request.getRequestURI()));
     String correlationId = org.slf4j.MDC.get(CorrelationId.MDC_KEY);
     if (correlationId != null) {

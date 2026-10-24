@@ -1,22 +1,27 @@
 package com.smarthire.ai.service;
 
-import com.smarthire.ai.api.dto.MatchScoreRequest;
-import com.smarthire.ai.api.dto.MatchScoreResponse;
 import com.smarthire.ai.api.dto.CandidateSummaryRequest;
 import com.smarthire.ai.api.dto.CandidateSummaryResponse;
 import com.smarthire.ai.api.dto.JdAssistRequest;
 import com.smarthire.ai.api.dto.JdAssistResponse;
+import com.smarthire.ai.api.dto.MatchScoreRequest;
+import com.smarthire.ai.api.dto.MatchScoreResponse;
 import com.smarthire.ai.api.dto.ResumeParseRequest;
 import com.smarthire.ai.api.dto.ResumeParseResponse;
+import com.smarthire.ai.config.AiProperties;
 import com.smarthire.ai.domain.MatchScore;
 import com.smarthire.ai.infra.AiProvider;
-import com.smarthire.ai.infra.MockAiProvider;
+import com.smarthire.ai.infra.MatchScoreRepository;
+import com.smarthire.ai.config.AiProperties;
+import com.smarthire.ai.infra.AiProvider;
+import com.smarthire.ai.infra.MatchScoreRepository;
 import com.smarthire.common.audit.AuditService;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Core AI service orchestrating match scoring, candidate summaries, JD assistance, and resume
@@ -26,6 +31,7 @@ import org.springframework.transaction.annotation.Transactional;
  * (ADR-0015, governance §43). Features are gated by the {@code smarthire.ai.enabled} feature flag.
  *
  * <p>Safety layers applied before every provider call:
+ *
  * <ol>
  *   <li>Feature flag check (kill switch)
  *   <li>PII redaction on untrusted input
@@ -44,8 +50,12 @@ public class AiMatchingService {
   private final PiiRedactionService piiRedactionService;
   private final PromptInjectionDefense promptInjectionDefense;
   private final MatchScoreRepository matchScoreRepository;
-  private final boolean aiEnabled;
+  private final AiProperties aiProperties;
 
+  @SuppressFBWarnings(
+      value = "EI_EXPOSE_REP2",
+      justification = "Spring-injected configuration properties; not mutated after injection"
+  )
   public AiMatchingService(
       AiProvider aiProvider,
       PiiRedactionService piiRedactionService,
@@ -56,7 +66,7 @@ public class AiMatchingService {
     this.piiRedactionService = piiRedactionService;
     this.promptInjectionDefense = promptInjectionDefense;
     this.matchScoreRepository = matchScoreRepository;
-    this.aiEnabled = aiProperties.isEnabled();
+    this.aiProperties = aiProperties;
   }
 
   /**
@@ -72,7 +82,10 @@ public class AiMatchingService {
   public MatchScoreResponse computeMatchScore(MatchScoreRequest request, UUID recruiterId) {
     checkEnabled();
 
-    log.info("Computing match score for application={}, job={}", request.applicationId(), request.jobId());
+    log.info(
+        "Computing match score for application={}, job={}",
+        request.applicationId(),
+        request.jobId());
 
     // Safety: validate input (already done by Bean Validation)
     // Safety: no PII in request — only UUIDs
@@ -81,15 +94,16 @@ public class AiMatchingService {
     MatchScoreResponse response = aiProvider.computeMatchScore(request);
 
     // Persist for audit trail and potential override tracking
-    MatchScore matchScore = MatchScore.create(
-        response.matchScoreId(),
-        request.applicationId(),
-        request.jobId(),
-        response.score(),
-        response.rationale(),
-        response.model(),
-        response.promptVersion(),
-        response.confidence());
+    MatchScore matchScore =
+        MatchScore.create(
+            response.matchScoreId(),
+            request.applicationId(),
+            request.jobId(),
+            response.score(),
+            response.rationale(),
+            response.model(),
+            response.promptVersion(),
+            response.confidence());
     matchScoreRepository.save(matchScore);
 
     // Audit: AI output generated (no sensitive content in log)
@@ -98,12 +112,19 @@ public class AiMatchingService {
         recruiterId,
         request.applicationId(),
         AuditService.Outcome.SUCCESS,
-        "ai_match_generated:matchScoreId=" + response.matchScoreId()
-            + ",score=" + response.score()
-            + ",model=" + response.model()
-            + ",promptVersion=" + response.promptVersion());
+        "ai_match_generated:matchScoreId="
+            + response.matchScoreId()
+            + ",score="
+            + response.score()
+            + ",model="
+            + response.model()
+            + ",promptVersion="
+            + response.promptVersion());
 
-    log.info("Match score computed: matchScoreId={}, score={}", response.matchScoreId(), response.score());
+    log.info(
+        "Match score computed: matchScoreId={}, score={}",
+        response.matchScoreId(),
+        response.score());
     return response;
   }
 
@@ -115,7 +136,8 @@ public class AiMatchingService {
    * @return the candidate summary response
    */
   @Transactional
-  public CandidateSummaryResponse generateCandidateSummary(CandidateSummaryRequest request, UUID recruiterId) {
+  public CandidateSummaryResponse generateCandidateSummary(
+      CandidateSummaryRequest request, UUID recruiterId) {
     checkEnabled();
 
     log.info("Generating candidate summary for application={}", request.applicationId());
@@ -131,9 +153,12 @@ public class AiMatchingService {
         recruiterId,
         request.applicationId(),
         AuditService.Outcome.SUCCESS,
-        "ai_summary_generated:summaryId=" + response.summaryId()
-            + ",model=" + response.model()
-            + ",promptVersion=" + response.promptVersion());
+        "ai_summary_generated:summaryId="
+            + response.summaryId()
+            + ",model="
+            + response.model()
+            + ",promptVersion="
+            + response.promptVersion());
 
     log.info("Candidate summary generated: summaryId={}", response.summaryId());
     return response;
@@ -159,11 +184,8 @@ public class AiMatchingService {
     String framedDraft = promptInjectionDefense.frameContent(sanitizedDraft);
 
     // Create modified request with safe content
-    JdAssistRequest safeRequest = new JdAssistRequest(
-        request.role(),
-        request.seniority(),
-        framedDraft,
-        request.tone());
+    JdAssistRequest safeRequest =
+        new JdAssistRequest(request.role(), request.seniority(), framedDraft, request.tone());
 
     JdAssistResponse response = aiProvider.assistJd(safeRequest);
 
@@ -173,9 +195,12 @@ public class AiMatchingService {
         recruiterId,
         null, // No jobId yet — this is a draft
         AuditService.Outcome.SUCCESS,
-        "ai_jd_assist:suggestionId=" + response.suggestionId()
-            + ",model=" + response.model()
-            + ",promptVersion=" + response.promptVersion());
+        "ai_jd_assist:suggestionId="
+            + response.suggestionId()
+            + ",model="
+            + response.model()
+            + ",promptVersion="
+            + response.promptVersion());
 
     log.info("JD assist completed: suggestionId={}", response.suggestionId());
     return response;
@@ -190,10 +215,15 @@ public class AiMatchingService {
    * @return the resume parse response
    */
   @Transactional
-  public ResumeParseResponse parseResume(ResumeParseRequest request, UUID actorId, boolean isCandidate) {
+  public ResumeParseResponse parseResume(
+      ResumeParseRequest request, UUID actorId, boolean isCandidate) {
     checkEnabled();
 
-    log.info("Parsing resume for document={}, actor={}, isCandidate={}", request.documentId(), actorId, isCandidate);
+    log.info(
+        "Parsing resume for document={}, actor={}, isCandidate={}",
+        request.documentId(),
+        actorId,
+        isCandidate);
 
     // Safety: The document content would be fetched from Document Service
     // For now, we pass the documentId and let the provider handle it (mock)
@@ -211,9 +241,12 @@ public class AiMatchingService {
         isCandidate ? actorId : null,
         request.documentId(),
         AuditService.Outcome.SUCCESS,
-        "ai_resume_parse:parseId=" + response.parseId()
-            + ",model=" + response.model()
-            + ",promptVersion=" + response.promptVersion());
+        "ai_resume_parse:parseId="
+            + response.parseId()
+            + ",model="
+            + response.model()
+            + ",promptVersion="
+            + response.promptVersion());
 
     log.info("Resume parsed: parseId={}", response.parseId());
     return response;
@@ -227,8 +260,10 @@ public class AiMatchingService {
    */
   @Transactional(readOnly = true)
   public MatchScore getMatchScore(UUID matchScoreId) {
-    return matchScoreRepository.findById(matchScoreId)
-        .orElseThrow(() -> new MatchScoreNotFoundException("Match score not found: " + matchScoreId));
+    return matchScoreRepository
+        .findById(matchScoreId)
+        .orElseThrow(
+            () -> new MatchScoreNotFoundException("Match score not found: " + matchScoreId));
   }
 
   /**
@@ -249,15 +284,18 @@ public class AiMatchingService {
         recruiterId,
         matchScore.getApplicationId(),
         AuditService.Outcome.SUCCESS,
-        "ai_match_overridden:matchScoreId=" + matchScoreId
-            + ",overriddenBy=" + recruiterId
-            + ",reason=" + reason);
+        "ai_match_overridden:matchScoreId="
+            + matchScoreId
+            + ",overriddenBy="
+            + recruiterId
+            + ",reason="
+            + reason);
 
     log.info("Match score overridden: matchScoreId={}, recruiter={}", matchScoreId, recruiterId);
   }
 
   private void checkEnabled() {
-    if (!aiEnabled) {
+    if (!aiProperties.isEnabled()) {
       throw new AiServiceDisabledException(
           "AI features are disabled. Enable with smarthire.ai.enabled=true");
     }

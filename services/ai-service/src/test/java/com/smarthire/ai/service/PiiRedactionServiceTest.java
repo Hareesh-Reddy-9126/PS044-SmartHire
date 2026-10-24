@@ -1,10 +1,10 @@
 package com.smarthire.ai.service;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Tests for {@link PiiRedactionService}.
@@ -25,12 +25,13 @@ class PiiRedactionServiceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {
-      "john.doe@example.com",
-      "jane.smith+tag@company.org",
-      "user.name@sub.domain.co.uk",
-      "test+filter@domain.io"
-  })
+  @ValueSource(
+      strings = {
+        "john.doe@example.com",
+        "jane.smith+tag@company.org",
+        "user.name@sub.domain.co.uk",
+        "test+filter@domain.io"
+      })
   void redactsVariousEmailFormats(String email) {
     String result = redactionService.redact("Email: " + email);
     assertThat(result).contains("[EMAIL_REDACTED]");
@@ -48,14 +49,15 @@ class PiiRedactionServiceTest {
   }
 
   @ParameterizedTest
-  @ValueSource(strings = {
-      "555-123-4567",
-      "(555) 123-4567",
-      "555.123.4567",
-      "555 123 4567",
-      "+1-555-123-4567",
-      "+1 (555) 123-4567"
-  })
+  @ValueSource(
+      strings = {
+        "555-123-4567",
+        "(555) 123-4567",
+        "555.123.4567",
+        "555 123 4567",
+        "+1-555-123-4567",
+        "+1 (555) 123-4567"
+      })
   void redactsVariousPhoneFormats(String phone) {
     String result = redactionService.redact("Phone: " + phone);
     assertThat(result).contains("[PHONE_REDACTED]");

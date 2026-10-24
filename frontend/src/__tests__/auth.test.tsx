@@ -14,6 +14,11 @@ vi.mock('../api/client', () => ({
   clearAccessToken: vi.fn(),
   isTokenExpired: vi.fn(() => true),
   setAccessToken: vi.fn(),
+  setUnauthorizedHandler: vi.fn(),
+  restoreSession: vi.fn(() => Promise.resolve(false)),
+  tryRefreshSession: vi.fn(() => Promise.resolve(false)),
+  accessTokenExpiry: vi.fn(() => Date.now() + 900000),
+  endSession: vi.fn(() => Promise.resolve()),
 }));
 
 // Import after mocks are set up
@@ -211,10 +216,123 @@ describe('ProtectedRoute', () => {
 
     await waitFor(() => {
       expect(screen.getByText('403 Forbidden')).toBeInTheDocument();
-    }, { timeout: 10000 });
+    });
 
     expect(screen.queryByText('Candidate Applications')).not.toBeInTheDocument();
     expect(screen.queryByText('Login Page')).not.toBeInTheDocument();
+  });
+
+  it('allows recruiter access to recruiter routes', async () => {
+    const mockMeResponse = {
+      sub: 'user-456',
+      email: 'recruiter@example.com',
+      roles: ['RECRUITER'],
+      orgId: 'org-123',
+    };
+
+    vi.mocked(getAccessToken).mockReturnValue('valid-token');
+    vi.mocked(isTokenExpired).mockReturnValue(false);
+    vi.mocked(authApi.me).mockResolvedValue(mockMeResponse);
+
+    render(
+      <MemoryRouter initialEntries={['/recruiter/jobs']}>
+        <AuthProvider>
+          <Routes>
+            <Route
+              path="/recruiter/jobs"
+              element={
+                <ProtectedRoute allowedRoles={['RECRUITER']}>
+                  <div data-testid="recruiter-content">Recruiter Jobs</div>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/login" element={<div data-testid="login-page">Login Page</div>} />
+            <Route path="/403" element={<div data-testid="forbidden-page">403 Forbidden</div>} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Recruiter Jobs')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Login Page')).not.toBeInTheDocument();
+    expect(screen.queryByText('403 Forbidden')).not.toBeInTheDocument();
+  });
+
+  it('allows admin access to admin routes', async () => {
+    const mockMeResponse = {
+      sub: 'user-789',
+      email: 'admin@example.com',
+      roles: ['ADMIN'],
+      orgId: null,
+    };
+
+    vi.mocked(getAccessToken).mockReturnValue('valid-token');
+    vi.mocked(isTokenExpired).mockReturnValue(false);
+    vi.mocked(authApi.me).mockResolvedValue(mockMeResponse);
+
+    render(
+      <MemoryRouter initialEntries={['/admin/overview']}>
+        <AuthProvider>
+          <Routes>
+            <Route
+              path="/admin/overview"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <div data-testid="admin-content">Admin Overview</div>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/login" element={<div data-testid="login-page">Login Page</div>} />
+            <Route path="/403" element={<div data-testid="forbidden-page">403 Forbidden</div>} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Admin Overview')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Login Page')).not.toBeInTheDocument();
+    expect(screen.queryByText('403 Forbidden')).not.toBeInTheDocument();
+  });
+
+  it('updates navbar immediately after login sets auth state', async () => {
+    const mockMeResponse = {
+      sub: 'user-123',
+      email: 'newuser@example.com',
+      roles: ['CANDIDATE'],
+      orgId: null,
+    };
+
+    vi.mocked(getAccessToken).mockReturnValue('valid-token');
+    vi.mocked(isTokenExpired).mockReturnValue(false);
+    vi.mocked(authApi.me).mockResolvedValue(mockMeResponse);
+
+    function NavbarDisplay() {
+      const { user, isAuthenticated } = useAuth();
+      if (!isAuthenticated || !user) return <div data-testid="navbar-state">Signed out</div>;
+      return (
+        <div data-testid="navbar-state">
+          Signed in as {user.email} ({user.roles.join(', ')})
+        </div>
+      );
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/login']}>
+        <AuthProvider>
+          <NavbarDisplay />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('Signed in as newuser@example.com (CANDIDATE)')).toBeInTheDocument();
+    });
   });
 
   it('shows loading state while auth is initializing', async () => {

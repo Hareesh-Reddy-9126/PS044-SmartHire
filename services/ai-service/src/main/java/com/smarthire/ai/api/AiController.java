@@ -1,43 +1,53 @@
 package com.smarthire.ai.api;
 
-import com.smarthire.ai.api.dto.MatchScoreRequest;
-import com.smarthire.ai.api.dto.MatchScoreResponse;
 import com.smarthire.ai.api.dto.CandidateSummaryRequest;
 import com.smarthire.ai.api.dto.CandidateSummaryResponse;
 import com.smarthire.ai.api.dto.JdAssistRequest;
 import com.smarthire.ai.api.dto.JdAssistResponse;
+import com.smarthire.ai.api.dto.MatchScoreRequest;
+import com.smarthire.ai.api.dto.MatchScoreResponse;
 import com.smarthire.ai.api.dto.ResumeParseRequest;
 import com.smarthire.ai.api.dto.ResumeParseResponse;
 import com.smarthire.ai.service.AiMatchingService;
-import com.smarthire.common.authz.OwnershipChecker;
-import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.Parameter;
-import io.swagger.v3.oas.annotations.media.Content;
-import io.swagger.v3.oas.annotations.media.Schema;
-import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.security.SecurityRequirement;
-import io.swagger.v3.oas.annotations.tags.Tag;
-import jakarta.validation.Valid;
-import java.util.UUID;
-import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
-import org.springframework.security.oauth2.jwt.Jwt;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+@RestController
+  @RequestMapping("/api/v1/ai")
+  @Tag(
+      name = "AI-Assisted Recruitment",
+      description = "Advisory AI features for recruitment workflows")
+  @SecurityRequirement(name = "bearerAuth")
+  public class AiController {
+
+    private final AiMatchingService aiMatchingService;
+
+    public AiController(AiMatchingService aiMatchingService) {
+      this.aiMatchingService = aiMatchingService;
+    }
+
+    @Operation(
+        summary = "Health check",
+        description = "Returns the health status of the AI service")
+    @ApiResponses(
+        value = {
+          @ApiResponse(responseCode = "200", description = "Service healthy"),
+          @ApiResponse(responseCode = "503", description = "Service unavailable")
+        })
+    @GetMapping("/health")
+    @PreAuthorize("hasAnyRole('RECRUITER', 'CANDIDATE', 'ADMIN')")
+    public ResponseEntity<Map<String, String>> health() {
+      return ResponseEntity.ok(Map.of("status", "UP"));
+    }
+
+    /**
 
 /**
- * AI-assisted recruitment endpoints. All outputs are advisory only — human-in-the-loop required
- * for any recruitment decision (ADR-0015). Features gated by {@code smarthire.ai.enabled}.
+ * AI-assisted recruitment endpoints. All outputs are advisory only — human-in-the-loop required for
+ * any recruitment decision (ADR-0015). Features gated by {@code smarthire.ai.enabled}.
  */
 @RestController
 @RequestMapping("/api/v1/ai")
-@Tag(name = "AI-Assisted Recruitment", description = "Advisory AI features for recruitment workflows")
+@Tag(
+    name = "AI-Assisted Recruitment",
+    description = "Advisory AI features for recruitment workflows")
 @SecurityRequirement(name = "bearerAuth")
 public class AiController {
 
@@ -63,7 +73,10 @@ public class AiController {
         @ApiResponse(
             responseCode = "200",
             description = "Match score computed",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = MatchScoreResponse.class))),
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = MatchScoreResponse.class))),
         @ApiResponse(
             responseCode = "400",
             description = "Validation failed",
@@ -109,12 +122,30 @@ public class AiController {
         @ApiResponse(
             responseCode = "200",
             description = "Candidate summary generated",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = CandidateSummaryResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Validation failed", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "503", description = "AI service unavailable", content = @Content(mediaType = "application/problem+json"))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = CandidateSummaryResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Not found",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "503",
+            description = "AI service unavailable",
+            content = @Content(mediaType = "application/problem+json"))
       })
   @PostMapping("/candidate-summary")
   @PreAuthorize("hasRole('RECRUITER')")
@@ -122,7 +153,8 @@ public class AiController {
       @Valid @RequestBody CandidateSummaryRequest request, @AuthenticationPrincipal Jwt jwt) {
 
     UUID recruiterOrgId = getOrgId(jwt);
-    CandidateSummaryResponse response = aiMatchingService.generateCandidateSummary(request, recruiterOrgId);
+    CandidateSummaryResponse response =
+        aiMatchingService.generateCandidateSummary(request, recruiterOrgId);
     return ResponseEntity.ok(response);
   }
 
@@ -141,11 +173,26 @@ public class AiController {
         @ApiResponse(
             responseCode = "200",
             description = "JD suggestion generated",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = JdAssistResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Validation failed", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "403", description = "Forbidden — requires RECRUITER or ADMIN role", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "503", description = "AI service unavailable", content = @Content(mediaType = "application/problem+json"))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = JdAssistResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden — requires RECRUITER or ADMIN role",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "503",
+            description = "AI service unavailable",
+            content = @Content(mediaType = "application/problem+json"))
       })
   @PostMapping("/jd-assist")
   @PreAuthorize("hasAnyRole('RECRUITER', 'ADMIN')")
@@ -173,12 +220,30 @@ public class AiController {
         @ApiResponse(
             responseCode = "200",
             description = "Resume parsed",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = ResumeParseResponse.class))),
-        @ApiResponse(responseCode = "400", description = "Validation failed", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "403", description = "Forbidden — not document owner", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "404", description = "Document not found", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "503", description = "AI service unavailable", content = @Content(mediaType = "application/problem+json"))
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = ResumeParseResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden — not document owner",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Document not found",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "503",
+            description = "AI service unavailable",
+            content = @Content(mediaType = "application/problem+json"))
       })
   @PostMapping("/resume-parse")
   @PreAuthorize("hasAnyRole('CANDIDATE', 'RECRUITER', 'ADMIN')")
@@ -202,10 +267,25 @@ public class AiController {
       description = "Returns a previously computed match score with override status.")
   @ApiResponses(
       value = {
-        @ApiResponse(responseCode = "200", description = "Match score retrieved", content = @Content(mediaType = "application/json", schema = @Schema(implementation = MatchScoreResponse.class))),
-        @ApiResponse(responseCode = "401", description = "Unauthorized", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "403", description = "Forbidden", content = @Content(mediaType = "application/problem+json")),
-        @ApiResponse(responseCode = "404", description = "Not found", content = @Content(mediaType = "application/problem+json"))
+        @ApiResponse(
+            responseCode = "200",
+            description = "Match score retrieved",
+            content =
+                @Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = MatchScoreResponse.class))),
+        @ApiResponse(
+            responseCode = "401",
+            description = "Unauthorized",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Forbidden",
+            content = @Content(mediaType = "application/problem+json")),
+        @ApiResponse(
+            responseCode = "404",
+            description = "Not found",
+            content = @Content(mediaType = "application/problem+json"))
       })
   @GetMapping("/match-score/{matchScoreId}")
   @PreAuthorize("hasAnyRole('RECRUITER', 'CANDIDATE', 'ADMIN')")
@@ -215,15 +295,16 @@ public class AiController {
     // The service layer does ownership check
     var matchScore = aiMatchingService.getMatchScore(matchScoreId);
     // Convert domain entity to response DTO
-    MatchScoreResponse response = new MatchScoreResponse(
-        matchScore.getMatchScoreId(),
-        matchScore.getApplicationId(),
-        matchScore.getJobId(),
-        matchScore.getScore(),
-        matchScore.getRationale(),
-        matchScore.getModel(),
-        matchScore.getPromptVersion(),
-        matchScore.getConfidence());
+    MatchScoreResponse response =
+        new MatchScoreResponse(
+            matchScore.getMatchScoreId(),
+            matchScore.getApplicationId(),
+            matchScore.getJobId(),
+            matchScore.getScore(),
+            matchScore.getRationale(),
+            matchScore.getModel(),
+            matchScore.getPromptVersion(),
+            matchScore.getConfidence());
     return ResponseEntity.ok(response);
   }
 
@@ -249,7 +330,6 @@ public class AiController {
       @RequestBody OverrideRequest request,
       @AuthenticationPrincipal Jwt jwt) {
 
-    UUID recruiterOrgId = getOrgId(jwt);
     aiMatchingService.overrideMatchScore(matchScoreId, getRecruiterId(jwt), request.reason());
     return ResponseEntity.ok().build();
   }

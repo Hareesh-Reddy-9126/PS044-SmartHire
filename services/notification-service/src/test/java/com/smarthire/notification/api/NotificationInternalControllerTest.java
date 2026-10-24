@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.smarthire.common.contract.notification.ApplicationStatusChangeRequest;
 import com.smarthire.common.contract.notification.DeliveryStatus;
 import com.smarthire.notification.domain.Notification;
+import com.smarthire.notification.infra.UserDirectoryClient;
 import com.smarthire.notification.security.SecurityConfig;
 import com.smarthire.notification.service.NotificationService;
 import java.time.Instant;
@@ -45,6 +46,7 @@ class NotificationInternalControllerTest {
   @Autowired private ObjectMapper objectMapper;
 
   @MockitoBean private NotificationService notificationService;
+  @MockitoBean private UserDirectoryClient userDirectoryClient;
   @MockitoBean private JwtDecoder jwtDecoder;
 
   private static final UUID CANDIDATE_ID = UUID.fromString("11111111-1111-1111-1111-111111111111");
@@ -66,6 +68,10 @@ class NotificationInternalControllerTest {
             .build();
 
     when(jwtDecoder.decode(TOKEN)).thenReturn(serviceJwt);
+
+    when(userDirectoryClient.getEmail(CANDIDATE_ID))
+        .thenReturn(
+            new UserDirectoryClient.UserEmailResponse(CANDIDATE_ID, "candidate@example.com"));
 
     when(notificationService.createAndSendNotification(any(), any(), any(), any()))
         .thenAnswer(
@@ -111,6 +117,7 @@ class NotificationInternalControllerTest {
           .andExpect(jsonPath("$.candidateId").value(CANDIDATE_ID.toString()))
           .andExpect(jsonPath("$.applicationId").value(APPLICATION_ID.toString()))
           .andExpect(jsonPath("$.eventStatus").value("UNDER_REVIEW"))
+          .andExpect(jsonPath("$.recipientEmail").value("candidate@example.com"))
           .andExpect(jsonPath("$.deliveryStatus").value("SENT"));
     }
 

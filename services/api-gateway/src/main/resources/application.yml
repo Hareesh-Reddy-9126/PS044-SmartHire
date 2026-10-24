@@ -145,6 +145,12 @@ spring:
           uri: lb://NOTIFICATION-SERVICE
           predicates:
             - Path=/api/v1/notifications/**
+        # AI service route. All AI endpoints require authentication (enforced by
+        # GatewaySecurityConfig deny-by-default). Kill switch handled by AI service itself.
+        - id: ai-service
+          uri: lb://AI-SERVICE
+          predicates:
+            - Path=/api/v1/ai/**
       globalcors:
         cors-configurations:
           '[/**]':

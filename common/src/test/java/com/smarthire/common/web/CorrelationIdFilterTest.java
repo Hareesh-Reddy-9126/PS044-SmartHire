@@ -31,11 +31,12 @@ class CorrelationIdFilterTest {
   @Test
   void propagatesInboundCorrelationId() throws Exception {
     MockHttpServletRequest request = new MockHttpServletRequest();
-    request.addHeader(CorrelationId.HEADER, "edge-abc-123");
+    String validUuid = "550e8400-e29b-41d4-a716-446655440000";
+    request.addHeader(CorrelationId.HEADER, validUuid);
     MockHttpServletResponse response = new MockHttpServletResponse();
 
     filter.doFilter(request, response, (req, res) -> {});
 
-    assertThat(response.getHeader(CorrelationId.HEADER)).isEqualTo("edge-abc-123");
+    assertThat(response.getHeader(CorrelationId.HEADER)).isEqualTo(validUuid);
   }
 }

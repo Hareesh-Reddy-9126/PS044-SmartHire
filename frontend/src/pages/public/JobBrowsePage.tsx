@@ -1,311 +1,279 @@
-import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Link } from 'react-router-dom';
-import { jobsApi, JobResponse } from '../../api/client';
-import { useApi } from '../../hooks/useApi';
-import { PublicLayout } from '../../components/layout/Layout';
+import { useCallback, useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import { jobsApi } from '../../api/client';
+import type { JobResponse } from '../../api/client';
+import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
+import { EmptyState } from '../../components/ui/EmptyState';
 import { Input } from '../../components/ui/Input';
+import { Pagination } from '../../components/ui/Pagination';
+import { Select } from '../../components/ui/Select';
+import { SkeletonList } from '../../components/ui/Skeleton';
 import { StatusBadge } from '../../components/ui/StatusBadge';
-import { Card } from '../../components/ui/Card';
+import { useAuth } from '../../context/AuthContext';
+import { errorMessage } from '../../utils/errors';
 
+const DEFAULT_PAGE_SIZE = 10;
+const PAGE_SIZES = [10, 20, 50, 100];
+const DEBOUNCE_MS = 300;
+
+const STATUS_OPTIONS = [
+  { value: 'OPEN', label: 'Open roles' },
+  { value: 'DRAFT', label: 'Drafts' },
+  { value: 'CLOSED', label: 'Closed roles' },
+];
+
+/**
+ * Public job discovery.
+ *
+ * Filter state lives in the URL so a filtered result set is shareable and
+ * survives a reload. Text inputs keep local state and are debounced into the
+ * URL only when they differ from it — writing on every render would re-trigger
+ * the effect that performs the write. A recruiter additionally sees their own
+ * organization's DRAFT and CLOSED postings, so the status filter is offered
+ * only to them.
+ */
 export function JobBrowsePage() {
+  const { user } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+
+  const query = searchParams.get('q') ?? '';
+  const location = searchParams.get('location') ?? '';
+  const status = searchParams.get('status') ?? '';
+  const page = Math.max(Number(searchParams.get('page')) || 0, 0);
+  const requestedSize = Number(searchParams.get('size'));
+  const size = PAGE_SIZES.includes(requestedSize) ? requestedSize : DEFAULT_PAGE_SIZE;
+
+  const isRecruiter = user?.roles?.includes('RECRUITER') ?? false;
+
+  const [queryInput, setQueryInput] = useState(query);
+  const [locationInput, setLocationInput] = useState(location);
+
+  // Keep inputs in step with external URL changes (Clear, back/forward).
+  useEffect(() => setQueryInput(query), [query]);
+  useEffect(() => setLocationInput(location), [location]);
+
+  const updateParams = useCallback(
+    (patch: Record<string, string>) => {
+      const next = new URLSearchParams(searchParams);
+      Object.entries(patch).forEach(([key, value]) => {
+        if (value) next.set(key, value);
+        else next.delete(key);
+      });
+      if (!('page' in patch)) next.delete('page');
+      setSearchParams(next, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
+
+  useEffect(() => {
+    if (queryInput === query && locationInput === location) return;
+
+    const timer = window.setTimeout(() => {
+      updateParams({ q: queryInput, location: locationInput });
+    }, DEBOUNCE_MS);
+    return () => window.clearTimeout(timer);
+  }, [queryInput, locationInput, query, location, updateParams]);
+
   const [jobs, setJobs] = useState<JobResponse[]>([]);
   const [totalElements, setTotalElements] = useState(0);
-  const [page, setPage] = useState(0);
-  const [size, setSize] = useState(20);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [location, setLocation] = useState('');
-  const [debouncedSearch, setDebouncedSearch] = useState('');
-  const [debouncedLocation, setDebouncedLocation] = useState('');
+  const [error, setError] = useState<string | null>(null);
 
-  const { execute } = useApi();
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    setError(null);
 
-  // Debounce search inputs
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      setDebouncedSearch(search);
-      setDebouncedLocation(location);
-      setPage(0);
-    }, 300);
-    return () => clearTimeout(timer);
-  }, [search, location]);
-
-  const fetchJobs = useCallback(async () => {
-    const result = await execute(
-      () => jobsApi.list({ q: debouncedSearch, location: debouncedLocation, page, size }),
-      { errorMessage: 'Failed to load jobs' }
-    );
-    if (result) {
-      setJobs(result.content);
-      setTotalElements(result.page.totalElements);
-      setTotalPages(result.page.totalPages);
+    try {
+      const result = await jobsApi.list({ q: query, location, status, page, size });
+      setJobs(result.content ?? []);
+      setTotalElements(result.page?.totalElements ?? 0);
+      setTotalPages(result.page?.totalPages ?? 0);
+    } catch (caught) {
+      setJobs([]);
+      setTotalElements(0);
+      setTotalPages(0);
+      setError(errorMessage(caught, "We couldn't load job postings."));
+    } finally {
+      setIsLoading(false);
     }
-    setIsLoading(false);
-  }, [execute, debouncedSearch, debouncedLocation, page, size]);
+  }, [query, location, status, page, size]);
 
   useEffect(() => {
-    fetchJobs();
-  }, [fetchJobs]);
-
-  const filteredJobs = useMemo(() => {
-    if (!debouncedSearch && !debouncedLocation) return jobs;
-    return jobs.filter(job => {
-      const searchMatch = !debouncedSearch || 
-        job.companyName.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
-        job.role.toLowerCase().includes(debouncedSearch.toLowerCase());
-      const locMatch = !debouncedLocation ||
-        job.location.toLowerCase().includes(debouncedLocation.toLowerCase());
-      return searchMatch && locMatch;
-    });
-  }, [jobs, debouncedSearch, debouncedLocation]);
+    void load();
+  }, [load]);
 
   const clearFilters = () => {
-    setSearch('');
-    setLocation('');
+    setQueryInput('');
+    setLocationInput('');
+    setSearchParams(new URLSearchParams(), { replace: true });
   };
 
-  const hasFilters = !!debouncedSearch || !!debouncedLocation;
+  const hasFilters = Boolean(query || location || status);
 
   return (
-    <PublicLayout>
-      {/* Page Header */}
-      <div className="w-full flex flex-col md:flex-row md:items-end justify-between gap-4 pb-4 border-b border-c-border mb-6">
+    <div className="space-y-8">
+      <header className="browse-head">
         <div>
-          <div className="flex items-center gap-2 mb-1">
-            <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-c-primary-50 text-c-primary-700 font-overline text-overline uppercase tracking-wider font-semibold">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary" />
-              Candidate Directory
-            </span>
-            <span className="font-code-sm text-code-sm text-c-text-subtle">AUDIT-ROLES-V2.4</span>
-          </div>
-          <h1 className="font-headline-lg text-headline-lg text-on-surface tracking-tight">Open roles</h1>
-          <p className="font-body-md text-body-md text-c-text-muted mt-0.5">
-            {totalElements} postings available across verified organizations
+          <p className="page-eyebrow">Open roles</p>
+          <h1 className="browse-title">Find the work that fits.</h1>
+          <p className="browse-meta">
+            {isLoading
+              ? 'Loading postings…'
+              : `${totalElements} published role${totalElements === 1 ? '' : 's'} across the SmartHire record.`}
           </p>
         </div>
-        <div className="flex items-center gap-3 self-start md:self-auto bg-c-surface-sunken px-4 py-2 rounded border border-c-border">
-          <span className="material-symbols-outlined text-c-accent-700 text-[18px]">verified_user</span>
-          <div className="flex flex-col">
-            <span className="font-label-md text-label-md text-on-surface">RFC 9457 Verified Directory</span>
-            <span className="font-caption text-caption text-c-text-subtle">Strict server-state synchronization</span>
-          </div>
-        </div>
-      </div>
 
-      {/* Filter Bar */}
-      <div className="bg-c-surface border-b border-c-border py-4 px-0 mb-6">
-        <div className="flex flex-col lg:flex-row items-stretch lg:items-center gap-4">
-          <div className="flex-1 relative">
-            <label htmlFor="search-input" className="block font-label-md text-label-md text-on-surface mb-1.5">
-              Role or Organization
-            </label>
-            <div className="relative flex items-center">
-              <span className="material-symbols-outlined absolute left-3 text-c-text-subtle text-[20px] pointer-events-none">search</span>
-              <Input
-                id="search-input"
-                value={search}
-                onChange={e => setSearch(e.target.value)}
-                placeholder="Search company or role..."
-                maxLength={200}
-              />
-              <span className="absolute right-3 font-caption text-caption text-c-text-subtle bg-c-surface-sunken px-1.5 py-0.5 rounded border border-c-border select-none">
-                300ms debounced
+        {isRecruiter && (
+          <Link to="/recruiter/jobs/new" className="btn btn-primary btn-md">
+            Create posting
+          </Link>
+        )}
+      </header>
+
+      <section className="search-dock" aria-label="Filter job postings">
+        <div
+          className={`grid gap-4 sm:gap-5 lg:items-end ${
+            isRecruiter
+              ? 'lg:grid-cols-[1fr_1fr_13rem_auto]'
+              : 'lg:grid-cols-[1fr_1fr_auto]'
+          }`}
+        >
+          <Input
+            id="filter-q"
+            label="Role or company"
+            placeholder="Search by role or company"
+            value={queryInput}
+            onChange={event => setQueryInput(event.target.value)}
+            maxLength={200}
+            leftIcon={
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                search
               </span>
-            </div>
-          </div>
-          <div className="w-full lg:w-80 relative">
-            <label htmlFor="location-input" className="block font-label-md text-label-md text-on-surface mb-1.5">
-              Location Search
-            </label>
-            <div className="relative flex items-center">
-              <span className="material-symbols-outlined absolute left-3 text-c-text-subtle text-[19px] pointer-events-none">location_on</span>
-              <Input
-                id="location-input"
-                value={location}
-                onChange={e => setLocation(e.target.value)}
-                placeholder="Filter by location (e.g. London, Remote)..."
-              />
-            </div>
-          </div>
-          <div className="flex items-end gap-2 pt-2 lg:pt-0">
-            <Button variant="secondary" size="sm" onClick={clearFilters} disabled={!hasFilters}>
-              <span className="material-symbols-outlined text-[18px]">filter_alt_off</span>
-              <span>Clear filters</span>
-            </Button>
-          </div>
-        </div>
+            }
+          />
 
-        {/* Active Metadata & Scope Bar */}
-        <div className="flex flex-wrap items-center justify-between gap-3 mt-4 pt-3 border-t border-c-border font-caption text-caption">
-          <div className="flex items-center gap-3">
-            <span className="font-body-strong text-body-strong text-on-surface">
-              {hasFilters 
-                ? `Showing 1–${filteredJobs.length} of ${totalElements} open roles`
-                : `Showing 1–${Math.min(size, totalElements)} of ${totalElements} open roles`
-              }
-            </span>
-            <span className="text-c-border-strong">|</span>
-            <span className="text-c-text-subtle flex items-center gap-1">
-              <span className="material-symbols-outlined text-[14px]">lock</span>
-              Public candidate view: Status locked to <strong className="font-medium text-on-surface">OPEN</strong>
-            </span>
-          </div>
-          <div className="flex items-center gap-1 text-c-text-subtle">
-            <span className="material-symbols-outlined text-[15px]">sort</span>
-            <span>Sorted by requisition ID (fixed system order)</span>
-          </div>
-        </div>
-      </div>
+          <Input
+            id="filter-location"
+            label="Location"
+            placeholder="e.g. London, Remote"
+            value={locationInput}
+            onChange={event => setLocationInput(event.target.value)}
+            maxLength={200}
+            leftIcon={
+              <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
+                location_on
+              </span>
+            }
+          />
 
-      {/* Loading State */}
-      {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {[...Array(6)].map((_, i) => (
-            <div key={i} className="bg-c-surface border border-c-border rounded p-6 flex flex-col justify-between animate-pulse">
-              <div className="space-y-3">
-                <div className="h-5 bg-c-surface-sunken rounded w-1/4" />
-                <div className="h-6 bg-c-surface-sunken rounded w-3/4" />
-                <div className="h-4 bg-c-surface-sunken rounded w-1/2" />
-                <div className="h-4 bg-c-surface-sunken rounded w-1/3" />
-              </div>
-              <div className="pt-4 border-t border-c-border h-8 bg-c-surface-sunken rounded" />
-            </div>
-          ))}
-        </div>
-      )}
-
-      {/* Job Grid */}
-      {!isLoading && filteredJobs.length > 0 && (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8" id="jobs-grid">
-          {filteredJobs.map(job => (
-            <Card key={job.jobId} className="flex flex-col justify-between shadow-resting hover:border-c-border-strong transition-all">
-              <div>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <StatusBadge status="OPEN" />
-                  <button
-                    className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-c-surface-sunken text-c-text-muted hover:text-on-surface hover:bg-c-border font-code-sm text-code-sm border border-c-border transition-colors group cursor-pointer"
-                    onClick={() => navigator.clipboard.writeText(job.jobId)}
-                    title="Click to copy requisition ID"
-                  >
-                    <span>{job.jobId}</span>
-                    <span className="material-symbols-outlined text-[13px] opacity-60 group-hover:opacity-100">content_copy</span>
-                  </button>
-                </div>
-                <h2 className="font-headline-sm text-headline-sm text-on-surface tracking-tight mb-2">{job.role}</h2>
-                <div className="flex flex-col gap-1 text-body-md text-c-text-muted mb-4">
-                  <div className="flex items-center gap-1.5">
-                    <span className="material-symbols-outlined text-c-text-subtle text-[18px]">domain</span>
-                    <span className="font-body-strong text-body-strong text-on-surface">{job.companyName}</span>
-                  </div>
-                  <div className="flex items-center gap-1.5 text-c-text-subtle">
-                    <span className="material-symbols-outlined text-[17px]">place</span>
-                    <span>{job.location}</span>
-                  </div>
-                </div>
-              </div>
-              <div className="pt-4 border-t border-c-border flex items-center justify-between">
-                <span className="font-caption text-caption text-c-text-subtle">ID Ref: #{job.jobId.slice(-4).toUpperCase()}</span>
-                <Link
-                  to={`/jobs/${job.jobId}`}
-                  className="inline-flex items-center gap-1 text-primary hover:text-c-primary-700 font-label-md text-label-md group transition-colors"
-                >
-                  <span>View role & apply</span>
-                  <span className="material-symbols-outlined text-[16px] transition-transform group-hover:translate-x-0.5">arrow_forward</span>
-                </Link>
-              </div>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      {/* Empty State */}
-      {!isLoading && filteredJobs.length === 0 && (
-        <div className="w-full bg-c-surface border border-dashed border-c-border-strong rounded p-12 text-center mb-8" id="empty-state-banner">
-          <div className="w-12 h-12 rounded-full bg-c-surface-sunken flex items-center justify-center mx-auto mb-4 text-c-text-subtle">
-            <span className="material-symbols-outlined text-[24px]">search_off</span>
-          </div>
-          <h3 className="font-headline-sm text-headline-sm text-on-surface mb-2">
-            {hasFilters ? 'No matching verified postings' : 'No open roles right now'}
-          </h3>
-          <p className="font-body-md text-body-md text-c-text-muted max-w-md mx-auto mb-6">
-            {hasFilters
-              ? 'No open roles matched your search parameters across our verified directories. Try removing filters or searching by partial title.'
-              : 'Check back soon for new opportunities.'}
-          </p>
-          {hasFilters && (
-            <Button onClick={clearFilters} className="inline-flex items-center gap-2">
-              <span className="material-symbols-outlined text-[18px]">restart_alt</span>
-              <span>Reset all filters</span>
-            </Button>
+          {isRecruiter && (
+            <Select
+              id="filter-status"
+              label="Status"
+              value={status}
+              onChange={event => updateParams({ status: event.target.value })}
+              options={STATUS_OPTIONS}
+              placeholder="All statuses"
+              className="w-full"
+            />
           )}
+
+          <Button
+            variant="secondary"
+            size="md"
+            onClick={clearFilters}
+            disabled={!hasFilters && !queryInput && !locationInput}
+            className="w-full shrink-0 lg:w-auto"
+          >
+            Clear filters
+          </Button>
         </div>
+      </section>
+
+      {error && (
+        <Alert
+          tone="danger"
+          title="Could not load postings"
+          action={
+            <Button size="sm" variant="secondary" onClick={() => void load()}>
+              Try again
+            </Button>
+          }
+        >
+          {error}
+        </Alert>
       )}
 
-      {/* Pagination */}
-      {!isLoading && totalPages > 1 && (
-        <div className="w-full bg-c-surface border border-c-border rounded p-3 flex flex-col md:flex-row items-center justify-between gap-3 shadow-resting">
-          <div className="flex items-center gap-2 order-2 md:order-1 font-body-md text-body-md text-on-surface-variant">
-            <label htmlFor="rows-per-page" className="font-label-md text-label-md text-c-text-muted">
-              Rows per page:
-            </label>
-            <select
-              id="rows-per-page"
-              value={size}
-              onChange={e => { setSize(Number(e.target.value)); setPage(0); }}
-              className="h-8 pl-2 pr-6 bg-c-surface-sunken border border-c-border rounded font-code-sm text-code-sm text-on-surface focus:outline-none focus:border-primary"
-            >
-              <option value="10">10</option>
-              <option value="20">20</option>
-              <option value="50">50</option>
-              <option value="100">100 (Max limit)</option>
-            </select>
-            <span className="font-caption text-caption text-c-text-subtle hidden sm:inline">(Server clamped: 100 max)</span>
-          </div>
-          <div className="flex items-center gap-1 order-1 md:order-2">
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page === 0}
-              onClick={() => setPage(0)}
-              aria-label="First Page"
-            >
-              « First
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page === 0}
-              onClick={() => setPage(p => p - 1)}
-              aria-label="Previous Page"
-            >
-              ‹ Prev
-            </Button>
-            <span className="px-3 font-body-strong text-body-strong text-on-surface select-none">
-              Page <span className="font-bold text-primary">{page + 1}</span> of {totalPages}
-            </span>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page === totalPages - 1}
-              onClick={() => setPage(p => p + 1)}
-              aria-label="Next Page"
-            >
-              Next ›
-            </Button>
-            <Button
-              variant="secondary"
-              size="sm"
-              disabled={page === totalPages - 1}
-              onClick={() => setPage(totalPages - 1)}
-              aria-label="Last Page"
-            >
-              Last »
-            </Button>
-          </div>
-        </div>
+      {isLoading ? (
+        <SkeletonList rows={6} label="Loading job postings" />
+      ) : jobs.length === 0 ? (
+        <EmptyState
+          icon="work_off"
+          title={hasFilters ? 'No roles match these filters' : 'No open roles right now'}
+          message={
+            hasFilters
+              ? 'Try a different search term, or clear the filters to see everything.'
+              : 'Check back soon — new postings appear here as soon as they are published.'
+          }
+          action={
+            hasFilters ? (
+              <Button variant="secondary" size="sm" onClick={clearFilters}>
+                Clear filters
+              </Button>
+            ) : undefined
+          }
+        />
+      ) : (
+        <>
+          <ul className="job-records" aria-label="Job postings">
+            {jobs.map((job, index) => (
+              <li key={job.jobId}>
+                <Link to={`/jobs/${job.jobId}`} className="job-record group">
+                  <span className="job-record-index tabular">
+                    {String(page * size + index + 1).padStart(2, '0')}
+                  </span>
+
+                  <div className="min-w-0">
+                    <h2 className="job-record-role break-words">{job.role}</h2>
+                    <p className="job-record-company truncate">{job.companyName}</p>
+                  </div>
+
+                  <span className="job-record-location">
+                    <span className="material-symbols-outlined text-[15px]" aria-hidden="true">
+                      location_on
+                    </span>
+                    <span className="truncate">{job.location}</span>
+                  </span>
+
+                  <StatusBadge status={job.status} />
+
+                  <span className="job-record-arrow" aria-hidden="true">
+                    <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            totalElements={totalElements}
+            size={size}
+            sizeOptions={PAGE_SIZES}
+            onPageChange={next => {
+              updateParams({ page: next === 0 ? '' : String(next), size: String(size) });
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+            onSizeChange={nextSize => {
+              updateParams({ size: String(nextSize), page: '' });
+              window.scrollTo({ top: 0, behavior: 'smooth' });
+            }}
+          />
+        </>
       )}
-    </PublicLayout>
+    </div>
   );
 }

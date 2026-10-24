@@ -1,191 +1,117 @@
-import { useState, FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
-import { useAuth } from '../../context/AuthContext';
-import { useToast } from '../../context/ToastContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { useCallback, useState, type FormEvent } from 'react';
+import { authApi } from '../../api/client';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { AuthLayout } from '../../components/layout/Layout';
+import { Alert } from '../../components/ui/Alert';
+import { errorMessage } from '../../utils/errors';
+
+/** Passwords are validated by auth-service; these limits mirror its contract. */
+const PASSWORD_MIN_LENGTH = 12;
+const PASSWORD_MAX_LENGTH = 128;
 
 export function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-  const [emailError, setEmailError] = useState('');
-  const [passwordError, setPasswordError] = useState('');
-  const [confirmError, setConfirmError] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
-  
-  const { register } = useAuth();
-  const { showToast } = useToast();
+  const [error, setError] = useState<string | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const registered = searchParams.get('registered') === '1';
-  const registeredEmail = searchParams.get('email') || '';
 
-  const validatePassword = (pwd: string): string[] => {
-    const errors: string[] = [];
-    if (pwd.length < 12) errors.push('At least 12 characters');
-    if (!/[A-Z]/.test(pwd)) errors.push('One uppercase letter (advisory)');
-    if (!/[a-z]/.test(pwd)) errors.push('One lowercase letter (advisory)');
-    if (!/[0-9]/.test(pwd)) errors.push('One number (advisory)');
-    if (!/[^A-Za-z0-9]/.test(pwd)) errors.push('One symbol (advisory)');
-    return errors;
-  };
+  const handleSubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      setError(null);
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setEmailError('');
-    setPasswordError('');
-    setConfirmError('');
-
-    if (!email) {
-      setEmailError('Email is required.');
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-      setEmailError('Enter a valid email address.');
-      return;
-    }
-    if (email.length > 255) {
-      setEmailError('Email must be 255 characters or fewer.');
-      return;
-    }
-    if (!password) {
-      setPasswordError('Password is required.');
-      return;
-    }
-    if (password.length < 12) {
-      setPasswordError('Password must be at least 12 characters.');
-      return;
-    }
-    if (password.length > 128) {
-      setPasswordError('Password must be 128 characters or fewer.');
-      return;
-    }
-    if (password !== confirmPassword) {
-      setConfirmError('Passwords do not match.');
-      return;
-    }
-
-    setIsLoading(true);
-
-    try {
-      await register(email, password);
-      showToast('Account created. Sign in to continue.', 'success');
-      navigate(`/login?registered=1&email=${encodeURIComponent(email)}`, { replace: true });
-    } catch (err) {
-      const apiError = err as { error?: { status: number; detail: string } } | null;
-      if (apiError?.error?.status === 409) {
-        setEmailError('An account with this email already exists.');
-      } else if (apiError?.error?.status === 429) {
-        setEmailError('Too many attempts. Wait a moment and try again.');
-      } else {
-        setEmailError(apiError?.error?.detail || 'Registration failed. Please try again.');
+      if (!email.trim()) {
+        setError('Enter your email address.');
+        return;
       }
-      showToast('Registration failed', 'error');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+      if (password.length < PASSWORD_MIN_LENGTH) {
+        setError(`Your password must be at least ${PASSWORD_MIN_LENGTH} characters.`);
+        return;
+      }
 
-  const passwordErrors = validatePassword(password);
-  const enforcedError = passwordErrors[0]; // Only the first (12 chars) is enforced
-  const advisoryErrors = passwordErrors.slice(1);
+      setIsSubmitting(true);
+      try {
+        await authApi.register(email.trim(), password);
+        navigate('/login', { state: { email: email.trim() } });
+      } catch (caught) {
+        setError(errorMessage(caught, 'Registration failed. Please try again.'));
+      } finally {
+        setIsSubmitting(false);
+      }
+    },
+    [email, password, navigate]
+  );
 
   return (
-    <AuthLayout>
-      <div className="bg-c-surface rounded-xl shadow-sm p-8 relative overflow-hidden">
-        <div className="absolute top-0 left-0 right-0 h-1 bg-c-primary-700" />
-        
-        <div className="mb-6 text-center">
-          <h1 className="font-display text-display text-c-primary-900 tracking-tight">Create your candidate account</h1>
-          <p className="font-caption text-caption text-c-text-muted mt-1 max-w-xs mx-auto">
-            Recruiter and administrator accounts are provisioned by your administrator.
-          </p>
+    <>
+      <div>
+        <p className="page-eyebrow">Candidate registration</p>
+        <h1 className="auth-form-title">Create an account</h1>
+        <p className="auth-form-subtitle">
+          Register as a candidate to apply for roles and follow every step of your
+          application from one place.
+        </p>
+      </div>
+
+      {error && (
+        <div className="mt-7">
+          <Alert tone="danger" title="Account not created">
+            {error}
+          </Alert>
         </div>
+      )}
 
-        {registered && (
-          <div className="mb-4 p-3 bg-success-50 border border-success-200 rounded-lg flex items-center gap-2 text-success-700">
-            <span className="material-symbols-outlined text-[18px]">check_circle</span>
-            <span className="font-body-md text-body-md">Account created for <strong>{registeredEmail}</strong>. Please sign in.</span>
-          </div>
-        )}
+      <form onSubmit={handleSubmit} className="mt-7 space-y-5" noValidate>
+        <Input
+          id="email"
+          label="Email"
+          type="email"
+          placeholder="name@example.com"
+          value={email}
+          onChange={event => setEmail(event.target.value)}
+          required
+          autoComplete="email"
+          maxLength={254}
+          helperText="Use an address you can access — it identifies your application record."
+        />
 
-        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
-          <Input
-            label="Email"
-            type="email"
-            autoComplete="username"
-            value={email}
-            onChange={e => { setEmail(e.target.value); setEmailError(''); }}
-            placeholder="name@example.com"
-            required
-            error={emailError}
-          />
+        <Input
+          id="password"
+          label="Password"
+          type="password"
+          placeholder={`At least ${PASSWORD_MIN_LENGTH} characters`}
+          value={password}
+          onChange={event => setPassword(event.target.value)}
+          required
+          minLength={PASSWORD_MIN_LENGTH}
+          maxLength={PASSWORD_MAX_LENGTH}
+          helperText={`Use ${PASSWORD_MIN_LENGTH} characters or more.`}
+          autoComplete="new-password"
+          showPasswordToggle
+        />
 
-          <Input
-            label="Password"
-            autoComplete="new-password"
-            value={password}
-            onChange={e => { 
-              setPassword(e.target.value); 
-              setPasswordError('');
-              if (confirmPassword) setConfirmError('');
-            }}
-            placeholder="Create a password"
-            required
-            showPasswordToggle
-            error={passwordError}
-            helperText="At least 12 characters. Mixed case, number, and symbol recommended."
-          />
+        <Button type="submit" fullWidth size="lg" isLoading={isSubmitting}>
+          Create account
+        </Button>
+      </form>
 
-          {password && (
-            <div className="space-y-1 ml-1">
-              <div className="flex items-center gap-1.5 text-caption text-c-text-muted">
-                <span className={`material-symbols-outlined text-[14px] ${enforcedError && password.length >= 12 ? 'text-success-600' : enforcedError ? 'text-danger-600' : 'text-c-text-subtle'}`}>
-                  {password.length >= 12 ? 'check_circle' : 'radio_button_unchecked'}
-                </span>
-                <span className={password.length >= 12 ? 'text-success-600' : 'text-c-text-subtle'}>
-                  At least 12 characters (enforced)
-                </span>
-              </div>
-              {advisoryErrors.map((err, i) => (
-                <div key={i} className="flex items-center gap-1.5 text-caption text-c-text-subtle">
-                  <span className="material-symbols-outlined text-[14px]">
-                    {password.length > 0 && !enforcedError ? 'check_circle' : 'radio_button_unchecked'}
-                  </span>
-                  <span>{err}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          <Input
-            label="Confirm password"
-            autoComplete="new-password"
-            value={confirmPassword}
-            onChange={e => { 
-              setConfirmPassword(e.target.value); 
-              setConfirmError('');
-            }}
-            placeholder="Confirm your password"
-            required
-            error={confirmError}
-          />
-
-          <Button type="submit" className="w-full" isLoading={isLoading}>
-            <span>{isLoading ? 'Creating...' : 'Create account'}</span>
-            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
-          </Button>
-        </form>
-
-        <div className="mt-6 w-full flex flex-col items-center text-center space-y-3">
-          <Link to="/login" className="font-body-md text-body-md text-c-primary-700 hover:text-c-primary-900 transition-colors inline-flex items-center gap-1">
-            <span>Already have an account? Sign in</span>
-            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+      <div className="mt-6 border-t border-c-border pt-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <p className="font-body-sm text-body-sm text-c-text-muted">Already have an account?</p>
+          <Link
+            to="/login"
+            className="font-label-md text-label-md text-c-primary-700 transition-colors hover:text-c-primary-900"
+          >
+            Sign in
           </Link>
         </div>
+        <p className="mt-4 font-caption text-caption leading-relaxed text-c-text-subtle">
+          Recruiter and administrator accounts are provisioned by the platform and
+          cannot be created here.
+        </p>
       </div>
-    </AuthLayout>
+    </>
   );
 }
