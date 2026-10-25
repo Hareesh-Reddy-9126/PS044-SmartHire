@@ -9,6 +9,7 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 import org.slf4j.MDC;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -112,8 +113,12 @@ public class SecurityConfig {
    * Offline RS256 decoder keyed off the auth-service JWKS, pinning {@code iss} (via the
    * default-with-issuer validators, which also enforce {@code exp}) and {@code aud} — the same
    * checks the gateway applies, repeated here so the service is safe even when reached directly.
+   * <p>
+   * This bean is conditional on missing bean so that tests can provide a mock JwtDecoder
+   * via @MockitoBean.
    */
   @Bean
+  @ConditionalOnMissingBean
   public JwtDecoder jwtDecoder(NotificationSecurityProperties props) {
     NimbusJwtDecoder decoder = NimbusJwtDecoder.withJwkSetUri(props.jwkSetUri()).build();
     OAuth2TokenValidator<Jwt> withIssuer = JwtValidators.createDefaultWithIssuer(props.issuer());

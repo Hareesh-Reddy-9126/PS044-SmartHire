@@ -1,0 +1,250 @@
+# SmartHire production deployment (single VM).
+#
+# Usage from the repository root:
+#   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.prod.yml \
+#     --env-file deploy/.env up -d --build
+#
+# Postgres and Redis stay on the internal Docker network (no host ports). The API gateway and
+# Eureka dashboard are bound to loopback only. TLS terminates in the `frontend` Caddy container.
+#
+# Frontend is built with the frontend Docker image and served by Caddy. The gateway is proxied
+# through the same origin so no third-party cross-origin request is needed.
+
+name: smarthire
+
+services:
+  postgres:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    # A named volume so a compose down/restart does not discard existing database state.
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+
+  redis:
+    restart: unless-stopped
+    command:
+      - redis-server
+      - --appendonly
+      - "yes"
+      - --appendfsync
+      - everysec
+      - --dir
+      - /data
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    volumes:
+      - redis-data:/data
+
+  service-registry:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 384m
+    cpus: "0.5"
+    pids_limit: 512
+
+  job-service:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
+    mem_limit: 768m
+    cpus: "1.0"
+    pids_limit: 512
+
+  auth-service:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      # Replaces the local demo seeding profile; no demo credentials in production.
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
+      AUTH_JWT_PRIVATE_KEY: ${AUTH_JWT_PRIVATE_KEY:?AUTH_JWT_PRIVATE_KEY must be set in deploy/.env}
+      REDIS_PORT: 6379
+    mem_limit: 768m
+    cpus: "1.0"
+    pids_limit: 512
+
+  application-service:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
+    mem_limit: 768m
+    cpus: "1.0"
+    pids_limit: 512
+
+  recruitment-service:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
+    mem_limit: 768m
+    cpus: "1.0"
+    pids_limit: 512
+
+  document-service:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
+    mem_limit: 768m
+    cpus: "1.0"
+    pids_limit: 512
+
+  notification-service:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
+      # Real SMTP is required in production; placeholder values are never accepted.
+      NOTIFICATION_SENDER_TYPE: smtp
+      NOTIFICATION_SMTP_HOST: ${NOTIFICATION_SMTP_HOST:?NOTIFICATION_SMTP_HOST must be set in deploy/.env}
+      NOTIFICATION_SMTP_PORT: ${NOTIFICATION_SMTP_PORT:-587}
+      NOTIFICATION_SMTP_USERNAME: ${NOTIFICATION_SMTP_USERNAME:-}
+      NOTIFICATION_SMTP_PASSWORD: ${NOTIFICATION_SMTP_PASSWORD:-}
+      NOTIFICATION_SMTP_FROM: ${NOTIFICATION_SMTP_FROM:?NOTIFICATION_SMTP_FROM must be set in deploy/.env}
+      NOTIFICATION_DELIVERY_MAX_ATTEMPTS: ${NOTIFICATION_DELIVERY_MAX_ATTEMPTS:-3}
+      NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS: ${NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS:-500}
+    mem_limit: 640m
+    cpus: "1.0"
+    pids_limit: 512
+
+  ai-service:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
+      AI_ENABLED: ${AI_ENABLED:-true}
+      # The Claude provider is not implemented yet; fail fast rather than fallback to mock.
+      AI_PROVIDER: ${AI_PROVIDER:-mock}
+      AI_CLAUDE_API_KEY: ${AI_CLAUDE_API_KEY:-}
+      AI_SVC_DB_URL: jdbc:postgresql://postgres:5432/${POSTGRES_DB:-smarthire}
+      AI_SVC_DB_USER: ${POSTGRES_USER:?POSTGRES_USER must be set in deploy/.env}
+      AI_SVC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
+    mem_limit: 1024m
+    cpus: "1.5"
+    pids_limit: 512
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api-gateway:
+    restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
+      # Same-origin deployment, but keep CORS explicit for any future separate origin.
+      GATEWAY_CORS_ALLOWED_ORIGINS: ${GATEWAY_CORS_ALLOWED_ORIGINS:-https://${DOMAIN}}
+      REDIS_PORT: 6379
+    # The gateway is reached only through Caddy; loopback access is for local ops.
+    ports:
+      - "127.0.0.1:8080:8080"
+    mem_limit: 768m
+    cpus: "1.0"
+    pids_limit: 512
+
+  frontend:
+    build:
+      context: ..
+      dockerfile: frontend/Dockerfile
+    restart: unless-stopped
+    environment:
+      DOMAIN: ${DOMAIN:?DOMAIN must be set in deploy/.env}
+      ACME_EMAIL: ${ACME_EMAIL:?ACME_EMAIL must be set in deploy/.env}
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 256m
+    cpus: "0.5"
+    pids_limit: 128
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+
+volumes:
+  postgres-data:
+  redis-data:
+  caddy-data:
+  caddy-config:

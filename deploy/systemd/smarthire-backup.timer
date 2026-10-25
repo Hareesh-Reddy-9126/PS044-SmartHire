@@ -1,0 +1,12 @@
+[Unit]
+Description=Run SmartHire PostgreSQL backup daily at 02:30 UTC (24-hour RPO)
+Documentation=file:///opt/smarthire/docs/deployment/backup-restore.md
+
+[Timer]
+OnCalendar=*-*-* 02:30:00
+Persistent=true
+RandomizedDelaySec=5min
+AccuracySec=1min
+
+[Install]
+WantedBy=timers.target

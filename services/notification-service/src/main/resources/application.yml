@@ -36,6 +36,18 @@ smarthire:
       jwk-set-uri: ${NOTIF_JWK_SET_URI:http://localhost:8082/oauth2/jwks}
       issuer: ${AUTH_JWT_ISSUER:https://smarthire.local/auth}
       audience: ${AUTH_JWT_AUDIENCE:smarthire}
+    sender:
+      type: ${NOTIFICATION_SENDER_TYPE:logging}
+      max-attempts: ${NOTIFICATION_DELIVERY_MAX_ATTEMPTS:3}
+      retry-backoff-ms: ${NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS:500}
+      smtp:
+        host: ${NOTIFICATION_SMTP_HOST:}
+        port: ${NOTIFICATION_SMTP_PORT:587}
+        username: ${NOTIFICATION_SMTP_USERNAME:}
+        password: ${NOTIFICATION_SMTP_PASSWORD:}
+        from: ${NOTIFICATION_SMTP_FROM:}
+        starttls: ${NOTIFICATION_SMTP_STARTTLS:true}
+        ssl: ${NOTIFICATION_SMTP_SSL:false}
 
 eureka:
   client:
@@ -60,20 +72,3 @@ management:
         http.server.requests: true
       percentiles:
         http.server.requests: 0.5,0.95,0.99
-
-# Notification sender configuration. The logging sender is intentionally the default: real SMTP
-# values are supplied by the deployment environment, never committed to the repository.
-smarthire:
-  notification:
-    sender:
-      type: ${NOTIFICATION_SENDER_TYPE:logging}
-      max-attempts: ${NOTIFICATION_DELIVERY_MAX_ATTEMPTS:3}
-      retry-backoff-ms: ${NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS:500}
-      smtp:
-        host: ${NOTIFICATION_SMTP_HOST:}
-        port: ${NOTIFICATION_SMTP_PORT:587}
-        username: ${NOTIFICATION_SMTP_USERNAME:}
-        password: ${NOTIFICATION_SMTP_PASSWORD:}
-        from: ${NOTIFICATION_SMTP_FROM:}
-        starttls: ${NOTIFICATION_SMTP_STARTTLS:true}
-        ssl: ${NOTIFICATION_SMTP_SSL:false}

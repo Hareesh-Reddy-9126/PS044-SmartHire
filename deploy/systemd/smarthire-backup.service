@@ -1,0 +1,13 @@
+[Unit]
+Description=SmartHire daily PostgreSQL backup
+Documentation=file:///opt/smarthire/docs/deployment/backup-restore.md
+After=network-online.target
+Wants=network-online.target
+Requires=docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/smarthire
+EnvironmentFile=/etc/smarthire/backup.env
+ExecStart=/opt/smarthire/deploy/scripts/backup-postgres.sh
+TimeoutStartSec=600
