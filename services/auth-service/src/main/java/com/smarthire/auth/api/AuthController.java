@@ -147,23 +147,28 @@ public class AuthController {
   @Operation(
       summary = "User logout",
       description =
-          "Logs out the user by invalidating the refresh token and clearing the cookie. Requires authentication.")
+          "Logs out the user by invalidating the refresh token and clearing the cookie. The"
+              + " access token is optional so an expired access token cannot prevent the refresh"
+              + " cookie from being cleared.")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "204", description = "Logged out successfully"),
         @ApiResponse(
             responseCode = "401",
-            description = "Unauthorized",
+            description = "Unauthorized (not returned for logout; kept for API compatibility)",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
       })
-  @SecurityRequirement(name = "bearerAuth")
   @PostMapping("/logout")
   @ResponseStatus(HttpStatus.NO_CONTENT)
   public void logout(
       @AuthenticationPrincipal Jwt accessToken,
       @CookieValue(value = REFRESH_COOKIE, required = false) String refreshToken,
       jakarta.servlet.http.HttpServletResponse response) {
-    authService.logout(refreshToken, accessToken.getId(), accessToken.getExpiresAt());
+    if (accessToken != null) {
+      authService.logout(refreshToken, accessToken.getId(), accessToken.getExpiresAt());
+    } else {
+      authService.logout(refreshToken, null, null);
+    }
     clearRefreshCookie(response);
   }
 
@@ -224,9 +229,16 @@ public class AuthController {
     return toMeResponse(accessToken);
   }
 
+  private boolean secureRefreshCookie() {
+    boolean local = Arrays.asList(environment.getActiveProfiles()).contains("local");
+    boolean prod = Arrays.asList(environment.getActiveProfiles()).contains("prod");
+    // A prod,local combination must never downgrade the cookie to plain HTTP.
+    return prod || !local;
+  }
+
   private void addRefreshCookie(
       jakarta.servlet.http.HttpServletResponse response, String refreshToken) {
-    boolean secure = !Arrays.asList(environment.getActiveProfiles()).contains("local");
+    boolean secure = secureRefreshCookie();
     response.setHeader(
         HttpHeaders.SET_COOKIE,
         ResponseCookie.from(REFRESH_COOKIE, refreshToken)
@@ -240,7 +252,7 @@ public class AuthController {
   }
 
   private void clearRefreshCookie(jakarta.servlet.http.HttpServletResponse response) {
-    boolean secure = !Arrays.asList(environment.getActiveProfiles()).contains("local");
+    boolean secure = secureRefreshCookie();
     response.setHeader(
         HttpHeaders.SET_COOKIE,
         ResponseCookie.from(REFRESH_COOKIE, "")

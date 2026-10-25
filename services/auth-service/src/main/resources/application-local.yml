@@ -1,3 +1,9 @@
+logging:
+  level:
+    org.springframework.web: DEBUG
+    org.springframework.http.converter: DEBUG
+    com.fasterxml.jackson: DEBUG
+
 smarthire:
   jwt:
     # Explicit local profile only: local tokens use an ephemeral key and do not survive restart.

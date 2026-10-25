@@ -2,6 +2,7 @@ package com.smarthire.gateway;
 
 import org.springframework.cloud.gateway.filter.ratelimit.KeyResolver;
 import org.springframework.cloud.gateway.filter.ratelimit.RedisRateLimiter;
+import org.springframework.cloud.gateway.support.ipresolver.XForwardedRemoteAddressResolver;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.Primary;
@@ -29,6 +30,14 @@ import reactor.core.publisher.Mono;
  */
 @Configuration
 public class GatewayRateLimitConfig {
+
+  /**
+   * Caddy is the only public entry point and appends the real client address to
+   * X-Forwarded-For. Reading the last trusted hop prevents every anonymous caller from sharing
+   * Caddy's container IP (which would make the rate limit effectively global).
+   */
+  private final XForwardedRemoteAddressResolver forwardedAddressResolver =
+      XForwardedRemoteAddressResolver.maxTrustedIndex(1);
 
   /**
    * Keys requests by the authenticated user's JWT subject ({@code sub} claim). When no
@@ -60,7 +69,7 @@ public class GatewayRateLimitConfig {
   @Primary
   public KeyResolver ipKeyResolver() {
     return exchange ->
-        Mono.justOrEmpty(exchange.getRequest().getRemoteAddress())
+        Mono.justOrEmpty(forwardedAddressResolver.resolve(exchange))
             .map(addr -> addr.getAddress() != null ? addr.getAddress().getHostAddress() : "unknown")
             .defaultIfEmpty("unknown");
   }

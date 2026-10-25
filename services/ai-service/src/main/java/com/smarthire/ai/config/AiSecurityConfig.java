@@ -9,7 +9,9 @@ import org.springframework.core.convert.converter.Converter;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AbstractAuthenticationToken;
+import org.springframework.security.authentication.AnonymousAuthenticationToken;
 import org.springframework.security.authorization.AuthorizationDecision;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
@@ -37,6 +39,7 @@ import org.springframework.security.web.authentication.HttpStatusEntryPoint;
  */
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 @EnableConfigurationProperties(AiProperties.class)
 public class AiSecurityConfig {
 
@@ -69,11 +72,19 @@ public class AiSecurityConfig {
                         "/webjars/swagger-ui/**",
                         "/webjars/swagger-ui.html")
                     .permitAll()
-                    // AI endpoints: require authentication only if enabled
+                    // AI endpoints: always require a real authenticated caller. The kill switch
+                    // additionally disables them without making the endpoint anonymous.
                     .requestMatchers("/api/v1/ai/**")
                     .access(
-                        (authentication, context) ->
-                            new AuthorizationDecision(aiProperties.isEnabled()))
+                        (authentication, context) -> {
+                          var principal = authentication.get();
+                          boolean authenticated =
+                              principal != null
+                                  && principal.isAuthenticated()
+                                  && !(principal instanceof AnonymousAuthenticationToken);
+                          return new AuthorizationDecision(
+                              aiProperties.isEnabled() && authenticated);
+                        })
                     .anyRequest()
                     .authenticated())
         .oauth2ResourceServer(

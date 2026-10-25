@@ -58,9 +58,12 @@ public class JwtKeyConfig {
   public RSAKey rsaKey() throws Exception {
     RSAPrivateKey privateKey;
     if (props.privateKey() == null || props.privateKey().isBlank()) {
-      if (!environment.acceptsProfiles(Profiles.of("local"))) {
+      boolean local = environment.acceptsProfiles(Profiles.of("local"));
+      boolean prod = environment.acceptsProfiles(Profiles.of("prod"));
+      if (!local || prod) {
         throw new IllegalStateException(
-            "AUTH_JWT_PRIVATE_KEY must be configured outside the local profile");
+            "AUTH_JWT_PRIVATE_KEY must be configured outside the local profile"
+                + " (prod,local is not a development profile)");
       }
       log.warn(
           "smarthire.jwt.private-key is not set — generating an EPHEMERAL RSA keypair. "

@@ -75,7 +75,10 @@ public class GatewaySecurityConfig {
                         HttpMethod.POST,
                         "/api/v1/auth/register",
                         "/api/v1/auth/login",
-                        "/api/v1/auth/refresh")
+                        "/api/v1/auth/refresh",
+                        // Public so logout can clear the HttpOnly cookie even when the access
+                        // token has expired. CSRF is mitigated by SameSite=Strict on the cookie.
+                        "/api/v1/auth/logout")
                     .permitAll()
                     .pathMatchers(HttpMethod.GET, "/oauth2/jwks")
                     .permitAll()

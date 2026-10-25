@@ -38,12 +38,11 @@ public class AiProviderConfig {
   public AiProvider aiProviderProd() {
     return switch (provider.toLowerCase()) {
       case "mock" -> new MockAiProvider();
-      case "claude" -> {
-        // TODO: Implement real Claude provider when AI_CLAUDE_API_KEY is available
-        // throw new IllegalStateException("Claude provider not yet implemented; set
-        // AI_PROVIDER=mock");
-        yield new MockAiProvider(); // Temporary fallback
-      }
+      case "claude" ->
+          // Fail fast rather than silently serving fabricated mock results in production.
+          throw new IllegalStateException(
+              "AI_PROVIDER=claude is not implemented in this build; set AI_PROVIDER=mock"
+                  + " explicitly or implement the Claude provider before enabling it.");
       default ->
           throw new IllegalArgumentException(
               "Unknown AI provider: " + provider + ". Supported: mock, claude");

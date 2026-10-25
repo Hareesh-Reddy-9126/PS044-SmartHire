@@ -9,40 +9,7 @@ import com.smarthire.ai.api.dto.MatchScoreResponse;
 import com.smarthire.ai.api.dto.ResumeParseRequest;
 import com.smarthire.ai.api.dto.ResumeParseResponse;
 import com.smarthire.ai.service.AiMatchingService;
-@RestController
-  @RequestMapping("/api/v1/ai")
-  @Tag(
-      name = "AI-Assisted Recruitment",
-      description = "Advisory AI features for recruitment workflows")
-  @SecurityRequirement(name = "bearerAuth")
-  public class AiController {
 
-    private final AiMatchingService aiMatchingService;
-
-    public AiController(AiMatchingService aiMatchingService) {
-      this.aiMatchingService = aiMatchingService;
-    }
-
-    @Operation(
-        summary = "Health check",
-        description = "Returns the health status of the AI service")
-    @ApiResponses(
-        value = {
-          @ApiResponse(responseCode = "200", description = "Service healthy"),
-          @ApiResponse(responseCode = "503", description = "Service unavailable")
-        })
-    @GetMapping("/health")
-    @PreAuthorize("hasAnyRole('RECRUITER', 'CANDIDATE', 'ADMIN')")
-    public ResponseEntity<Map<String, String>> health() {
-      return ResponseEntity.ok(Map.of("status", "UP"));
-    }
-
-    /**
-
-/**
- * AI-assisted recruitment endpoints. All outputs are advisory only — human-in-the-loop required for
- * any recruitment decision (ADR-0015). Features gated by {@code smarthire.ai.enabled}.
- */
 @RestController
 @RequestMapping("/api/v1/ai")
 @Tag(

@@ -1,9 +1,3 @@
-logging:
-  level:
-    org.springframework.web: DEBUG
-    org.springframework.http.converter: DEBUG
-    com.fasterxml.jackson: DEBUG
-
 spring:
   application:
     name: auth-service

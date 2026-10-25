@@ -64,7 +64,7 @@ class JwtIssuerTest {
   void rejectsAnUnconfiguredKeyOutsideTheLocalProfile() {
     assertThatThrownBy(() -> new JwtKeyConfig(PROPS, new MockEnvironment()).rsaKey())
         .isInstanceOf(IllegalStateException.class)
-        .hasMessage("AUTH_JWT_PRIVATE_KEY must be configured outside the local profile");
+        .hasMessage("AUTH_JWT_PRIVATE_KEY must be configured outside the local profile (prod,local is not a development profile)");
   }
 
   @Test

@@ -75,7 +75,10 @@ public class SecurityConfig {
                         HttpMethod.POST,
                         "/api/v1/auth/register",
                         "/api/v1/auth/login",
-                        "/api/v1/auth/refresh")
+                        "/api/v1/auth/refresh",
+                        // Logout is deliberately public so an expired access token cannot leave a
+                        // live HttpOnly refresh cookie behind. The cookie itself is SameSite=Strict.
+                        "/api/v1/auth/logout")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/oauth2/jwks")
                     .permitAll()
