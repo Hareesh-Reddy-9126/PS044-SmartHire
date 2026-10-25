@@ -1,5 +1,6 @@
 package com.smarthire.auth.api;
 
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -119,6 +120,20 @@ class AuthControllerWebMvcTest {
                 org.assertj.core.api.Assertions.assertThat(
                         result.getResponse().getHeader(HttpHeaders.SET_COOKIE))
                     .contains("HttpOnly", "Secure", "SameSite=Strict"));
+  }
+
+  @Test
+  void logoutStillClearsTheRefreshCookieWithoutAnAccessToken() throws Exception {
+    mvc.perform(
+            post("/api/v1/auth/logout").cookie(new jakarta.servlet.http.Cookie("smarthire_refresh", "refresh-token")))
+        .andExpect(status().isNoContent())
+        .andExpect(
+            result ->
+                org.assertj.core.api.Assertions.assertThat(
+                        result.getResponse().getHeader(HttpHeaders.SET_COOKIE))
+                    .contains("Max-Age=0", "HttpOnly", "Secure", "SameSite=Strict"));
+
+    verify(authService).logout("refresh-token", null, null);
   }
 
   @Test

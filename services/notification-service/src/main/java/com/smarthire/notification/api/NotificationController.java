@@ -27,6 +27,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.validation.annotation.Validated;
@@ -52,6 +53,7 @@ import org.springframework.web.bind.annotation.RestController;
     name = "Notification Management",
     description = "Endpoints for managing candidate notifications")
 @SecurityRequirement(name = "bearerAuth")
+@PreAuthorize("hasRole('CANDIDATE')")
 public class NotificationController {
 
   private static final Logger log = LoggerFactory.getLogger(NotificationController.class);

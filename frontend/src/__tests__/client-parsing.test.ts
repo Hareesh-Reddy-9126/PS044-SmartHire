@@ -108,4 +108,42 @@ describe('api client response parsing', () => {
     expect(logoutUrl).toContain('/api/v1/auth/logout');
     expect(new Headers(logoutInit.headers).get('Authorization')).toBe('Bearer access-token-1');
   });
+
+  it('retries logout without a bearer token when the expired token is rejected', async () => {
+    const fetchMock = vi
+      .fn()
+      .mockResolvedValueOnce(
+        response(
+          {
+            tokenType: 'Bearer',
+            accessToken: 'expired-token-1',
+            accessTokenExpiresAt: '2099-01-01T00:00:00Z',
+          },
+          'application/json'
+        )
+      )
+      .mockResolvedValueOnce({
+        ok: false,
+        status: 401,
+        headers: { get: () => null },
+        text: async () => '',
+      } as unknown as Response)
+      .mockResolvedValueOnce({
+        ok: true,
+        status: 204,
+        headers: { get: () => null },
+        text: async () => '',
+      } as unknown as Response);
+    vi.stubGlobal('fetch', fetchMock);
+
+    await authApi.login('candidate@example.com', 'Secret123!');
+    await endSession();
+
+    expect(fetchMock).toHaveBeenCalledTimes(3);
+    const [, expiredInit] = fetchMock.mock.calls[1] as [string, RequestInit];
+    expect(new Headers(expiredInit.headers).get('Authorization')).toBe('Bearer expired-token-1');
+
+    const [, retryInit] = fetchMock.mock.calls[2] as [string, RequestInit];
+    expect(retryInit.headers).toBeUndefined();
+  });
 });

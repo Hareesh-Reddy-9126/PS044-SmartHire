@@ -1,12 +1,5 @@
-# Build output (exclude for all modules except the ones we build images for)
+# Build output (images compile from source in their build stages)
 **/target/
-!services/application-service/target/
-!services/recruitment-service/target/
-!services/job-service/target/
-!services/auth-service/target/
-!services/api-gateway/target/
-!services/service-registry/target/
-!services/notification-service/target/
 
 # Git & docs (not needed in image build context)
 .git
@@ -25,14 +18,18 @@ skills-lock.json
 
 # Node (frontend added at Inc 5)
 node_modules
+frontend/node_modules
+frontend/dist
 
-# Secrets / env (never copy into an image)
+# Secrets / env (never copy into an image, including nested env files)
 .env
 .env.*
+**/.env
+**/.env.*
 !.env.example
+!**/.env.example
 
 # Logs / OS
 *.log
 .DS_Store
 Thumbs.db
-

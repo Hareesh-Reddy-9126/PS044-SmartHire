@@ -237,6 +237,14 @@ class AuthServiceTest {
   }
 
   @Test
+  void logoutWithoutAnAccessTokenStillRevokesTheRefreshFamily() {
+    service.logout("refresh-token", null, null);
+
+    verify(refreshTokenService).revoke("refresh-token");
+    verify(revocationService, never()).revoke(anyString(), any(Instant.class));
+  }
+
+  @Test
   void refreshTransactionDoesNotRollbackOnInvalidTokenException() throws Exception {
     Transactional annotation =
         AuthService.class.getMethod("refresh", String.class).getAnnotation(Transactional.class);

@@ -30,6 +30,11 @@ import { AdminRecruitmentsPage } from '../pages/admin/AdminRecruitmentsPage';
 import { AdminRecruitmentDetailPage } from '../pages/admin/AdminRecruitmentDetailPage';
 import { AdminLookupPage } from '../pages/admin/AdminLookupPage';
 import { AdminProfilePage } from '../pages/admin/AdminProfilePage';
+import { CompanyOnboardingPage } from '../pages/recruiter/CompanyOnboardingPage';
+import { CompanyDashboardPage } from '../pages/recruiter/CompanyDashboardPage';
+import { CompanyRecruitmentsPage } from '../pages/recruiter/CompanyRecruitmentsPage';
+import { CompanyMembersPage } from '../pages/recruiter/CompanyMembersPage';
+import { CompanyJobCreatePage } from '../pages/recruiter/CompanyJobCreatePage';
 import {
   ForbiddenPage,
   NotFoundPage,
@@ -279,6 +284,21 @@ export function AppRoutes() {
           </RecruiterRoute>
         }
       />
+
+      {/* Company pages - accessible by company members */}
+      <Route
+        path="/company/register"
+        element={
+          <ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN', 'CANDIDATE']}>
+            <CompanyOnboardingPage />
+          </ProtectedRoute>
+        }
+      />
+      <Route path="/company/dashboard" element={<CompanyDashboardPage />} />
+      <Route path="/company/recruitments" element={<CompanyRecruitmentsPage />} />
+      <Route path="/company/members" element={<CompanyMembersPage />} />
+      <Route path="/company/jobs/new" element={<CompanyJobCreatePage />} />
+
 
       {/* Admin */}
       <Route path="/admin" element={<Navigate to="/admin/overview" replace />} />

@@ -3,16 +3,14 @@ package com.smarthire.notification.service;
 import com.smarthire.notification.domain.Notification;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 /**
- * Logging implementation of {@link NotificationSender}. Writes the notification content to the log
- * at INFO level. Used for Review-1 to satisfy the notification requirement without external
- * dependencies.
+ * Logging implementation of {@link NotificationSender}. Used for local development and tests so no
+ * real email leaves the machine.
  *
- * <p>In production, this would be replaced with an actual email/SMS sender.
+ * <p>Production uses {@link SmtpNotificationSender}. Recipient addresses and message bodies are
+ * not logged because notification content is candidate personal data.
  */
-@Component
 public class LoggingNotificationSender implements NotificationSender {
 
   private static final Logger log = LoggerFactory.getLogger(LoggingNotificationSender.class);
@@ -20,13 +18,7 @@ public class LoggingNotificationSender implements NotificationSender {
   @Override
   public void send(Notification notification) {
     log.info(
-        "Sending notification {} to {}: subject='{}'",
-        notification.getNotificationId(),
-        notification.getRecipientEmail(),
-        notification.getSubject());
-    log.debug(
-        "Notification {} full message: {}",
-        notification.getNotificationId(),
-        notification.getMessage());
+        "Logging sender accepted notification {} (subject and recipient are not logged)",
+        notification.getNotificationId());
   }
 }

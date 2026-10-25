@@ -41,6 +41,9 @@ COPY --from=builder /app/services/ai-service/target/*.jar app.jar
 RUN addgroup -g 1000 smarthire && adduser -D -u 1000 -G smarthire smarthire
 USER smarthire
 
+# ENV JAVA_TOOL_OPTIONS is honoured by the JVM without an intermediate shell.
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
+
 EXPOSE 8087
 
 # Health check

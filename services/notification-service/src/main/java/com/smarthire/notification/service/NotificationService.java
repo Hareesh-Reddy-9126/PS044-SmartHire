@@ -56,13 +56,42 @@ public class NotificationService {
   @Transactional
   public Notification createAndSendNotification(
       UUID candidateId, UUID applicationId, String eventStatus, String recipientEmail) {
+    // Same application/status transition must not create a second notification when the caller
+    // retries or when the same transition is replayed.
+    var existing =
+        notificationRepository.findFirstByApplicationIdAndEventStatusOrderByCreatedAtDesc(
+            applicationId, eventStatus);
+
+    if (existing.isPresent()) {
+      Notification prior = existing.get();
+      if (prior.getDeliveryStatus() == DeliveryStatus.SENT) {
+        log.debug(
+            "Duplicate notification request suppressed for application {} status {}",
+            applicationId,
+            eventStatus);
+        return prior;
+      }
+      if (prior.getDeliveryStatus() == DeliveryStatus.PENDING) {
+        return prior;
+      }
+      // FAILED notifications may be retried by the same request; clear the previous error first.
+      prior.setErrorMessage(null);
+      prior.setSentAt(null);
+      prior.setDeliveryStatus(DeliveryStatus.PENDING);
+      prior = notificationRepository.save(prior);
+      return attemptDelivery(prior);
+    }
+
     // Create the notification in PENDING state
     Notification notification =
         createNotification(candidateId, applicationId, eventStatus, recipientEmail);
 
     // Save to get the ID
     notification = notificationRepository.save(notification);
+    return attemptDelivery(notification);
+  }
 
+  private Notification attemptDelivery(Notification notification) {
     // Attempt delivery
     try {
       notificationSender.send(notification);

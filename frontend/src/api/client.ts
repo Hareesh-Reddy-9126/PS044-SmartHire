@@ -780,3 +780,61 @@ export const recruitmentsApi = {
       }
     ),
 };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+export interface CompanyResponse {
+  companyId: string;
+  name: string;
+  status: 'PENDING_APPROVAL' | 'ACTIVE' | 'SUSPENDED';
+  ownerId: string;
+  memberCount: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CompanyListParams {
+  page?: number;
+  size?: number;
+}
+
+export const companiesApi = {
+  list: async (params: CompanyListParams = {}): Promise<PagedModel<CompanyResponse>> =>
+    request<PagedModel<CompanyResponse>>(
+      `/api/v1/companies${query({
+        page: params.page,
+        size: params.size,
+      })}`
+    ),
+
+  get: async (companyId: string): Promise<CompanyResponse> =>
+    request<CompanyResponse>(`/api/v1/companies/${companyId}`),
+
+  create: async (data: { name: string }): Promise<CompanyResponse> =>
+    request<CompanyResponse>('/api/v1/companies', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+
+  update: async (companyId: string, data: { name: string }): Promise<CompanyResponse> =>
+    request<CompanyResponse>(`/api/v1/companies/${companyId}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    }),
+};

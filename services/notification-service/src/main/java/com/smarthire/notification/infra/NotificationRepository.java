@@ -27,4 +27,8 @@ public interface NotificationRepository
   List<Notification> findByApplicationId(UUID applicationId);
 
   List<Notification> findByDeliveryStatus(DeliveryStatus deliveryStatus);
+
+  /** Idempotency lookup: one notification per application/status transition. */
+  Optional<Notification> findFirstByApplicationIdAndEventStatusOrderByCreatedAtDesc(
+      UUID applicationId, String eventStatus);
 }

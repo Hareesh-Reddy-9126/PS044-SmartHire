@@ -61,14 +61,19 @@ management:
       percentiles:
         http.server.requests: 0.5,0.95,0.99
 
-# Notification sender configuration
-notification:
-  sender:
-    type: ${NOTIFICATION_SENDER_TYPE:logging}
-    # For future SMTP sender (not implemented in R1)
-    smtp:
-      host: ${NOTIFICATION_SMTP_HOST:localhost}
-      port: ${NOTIFICATION_SMTP_PORT:25}
-      username: ${NOTIFICATION_SMTP_USERNAME:}
-      password: ${NOTIFICATION_SMTP_PASSWORD:}
-      from: ${NOTIFICATION_SMTP_FROM:noreply@smarthire.local}
+# Notification sender configuration. The logging sender is intentionally the default: real SMTP
+# values are supplied by the deployment environment, never committed to the repository.
+smarthire:
+  notification:
+    sender:
+      type: ${NOTIFICATION_SENDER_TYPE:logging}
+      max-attempts: ${NOTIFICATION_DELIVERY_MAX_ATTEMPTS:3}
+      retry-backoff-ms: ${NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS:500}
+      smtp:
+        host: ${NOTIFICATION_SMTP_HOST:}
+        port: ${NOTIFICATION_SMTP_PORT:587}
+        username: ${NOTIFICATION_SMTP_USERNAME:}
+        password: ${NOTIFICATION_SMTP_PASSWORD:}
+        from: ${NOTIFICATION_SMTP_FROM:}
+        starttls: ${NOTIFICATION_SMTP_STARTTLS:true}
+        ssl: ${NOTIFICATION_SMTP_SSL:false}

@@ -3,20 +3,17 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
-import { Select } from '../../components/ui/Select';
 import { Alert } from '../../components/ui/Alert';
 import { errorMessage } from '../../utils/errors';
 import { safeNextPath } from '../../utils/roles';
 
 type Role = 'CANDIDATE' | 'RECRUITER' | 'ADMIN';
 
-const ROLE_OPTIONS: { value: Role; label: string; email?: string; password?: string; note?: string }[] = [
-  { value: 'CANDIDATE', label: 'Candidate', email: undefined, note: 'Create a new account via the registration page.' },
-  { value: 'RECRUITER', label: 'Recruiter', email: 'recruiter@smarthire.local', password: 'Recruiter123!', note: 'Pre-seeded recruiter account for development.' },
-  { value: 'ADMIN', label: 'Admin', email: 'admin@smarthire.local', password: 'Admin123!', note: 'Pre-seeded admin account for development.' },
+const ROLE_OPTIONS: { value: Role; label: string }[] = [
+  { value: 'CANDIDATE', label: 'Candidate' },
+  { value: 'RECRUITER', label: 'Recruiter' },
+  { value: 'ADMIN', label: 'Admin' },
 ];
-
-const ROLE_SELECT_OPTIONS = ROLE_OPTIONS.map(({ value, label }) => ({ value, label }));
 
 export function LoginPage() {
   const location = useLocation();
@@ -29,15 +26,7 @@ export function LoginPage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { login } = useAuth();
-
-  const handleRoleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-    const role = event.target.value as Role;
-    setSelectedRole(role);
-    const option = ROLE_OPTIONS.find(r => r.value === role);
-    setEmail(role === 'CANDIDATE' ? '' : (option?.email || ''));
-    setPassword(role === 'CANDIDATE' ? '' : (option?.password || ''));
-  };
+  const { login, logout } = useAuth();
 
   const handleSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -46,6 +35,13 @@ export function LoginPage() {
 
     try {
       const me = await login(email, password);
+
+      if (!me.roles.includes(selectedRole)) {
+        await logout();
+        setError('This account does not have the selected role.');
+        return;
+      }
+
       const next = searchParams.get('next');
       navigate(safeNextPath(next, me.roles), { replace: true });
     } catch (err) {
@@ -53,9 +49,7 @@ export function LoginPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [email, password, navigate, login, searchParams]);
-
-  const selectedOption = ROLE_OPTIONS.find(r => r.value === selectedRole);
+  }, [email, password, navigate, login, logout, searchParams, selectedRole]);
 
   return (
     <>
@@ -68,24 +62,26 @@ export function LoginPage() {
         </p>
       </div>
 
-      <div className="mt-7 space-y-4">
-        {registeredEmail && !error && (
-          <Alert tone="success" title="Account created">
-            Sign in with your new account to start applying.
-          </Alert>
-        )}
-
-        {error && <Alert tone="danger">{error}</Alert>}
-      </div>
+      {error && <Alert tone="danger">{error}</Alert>}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-        <Select
-          id="role"
-          label="Sign in as"
-          value={selectedRole}
-          onChange={handleRoleChange}
-          options={ROLE_SELECT_OPTIONS}
-        />
+        <div className="space-y-2">
+          <label htmlFor="role" className="font-label-md text-label-md text-c-text-muted">
+            Sign in as
+          </label>
+          <select
+            id="role"
+            value={selectedRole}
+            onChange={event => setSelectedRole(event.target.value as Role)}
+            className="input w-full"
+          >
+            {ROLE_OPTIONS.map(option => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
 
         <Input
           id="email"
@@ -126,21 +122,6 @@ export function LoginPage() {
           Create an account
         </Link>
       </div>
-
-      {selectedRole !== 'CANDIDATE' && selectedOption && (
-        <div className="auth-demo">
-          <h2 className="auth-demo-title">Development credentials</h2>
-          <div className="auth-demo-row">
-            <span>Email</span>
-            <span className="font-mono">{selectedOption.email}</span>
-          </div>
-          <div className="auth-demo-row">
-            <span>Password</span>
-            <span className="font-mono">{selectedOption.password}</span>
-          </div>
-          <p className="mt-2 text-[11px] leading-relaxed text-c-accent-700">{selectedOption.note}</p>
-        </div>
-      )}
     </>
   );
 }

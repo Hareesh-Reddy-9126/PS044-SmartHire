@@ -2,6 +2,13 @@
 # Build: docker build -t smarthire-recruitment-service:local -f services/recruitment-service/Dockerfile .
 # Run:   docker run -p 8084:8084 --env-file deploy/.env smarthire-recruitment-service:local
 
+# ---- Build stage: compile on the approved JDK 21, independent of the host JVM (ADR-0002) ----
+FROM maven:3.9-eclipse-temurin-21 AS build
+WORKDIR /build
+COPY . .
+RUN mvn -B -pl services/recruitment-service -am -DskipTests clean package
+
+# ---- Runtime stage: slim JRE, non-root user, health-checked ----
 FROM eclipse-temurin:21-jre-jammy AS runtime
 RUN apt-get update \
     && apt-get install -y --no-install-recommends curl \
@@ -9,17 +16,12 @@ RUN apt-get update \
     && useradd --system --uid 1001 --create-home appuser
 
 WORKDIR /app
-
-# Copy the built JAR (from Maven target/)
-COPY services/recruitment-service/target/smarthire-recruitment-service-*.jar app.jar
-
-# Ownership
+COPY --from=build /build/services/recruitment-service/target/smarthire-recruitment-service-*.jar app.jar
 RUN chown appuser:appuser app.jar
-
 USER appuser
 
-# JVM tuning for container environments
-ENV JAVA_OPTS="-XX:MaxRAMPercentage=75 -Djava.security.egd=file:/dev/./urandom"
+# ENV JAVA_TOOL_OPTIONS is honoured by the JVM without an intermediate shell.
+ENV JAVA_TOOL_OPTIONS="-XX:MaxRAMPercentage=75 -XX:+ExitOnOutOfMemoryError -Djava.security.egd=file:/dev/./urandom"
 
 EXPOSE 8084
 

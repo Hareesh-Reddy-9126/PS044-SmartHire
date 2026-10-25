@@ -18,12 +18,14 @@ smarthire:
       audience: ${AUTH_JWT_AUDIENCE}
     sender:
       type: ${NOTIFICATION_SENDER_TYPE:smtp}
+      max-attempts: ${NOTIFICATION_DELIVERY_MAX_ATTEMPTS:3}
+      retry-backoff-ms: ${NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS:500}
       smtp:
         host: ${NOTIFICATION_SMTP_HOST}
         port: ${NOTIFICATION_SMTP_PORT:587}
-        username: ${NOTIFICATION_SMTP_USERNAME}
-        password: ${NOTIFICATION_SMTP_PASSWORD}
-        from: ${NOTIFICATION_SMTP_FROM:noreply@smarthire.local}
+        username: ${NOTIFICATION_SMTP_USERNAME:}
+        password: ${NOTIFICATION_SMTP_PASSWORD:}
+        from: ${NOTIFICATION_SMTP_FROM}
 
 management:
   endpoints:
