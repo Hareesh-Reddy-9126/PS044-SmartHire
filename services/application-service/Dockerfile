@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1.7
 # SmartHire Application Service — Docker image
 # Build: docker build -t smarthire-application-service:local -f services/application-service/Dockerfile .
 # Run:   docker run -p 8083:8083 --env-file deploy/.env smarthire-application-service:local
@@ -6,7 +7,10 @@
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /build
 COPY . .
-RUN mvn -B -pl services/application-service -am -DskipTests clean package
+# Compile the whole reactor once. BuildKit reuses this layer across every service image built
+# from the same context, so a cold stack build compiles Maven once instead of once per service
+# (the difference between minutes and hours on the 2-OCPU production VM).
+RUN --mount=type=cache,target=/root/.m2 mvn -B -Dmaven.test.skip=true -Dspotbugs.skip=true package
 
 # ---- Runtime stage: slim JRE, non-root user, health-checked ----
 FROM eclipse-temurin:21-jre-jammy AS runtime

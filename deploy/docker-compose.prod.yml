@@ -155,13 +155,15 @@ services:
     environment:
       SPRING_PROFILES_ACTIVE: prod
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
-      # Real SMTP is required in production; placeholder values are never accepted.
-      NOTIFICATION_SENDER_TYPE: smtp
-      NOTIFICATION_SMTP_HOST: ${NOTIFICATION_SMTP_HOST:?NOTIFICATION_SMTP_HOST must be set in deploy/.env}
+      # SMTP is the default. `logging` is an explicit opt-out for deployments without a mail
+      # provider: notifications are still recorded, but no email is sent. Selecting `smtp`
+      # without a host/from still fails startup (NotificationSenderConfig).
+      NOTIFICATION_SENDER_TYPE: ${NOTIFICATION_SENDER_TYPE:-smtp}
+      NOTIFICATION_SMTP_HOST: ${NOTIFICATION_SMTP_HOST:-}
       NOTIFICATION_SMTP_PORT: ${NOTIFICATION_SMTP_PORT:-587}
       NOTIFICATION_SMTP_USERNAME: ${NOTIFICATION_SMTP_USERNAME:-}
       NOTIFICATION_SMTP_PASSWORD: ${NOTIFICATION_SMTP_PASSWORD:-}
-      NOTIFICATION_SMTP_FROM: ${NOTIFICATION_SMTP_FROM:?NOTIFICATION_SMTP_FROM must be set in deploy/.env}
+      NOTIFICATION_SMTP_FROM: ${NOTIFICATION_SMTP_FROM:-}
       NOTIFICATION_DELIVERY_MAX_ATTEMPTS: ${NOTIFICATION_DELIVERY_MAX_ATTEMPTS:-3}
       NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS: ${NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS:-500}
     mem_limit: 640m

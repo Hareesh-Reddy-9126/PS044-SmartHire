@@ -1,66 +1,32 @@
 # Production profile overrides for API Gateway
 # Activates when 'prod' profile is active: --spring.profiles.active=prod
+#
+# Routes are defined once in application.yml. Do NOT add a `spring.cloud.gateway.routes` list
+# here: Spring config lists are replaced, not merged, so a profile-specific list silently dropped
+# the job, notification, AI, JWKS and API-docs routes from the production gateway. Only the
+# stricter production rate limits are overridden below; they are consumed by the placeholders in
+# application.yml.
 
-spring:
-  cloud:
-    gateway:
-      routes:
-        # Override auth route with stricter rate limiting in production
-        # Uses standard RedisRateLimiter (redisRateLimiter bean).
-        - id: auth-service
-          uri: lb://AUTH-SERVICE
-          predicates:
-            - Path=/api/v1/auth/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                rate-limiter: "#{@redisRateLimiter}"
-                key-resolver: "#{@ipKeyResolver}"
-                redis-rate-limiter.replenishRate: 5
-                redis-rate-limiter.burstCapacity: 10
-                redis-rate-limiter.requestedTokens: 1
-        # Override application route with stricter rate limiting
-        # Uses standard RedisRateLimiter (redisRateLimiter bean).
-        - id: application-service
-          uri: lb://APPLICATION-SERVICE
-          predicates:
-            - Path=/api/v1/applications/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                rate-limiter: "#{@redisRateLimiter}"
-                key-resolver: "#{@userKeyResolver}"
-                redis-rate-limiter.replenishRate: 10
-                redis-rate-limiter.burstCapacity: 20
-                redis-rate-limiter.requestedTokens: 1
-        # Override recruitment route with stricter rate limiting
-        # Uses standard RedisRateLimiter (redisRateLimiter bean).
-        - id: recruitment-service
-          uri: lb://RECRUITMENT-SERVICE
-          predicates:
-            - Path=/api/v1/recruitments/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                rate-limiter: "#{@redisRateLimiter}"
-                key-resolver: "#{@userKeyResolver}"
-                redis-rate-limiter.replenishRate: 8
-                redis-rate-limiter.burstCapacity: 16
-                redis-rate-limiter.requestedTokens: 1
-        # Override document route with stricter rate limiting
-        # Uses standard RedisRateLimiter (redisRateLimiter bean).
-        - id: document-service
-          uri: lb://DOCUMENT-SERVICE
-          predicates:
-            - Path=/api/v1/documents/**
-          filters:
-            - name: RequestRateLimiter
-              args:
-                rate-limiter: "#{@redisRateLimiter}"
-                key-resolver: "#{@userKeyResolver}"
-                redis-rate-limiter.replenishRate: 5
-                redis-rate-limiter.burstCapacity: 10
-                redis-rate-limiter.requestedTokens: 1
+smarthire:
+  gateway:
+    rate-limits:
+      auth:
+        replenish: 5
+        burst: 10
+      application:
+        replenish: 10
+        burst: 20
+      recruitment:
+        replenish: 8
+        burst: 16
+      document:
+        replenish: 5
+        burst: 10
+    # JWT configuration - production MUST provide explicit keys
+    jwt:
+      jwk-set-uri: ${GATEWAY_JWK_SET_URI}
+      issuer: ${AUTH_JWT_ISSUER}
+      audience: ${AUTH_JWT_AUDIENCE}
 
 management:
   endpoints:
@@ -73,11 +39,3 @@ management:
       show-details: never
     prometheus:
       enabled: true
-
-# JWT configuration - production MUST provide explicit keys
-smarthire:
-  gateway:
-    jwt:
-      jwk-set-uri: ${GATEWAY_JWK_SET_URI}
-      issuer: ${AUTH_JWT_ISSUER}
-      audience: ${AUTH_JWT_AUDIENCE}

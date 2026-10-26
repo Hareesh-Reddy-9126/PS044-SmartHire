@@ -97,6 +97,10 @@ services:
       AUTH_SVC_DB_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in deploy/.env}
       REDIS_HOST: redis
       EUREKA_SERVER_URL: http://service-registry:8761/eureka
+      # Issuer/audience MUST match the values every downstream service verifies. Without these the
+      # prod profile resolves the placeholders to literal text and signs unusable tokens.
+      AUTH_JWT_ISSUER: ${AUTH_JWT_ISSUER:-https://smarthire.local/auth}
+      AUTH_JWT_AUDIENCE: ${AUTH_JWT_AUDIENCE:-smarthire}
       # Local profile explicitly permits an ephemeral dev keypair; production requires a key.
       AUTH_JWT_PRIVATE_KEY: ${AUTH_JWT_PRIVATE_KEY:-}
       # "seed" activates the RECRUITER/ADMIN seeder; it only creates an account when both the email
@@ -297,6 +301,10 @@ services:
       # fetches auth-service's JWKS directly over the internal network (a plain URL, not lb://).
       REDIS_HOST: redis
       GATEWAY_JWK_SET_URI: http://auth-service:8082/oauth2/jwks
+      # The prod profile has no defaults for these; unresolved placeholders would make the edge
+      # reject every valid token. Keep them identical to what auth-service signs.
+      AUTH_JWT_ISSUER: ${AUTH_JWT_ISSUER:-https://smarthire.local/auth}
+      AUTH_JWT_AUDIENCE: ${AUTH_JWT_AUDIENCE:-smarthire}
     ports:
       - "127.0.0.1:8080:8080" # the single public entry point, reached only via Caddy in production
     depends_on:

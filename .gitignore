@@ -2,6 +2,8 @@
 .env
 .env.*
 !.env.example
+# Production template documents required keys (no real values) and must stay in the repo.
+!deploy/.env.production.example
 
 # Node
 node_modules/

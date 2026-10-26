@@ -11,15 +11,20 @@
     <meta name="theme-color" content="#0F271F" />
     <meta name="color-scheme" content="light" />
     <title>SmartHire — Employment decision architecture</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!--
+      Web fonts are self-hosted from /fonts (see src/styles/fonts.css). They used to be linked
+      from fonts.googleapis.com, which the production Content-Security-Policy blocks
+      (style-src 'self', font-src 'self'): every icon then rendered as its literal ligature text.
+
+      The icon font is preloaded because its ligatures become glyphs only after the file arrives:
+      until then the spans are empty, which shifts the layout of icon+text rows on first paint.
+    -->
     <link
-      href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Instrument+Sans:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Newsreader:ital,opsz,wght@0,6..72,300..600;1,6..72,300..400&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200"
-      rel="stylesheet"
+      rel="preload"
+      as="font"
+      type="font/woff2"
+      href="/fonts/material-symbols-outlined.woff2"
+      crossorigin
     />
   </head>
   <body>

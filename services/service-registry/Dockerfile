@@ -1,11 +1,14 @@
+# syntax=docker/dockerfile:1.7
 # ---- Build stage: compile on the approved JDK 21, independent of the host JVM (ADR-0002) ----
 FROM maven:3.9-eclipse-temurin-21 AS build
 WORKDIR /build
 # Context is the repo root (see .dockerignore for exclusions).
 COPY . .
-# Build this service and the modules it depends on. Tests run in the host quality gate,
-# not during image assembly (Testcontainers requires a Docker daemon).
-RUN mvn -B -pl services/service-registry -am -DskipTests clean package
+# Compile the whole reactor once. BuildKit reuses this layer across every service image built
+# from the same context, so a cold stack build compiles Maven once instead of once per service
+# (the difference between minutes and hours on the 2-OCPU production VM). Tests run in the host
+# quality gate, not during image assembly (Testcontainers requires a Docker daemon).
+RUN --mount=type=cache,target=/root/.m2 mvn -B -Dmaven.test.skip=true -Dspotbugs.skip=true package
 
 # ---- Runtime stage: slim JRE, non-root user, health-checked (governance §34) ----
 FROM eclipse-temurin:21-jre-jammy AS runtime
