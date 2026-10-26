@@ -45,9 +45,15 @@ smarthire:
     # PKCS#8 PEM RSA private key. SECRET — supplied only via the environment (governance §17).
     # Production/default deployments must provide the PKCS#8 PEM signing key.
     private-key: ${AUTH_JWT_PRIVATE_KEY}
-  # Development seeding of the non-self-service accounts (RECRUITER, ADMIN) — decision 7.
-  # Active only under the "seed" profile AND when the credentials are supplied via the environment
-  # (decision 8: no known/reusable demo password in git). Blank => that account is not seeded.
+  # Role-aware public registration. Candidate and recruiter signup are open; administrator signup
+  # requires the deployment-specific invitation code below. Blank disables administrator signup
+  # entirely (decision 8: no default secret in git).
+  registration:
+    admin-invite-code: ${AUTH_ADMIN_SIGNUP_CODE:}
+  # Development seeding of demo RECRUITER and ADMIN accounts. Both roles can also self-register;
+  # seeding remains useful for repeatable demos and tests. Active only under the "seed" profile AND
+  # when the credentials are supplied via the environment (decision 8: no known/reusable demo
+  # password in git). Blank => that account is not seeded.
   seed:
     recruiter-email: ${AUTH_SEED_RECRUITER_EMAIL:}
     recruiter-password: ${AUTH_SEED_RECRUITER_PASSWORD:}

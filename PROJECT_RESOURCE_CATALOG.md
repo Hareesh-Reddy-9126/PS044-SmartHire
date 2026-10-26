@@ -261,9 +261,9 @@ Kilo Code supports launching subagents via the `task` tool with types: `explore`
 
 | Tool | Path | Status | Notes |
 |------|------|--------|-------|
-| Vitest | `frontend/package.json` | Installed | 49 tests across 8 files |
+| Vitest | `frontend/package.json` | Installed | 69 tests across 11 files |
 | Testing Library (React) | `frontend/package.json` | Installed | @testing-library/react + jest-dom |
-| JUnit 5 | `pom.xml` | Installed | 538 backend unit tests across 10 modules |
+| JUnit 5 | `pom.xml` | Installed | Backend suites pass across 10 modules (auth 77, job 81, application 137, recruitment 122, ai 52, document+notification+common 44) |
 | Testcontainers | Not available | Not installed | Docker/Testcontainers unavailable locally |
 | Selenium/Playwright | Not available | Not installed | No browser automation configured |
 

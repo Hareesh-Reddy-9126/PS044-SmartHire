@@ -33,9 +33,10 @@ import org.springframework.security.web.access.AccessDeniedHandler;
  * the defense-in-depth layer behind the gateway (decision 4) — token revocation is also enforced
  * here via the decoder's {@code TokenRevocationValidator}.
  *
- * <p>{@code @EnableMethodSecurity} activates {@code @PreAuthorize} for role-gated endpoints (e.g.
- * {@code /admin/whoami}). Method security lives here in auth-service rather than the framework-free
- * {@code common} module, so job-service stays fully public (Inc 0 behaviour preserved).
+ * <p>{@code @EnableMethodSecurity} activates {@code @PreAuthorize} and, with {@code
+ * securedEnabled}, {@code @Secured} for role-gated endpoints (e.g. company administration). Method
+ * security lives here in auth-service rather than the framework-free {@code common} module, so
+ * job-service stays fully public (Inc 0 behaviour preserved).
  *
  * <p>401/403 responses are rendered as RFC 9457 {@code application/problem+json} (ADR-0016). The
  * handlers are set on both {@code exceptionHandling} and {@code oauth2ResourceServer} because the
@@ -43,7 +44,7 @@ import org.springframework.security.web.access.AccessDeniedHandler;
  */
 @Configuration
 @EnableWebSecurity
-@EnableMethodSecurity
+@EnableMethodSecurity(securedEnabled = true)
 public class SecurityConfig {
 
   private final ObjectMapper objectMapper;
@@ -77,7 +78,8 @@ public class SecurityConfig {
                         "/api/v1/auth/login",
                         "/api/v1/auth/refresh",
                         // Logout is deliberately public so an expired access token cannot leave a
-                        // live HttpOnly refresh cookie behind. The cookie itself is SameSite=Strict.
+                        // live HttpOnly refresh cookie behind. The cookie itself is
+                        // SameSite=Strict.
                         "/api/v1/auth/logout")
                     .permitAll()
                     .requestMatchers(HttpMethod.GET, "/oauth2/jwks")

@@ -31,9 +31,9 @@ import reactor.core.publisher.Mono;
 /**
  * Reactive edge security (decisions 4–6). Deny-by-default: only the public allow-list — GET {@code
  * /api/v1/jobs/**} (Inc 0 behaviour, decision 5), the anonymous auth entry points
- * (register/login/refresh, decision 7), the JWKS endpoint and health probes — is anonymous; every
- * other exchange requires a valid RS256 access token, verified offline against the auth-service
- * JWKS with the {@code iss}/{@code aud} claims pinned (ADR-0009). Role-level authorization
+ * (register/login/refresh), the JWKS endpoint and health probes — is anonymous; every other
+ * exchange requires a valid RS256 access token, verified offline against the auth-service JWKS with
+ * the {@code iss}/{@code aud} claims pinned (ADR-0009). Role-level authorization
  * ({@code @PreAuthorize}) stays in the owning service (defense-in-depth); the gateway is the first
  * line — authentication, revocation ({@link JwtRevocationWebFilter}) and rate limiting.
  *

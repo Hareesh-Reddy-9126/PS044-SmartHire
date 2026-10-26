@@ -1,10 +1,10 @@
 package com.smarthire.ai.config;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import jakarta.validation.constraints.NotBlank;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.annotation.Validated;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * AI Service configuration properties.
@@ -42,32 +42,28 @@ public class AiProperties {
 
   @SuppressFBWarnings(
       value = "EI_EXPOSE_REP",
-      justification = "Spring-managed configuration properties object; not mutated after startup"
-  )
+      justification = "Spring-managed configuration properties object; not mutated after startup")
   public JwtProperties getJwt() {
     return jwt;
   }
 
   @SuppressFBWarnings(
       value = "EI_EXPOSE_REP2",
-      justification = "Spring-injected configuration object; not mutated after injection"
-  )
+      justification = "Spring-injected configuration object; not mutated after injection")
   public void setJwt(JwtProperties jwt) {
     this.jwt = jwt;
   }
 
   @SuppressFBWarnings(
       value = "EI_EXPOSE_REP",
-      justification = "Spring-managed configuration properties object; not mutated after startup"
-  )
+      justification = "Spring-managed configuration properties object; not mutated after startup")
   public ClaudeProperties getClaude() {
     return claude;
   }
 
   @SuppressFBWarnings(
       value = "EI_EXPOSE_REP2",
-      justification = "Spring-injected configuration object; not mutated after injection"
-  )
+      justification = "Spring-injected configuration object; not mutated after injection")
   public void setClaude(ClaudeProperties claude) {
     this.claude = claude;
   }

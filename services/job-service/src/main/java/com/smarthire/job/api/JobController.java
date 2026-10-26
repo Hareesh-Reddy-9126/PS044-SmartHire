@@ -6,6 +6,7 @@ import com.smarthire.job.api.dto.JobResponse;
 import com.smarthire.job.api.dto.JobUpdateRequest;
 import com.smarthire.job.domain.JobStatus;
 import com.smarthire.job.security.JobPrincipal;
+import com.smarthire.job.service.JobForbiddenException;
 import com.smarthire.job.service.JobService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -104,11 +105,15 @@ public class JobController {
       @RequestParam(required = false) JobStatus status,
       @RequestParam(required = false) String location,
       @RequestParam(required = false) String q,
+      @RequestParam(defaultValue = "false") boolean mine,
       @RequestParam(defaultValue = "0") int page,
       @RequestParam(defaultValue = "20") int size,
       @AuthenticationPrincipal Jwt jwt) {
     JobPrincipal principal = JobPrincipal.from(jwt);
-    JobListCriteria criteria = new JobListCriteria(status, location, q, page, size);
+    if (mine && !principal.isRecruiter()) {
+      throw new JobForbiddenException("Only recruiters can list their organization's jobs.");
+    }
+    JobListCriteria criteria = new JobListCriteria(status, location, q, mine, page, size);
     // Sorted by jobId so paging is stable across requests.
     Pageable pageable = PageRequest.of(criteria.page(), criteria.size(), Sort.by("jobId"));
     return new PagedModel<>(

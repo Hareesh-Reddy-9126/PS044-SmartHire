@@ -5,15 +5,13 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.springframework.data.jpa.repository.JpaRepository;
-import org.springframework.data.jpa.repository.Query;
-import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 /**
  * Repository for {@link CompanyMembership} entities.
  *
- * <p>Membership records link users to companies with a role and status. They are the
- * authorization basis for all company-scoped operations.
+ * <p>Membership records link users to companies with a role and status. They are the authorization
+ * basis for all company-scoped operations.
  */
 @Repository
 public interface CompanyMembershipRepository extends JpaRepository<CompanyMembership, UUID> {

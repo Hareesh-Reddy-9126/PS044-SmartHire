@@ -9,8 +9,10 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.smarthire.auth.domain.Organization;
 import com.smarthire.auth.domain.Role;
 import com.smarthire.auth.domain.User;
+import com.smarthire.auth.infra.OrganizationRepository;
 import com.smarthire.auth.infra.UserRepository;
 import java.time.Clock;
 import java.time.Instant;
@@ -40,10 +42,12 @@ class AuthServiceTest {
   private static final Instant NOW = Instant.parse("2026-01-01T00:00:00Z");
 
   @Mock private UserRepository userRepository;
+  @Mock private OrganizationRepository organizationRepository;
   @Mock private PasswordEncoder passwordEncoder;
   @Mock private JwtIssuer jwtIssuer;
   @Mock private RefreshTokenService refreshTokenService;
   @Mock private RevocationService revocationService;
+  @Mock private RegistrationPolicy registrationPolicy;
 
   private AuthService service;
 
@@ -52,10 +56,12 @@ class AuthServiceTest {
     service =
         new AuthService(
             userRepository,
+            organizationRepository,
             passwordEncoder,
             jwtIssuer,
             refreshTokenService,
             revocationService,
+            registrationPolicy,
             Clock.fixed(NOW, ZoneOffset.UTC));
   }
 
@@ -97,6 +103,86 @@ class AuthServiceTest {
     assertThatThrownBy(() -> service.register("Ada@Example.com", "secret-password"))
         .isInstanceOf(EmailAlreadyExistsException.class)
         .hasMessage("Email already registered");
+  }
+
+  @Test
+  void recruiterRegistrationCreatesAnOwnedOrganization() {
+    when(userRepository.existsByEmail("hire@acme.example")).thenReturn(false);
+    when(passwordEncoder.encode("secret-password")).thenReturn("HASHED");
+    when(organizationRepository.saveAndFlush(any(Organization.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(userRepository.saveAndFlush(any(User.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.register(
+        "hire@acme.example", "secret-password", Role.RECRUITER, "  Acme   Corp  ", null);
+
+    ArgumentCaptor<Organization> organization = ArgumentCaptor.forClass(Organization.class);
+    verify(organizationRepository).saveAndFlush(organization.capture());
+    assertThat(organization.getValue().getName()).isEqualTo("Acme Corp");
+    assertThat(organization.getValue().getCreatedAt()).isEqualTo(NOW);
+
+    ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
+    verify(userRepository).saveAndFlush(saved.capture());
+    assertThat(saved.getValue().getRole()).isEqualTo(Role.RECRUITER);
+    assertThat(saved.getValue().getOrgId()).isEqualTo(organization.getValue().getId());
+  }
+
+  @Test
+  void recruiterRegistrationRequiresAnOrganizationName() {
+    assertThatThrownBy(
+            () ->
+                service.register(
+                    "hire@acme.example", "secret-password", Role.RECRUITER, "   ", null))
+        .isInstanceOf(InvalidRegistrationException.class)
+        .hasMessage("An organization name is required for recruiter registration.");
+
+    verify(organizationRepository, never()).saveAndFlush(any(Organization.class));
+    verify(userRepository, never()).saveAndFlush(any(User.class));
+  }
+
+  @Test
+  void candidateRegistrationRejectsAnOrganizationName() {
+    assertThatThrownBy(
+            () ->
+                service.register(
+                    "ada@example.com", "secret-password", Role.CANDIDATE, "Acme Corp", null))
+        .isInstanceOf(InvalidRegistrationException.class)
+        .hasMessage("An organization name is only accepted for recruiter registration.");
+
+    verify(userRepository, never()).saveAndFlush(any(User.class));
+  }
+
+  @Test
+  void adminRegistrationRequiresAValidInvitationCode() {
+    when(registrationPolicy.isAdminInviteCodeValid("wrong-code")).thenReturn(false);
+
+    assertThatThrownBy(
+            () ->
+                service.register(
+                    "ops@smarthire.example", "secret-password", Role.ADMIN, null, "wrong-code"))
+        .isInstanceOf(AdminRegistrationDeniedException.class)
+        .hasMessage("Administrator registration requires a valid invitation code.");
+
+    verify(userRepository, never()).saveAndFlush(any(User.class));
+  }
+
+  @Test
+  void adminRegistrationCreatesAnAccountWithoutAnOrganizationWhenTheCodeMatches() {
+    when(registrationPolicy.isAdminInviteCodeValid("deployment-code")).thenReturn(true);
+    when(userRepository.existsByEmail("ops@smarthire.example")).thenReturn(false);
+    when(passwordEncoder.encode("secret-password")).thenReturn("HASHED");
+    when(userRepository.saveAndFlush(any(User.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+
+    service.register(
+        "ops@smarthire.example", "secret-password", Role.ADMIN, null, "deployment-code");
+
+    ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
+    verify(userRepository).saveAndFlush(saved.capture());
+    assertThat(saved.getValue().getRole()).isEqualTo(Role.ADMIN);
+    assertThat(saved.getValue().getOrgId()).isNull();
+    verifyNoInteractions(organizationRepository);
   }
 
   @Test

@@ -190,6 +190,36 @@ class JobControllerWebMvcTest {
 
       verify(jobService).list(any(JobQuery.class), isNull(), eq(false), any(Pageable.class));
     }
+
+    @Test
+    void aRecruiterCanNarrowTheListingToTheirOwnOrganisation() throws Exception {
+      givenToken(RECRUITER);
+      when(jobService.list(any(), any(), anyBoolean(), any())).thenReturn(onePage());
+
+      mvc.perform(
+              get("/api/v1/jobs")
+                  .param("mine", "true")
+                  .header("Authorization", "Bearer " + RECRUITER))
+          .andExpect(status().isOk());
+
+      ArgumentCaptor<JobQuery> query = ArgumentCaptor.forClass(JobQuery.class);
+      verify(jobService).list(query.capture(), eq(OWNER_ORG_ID), eq(true), any(Pageable.class));
+      assertThat(query.getValue().mine()).isTrue();
+    }
+
+    @Test
+    void aCandidateCannotAskForTheOwnershipView() throws Exception {
+      givenToken(CANDIDATE);
+
+      mvc.perform(
+              get("/api/v1/jobs")
+                  .param("mine", "true")
+                  .header("Authorization", "Bearer " + CANDIDATE))
+          .andExpect(status().isForbidden())
+          .andExpect(jsonPath("$.title").value("Forbidden"));
+
+      verify(jobService, never()).list(any(), any(), anyBoolean(), any());
+    }
   }
 
   // ---------------------------------------------------------------- filtering / paging

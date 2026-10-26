@@ -15,8 +15,8 @@ import org.springframework.transaction.annotation.Transactional;
 
 /**
  * Service for company management. Handles company registration, approval, suspension, and
- * reactivation. Company creation is a public endpoint; approval/rejection/suspension are Platform
- * Admin operations.
+ * reactivation. Company creation is available to recruiters; approval, rejection and suspension are
+ * Platform Admin operations.
  */
 @Service
 public class CompanyService {
@@ -38,9 +38,8 @@ public class CompanyService {
   }
 
   /**
-   * Register a new company. Creates a PENDING_APPROVAL company owned by the given user (who
-   * becomes the initial Company Admin). The company cannot be used until a Platform Admin approves
-   * it.
+   * Register a new company. Creates a PENDING_APPROVAL company owned by the given user (who becomes
+   * the initial Company Admin). The company cannot be used until a Platform Admin approves it.
    *
    * @param companyName the company name
    * @param ownerId the user ID of the person registering the company
@@ -52,7 +51,10 @@ public class CompanyService {
       throw new IllegalStateException("A company with this name already exists");
     }
 
-    User owner = userRepository.findById(ownerId).orElseThrow(() -> new IllegalStateException("User not found: " + ownerId));
+    User owner =
+        userRepository
+            .findById(ownerId)
+            .orElseThrow(() -> new IllegalStateException("User not found: " + ownerId));
 
     Company company =
         new Company(
@@ -95,7 +97,10 @@ public class CompanyService {
    */
   @Transactional
   public void approveCompany(UUID companyId, UUID approvedBy) {
-    Company company = companyRepository.findById(companyId).orElseThrow(() -> new IllegalStateException("Company not found: " + companyId));
+    Company company =
+        companyRepository
+            .findById(companyId)
+            .orElseThrow(() -> new IllegalStateException("Company not found: " + companyId));
     company.approve(approvedBy, Instant.now(clock));
     companyRepository.save(company);
   }
@@ -109,7 +114,10 @@ public class CompanyService {
    */
   @Transactional
   public void rejectCompany(UUID companyId, UUID approvedBy, String rejectionReason) {
-    Company company = companyRepository.findById(companyId).orElseThrow(() -> new IllegalStateException("Company not found: " + companyId));
+    Company company =
+        companyRepository
+            .findById(companyId)
+            .orElseThrow(() -> new IllegalStateException("Company not found: " + companyId));
     company.reject(approvedBy, Instant.now(clock), rejectionReason);
     companyRepository.save(company);
   }
@@ -122,7 +130,10 @@ public class CompanyService {
    */
   @Transactional
   public void suspendCompany(UUID companyId, UUID suspendedBy) {
-    Company company = companyRepository.findById(companyId).orElseThrow(() -> new IllegalStateException("Company not found: " + companyId));
+    Company company =
+        companyRepository
+            .findById(companyId)
+            .orElseThrow(() -> new IllegalStateException("Company not found: " + companyId));
     company.suspend(suspendedBy, Instant.now(clock));
     companyRepository.save(company);
   }
@@ -135,7 +146,10 @@ public class CompanyService {
    */
   @Transactional
   public void reactivateCompany(UUID companyId, UUID reactivatedBy) {
-    Company company = companyRepository.findById(companyId).orElseThrow(() -> new IllegalStateException("Company not found: " + companyId));
+    Company company =
+        companyRepository
+            .findById(companyId)
+            .orElseThrow(() -> new IllegalStateException("Company not found: " + companyId));
     company.reactivate(reactivatedBy, Instant.now(clock));
     companyRepository.save(company);
   }
@@ -143,16 +157,16 @@ public class CompanyService {
   /**
    * Get a company by ID.
    *
-   * @throws IllegalStateException if the company does not exist
+   * @throws CompanyNotFoundException if the company does not exist
    */
   @Transactional(readOnly = true)
   public Company getCompany(UUID companyId) {
-    return companyRepository.findById(companyId).orElseThrow(() -> new IllegalStateException("Company not found: " + companyId));
+    return companyRepository
+        .findById(companyId)
+        .orElseThrow(() -> new CompanyNotFoundException("Company not found: " + companyId));
   }
 
-  /**
-   * List all companies with an optional status filter.
-   */
+  /** List all companies with an optional status filter. */
   @Transactional(readOnly = true)
   public List<Company> listCompanies(Company.Status status) {
     if (status != null) {
@@ -161,12 +175,11 @@ public class CompanyService {
     return companyRepository.findAll();
   }
 
-  /**
-   * Get all companies the user is an active member of.
-   */
+  /** Get all companies the user is an active member of. */
   @Transactional(readOnly = true)
   public List<Company> getUserCompanies(UUID userId) {
-    List<CompanyMembership> memberships = companyMembershipRepository.findByUserIdAndStatus(userId, CompanyMembership.Status.ACTIVE);
+    List<CompanyMembership> memberships =
+        companyMembershipRepository.findByUserIdAndStatus(userId, CompanyMembership.Status.ACTIVE);
     return memberships.stream()
         .map(m -> companyRepository.findById(m.getCompanyId()).orElse(null))
         .filter(java.util.Objects::nonNull)

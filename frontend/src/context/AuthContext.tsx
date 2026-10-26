@@ -17,6 +17,7 @@ import {
   restoreSession,
   setUnauthorizedHandler,
   type MeResponse,
+  type RegisterPayload,
 } from '../api/client';
 
 export interface AuthContextValue {
@@ -25,7 +26,7 @@ export interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<MeResponse>;
-  register: (email: string, password: string) => Promise<void>;
+  register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
   hasRole: (role: string) => boolean;
@@ -165,9 +166,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [loadIdentity, clearIdentity]
   );
 
-  const register = useCallback(async (email: string, password: string) => {
+  const register = useCallback(async (payload: RegisterPayload) => {
     // Registration returns only a user id; the caller must sign in afterwards.
-    await authApi.register(email, password);
+    await authApi.register(payload);
   }, []);
 
   const logout = useCallback(async () => {

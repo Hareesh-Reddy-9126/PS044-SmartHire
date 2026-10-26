@@ -243,12 +243,29 @@ class JobServiceTest {
           .thenReturn(new PageImpl<>(List.of(), pageable, 0));
 
       jobService.list(
-          new JobQuery(JobStatus.DRAFT, "Remote", "engineer"), OWNER_ORG_ID, true, pageable);
+          new JobQuery(JobStatus.DRAFT, "Remote", "engineer", false), OWNER_ORG_ID, true, pageable);
 
       ArgumentCaptor<Pageable> captured = ArgumentCaptor.forClass(Pageable.class);
       verify(jobRepository).findAll(ArgumentMatchers.<Specification<Job>>any(), captured.capture());
       assertThat(captured.getValue().getPageNumber()).isEqualTo(1);
       assertThat(captured.getValue().getPageSize()).isEqualTo(5);
+    }
+
+    @Test
+    void theOwnershipViewRequiresARecruiterWithAnOrganisation() {
+      Pageable pageable = PageRequest.of(0, 20);
+
+      assertThatExceptionOfType(JobForbiddenException.class)
+          .isThrownBy(
+              () ->
+                  jobService.list(
+                      new JobQuery(null, null, null, true), OWNER_ORG_ID, false, pageable));
+      assertThatExceptionOfType(JobForbiddenException.class)
+          .isThrownBy(
+              () -> jobService.list(new JobQuery(null, null, null, true), null, true, pageable));
+
+      verify(jobRepository, never())
+          .findAll(ArgumentMatchers.<Specification<Job>>any(), any(Pageable.class));
     }
   }
 }

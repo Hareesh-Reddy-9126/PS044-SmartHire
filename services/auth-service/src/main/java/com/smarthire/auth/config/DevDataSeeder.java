@@ -16,11 +16,11 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Development/demo seeder for the non-self-service roles (decision 7): RECRUITER and ADMIN accounts
- * cannot be self-registered, so they are provisioned here from environment-supplied credentials.
- * Active only under the {@code seed} profile. Credentials come from {@link SeedProperties}
- * (environment-driven, never committed — decision 8); a blank email or password skips that account.
- * Idempotent: an account whose email already exists is left untouched, so repeated boots are safe.
+ * Development/demo seeder for RECRUITER and ADMIN accounts. Both roles can also self-register;
+ * seeding remains useful for repeatable demos and tests. Active only under the {@code seed}
+ * profile. Credentials come from {@link SeedProperties} (environment-driven, never committed —
+ * decision 8); a blank email or password skips that account. Idempotent: an account whose email
+ * already exists is left untouched, so repeated boots are safe.
  */
 @Component
 @Profile("seed")

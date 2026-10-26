@@ -78,7 +78,14 @@ export function RecruiterJobsPage() {
     setError(null);
 
     try {
-      const result = await jobsApi.list({ q: query, location, status, page, size: PAGE_SIZE });
+      const result = await jobsApi.list({
+        q: query,
+        location,
+        status,
+        mine: true,
+        page,
+        size: PAGE_SIZE,
+      });
       setJobs(result.content ?? []);
       setTotalElements(result.page?.totalElements ?? 0);
       setTotalPages(result.page?.totalPages ?? 0);

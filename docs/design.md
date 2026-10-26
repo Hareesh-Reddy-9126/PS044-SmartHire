@@ -58,7 +58,7 @@ Real AI scoring, résumé parsing, JD assistance | `ai-service` is mock-only, no
 Email inbox / real email delivery UI | Notification sender is `LoggingNotificationSender` **[V]**; no mail transport in compose |
 Password reset, email verification, change password | No endpoints exist **[GAP-09]** |
 Candidate profile editing (name, phone, avatar) | `User` entity holds only `email`, `role`, `orgId`, `createdAt` **[V]**; no update endpoint **[GAP-10]** |
-Organization / recruiter / user administration screens | Recruiters and admins are created only by the `seed` profile seeder **[V]**; no API **[GAP-03]** |
+Organization / recruiter / user administration screens | Candidates and recruiters self-register and administrators register with an invitation code, but there is no user, role, or organization administration API or screen **[GAP-03]** |
 Multi-tenancy switching, org settings | Single `orgId` claim per user; no org API |
 Offline mode, PWA, push notifications | Not in architecture |
 Job description rich text, salary, employment type, skills | `Job` has only `companyName`, `role`, `location`, `status`, `ownerOrgId` **[V]**, **[GAP-11]** |
@@ -73,15 +73,15 @@ Interview scheduling with dates/times/calendar | `InterviewStatus` is an enum on
 
 Three roles exist in `com.smarthire.auth.domain.Role` **[V]**: `CANDIDATE`, `RECRUITER`, `ADMIN`.
 
-- Public self-registration (`POST /api/v1/auth/register`) creates **`CANDIDATE` only** **[V]**.
-- `RECRUITER` and `ADMIN` accounts are created exclusively by `DevDataSeeder`, active only under the `seed` Spring profile, with credentials supplied from the environment **[V]**. Credentials for the demo accounts live in `README.md` §Review-1 Demo Setup and in the operator's local `deploy/.env` — **never render, log, prefill or hardcode them in the frontend.**
+- Public self-registration (`POST /api/v1/auth/register`) is **role-aware** **[V]**. `CANDIDATE` is the default when `role` is omitted; `CANDIDATE` and `RECRUITER` signup are open. `RECRUITER` requires `organizationName` (2–255 characters) and creates a dedicated organization so job ownership works immediately. `ADMIN` requires the deployment's `AUTH_ADMIN_SIGNUP_CODE`; administrator signup is closed when that value is blank.
+- `DevDataSeeder` under the `seed` Spring profile remains available for seeded demo accounts, with credentials supplied from the environment **[V]**. Credentials for the demo accounts live in `README.md` §Review-1 Demo Setup and in the operator's local `deploy/.env` — **never render, log, prefill or hardcode them in the frontend.**
 - `ADMIN` is a platform-operations role, **not** a recruitment decision-maker. `@PreAuthorize("hasRole('RECRUITER')")` on job and recruitment writes deliberately excludes ADMIN **[V]**.
 
 The JWT carries `roles` as an **array** — the UI must treat it as a list, not a scalar **[V]**.
 
 ### 2.2 Identity available to the UI
 
-`GET /api/v1/auth/me` returns `{ sub, email, roles[], orgId }` **[V]**. `orgId` is `null` for candidates and for the seeded platform admin; recruiters carry the demo organization UUID **[V]**.
+`GET /api/v1/auth/me` returns `{ sub, email, roles[], orgId }` **[V]**. `orgId` is `null` for candidates and for an administrator created without an employer; a recruiter carries the organization created at registration, or the seeded demo organization for a seeded recruiter **[V]**.
 
 This is the **only** identity source. There is no endpoint to resolve any *other* user's id to a name or email — see **[GAP-15]**. Consequence: every recruiter- and admin-facing screen can display a candidate only as a UUID.
 
@@ -91,12 +91,13 @@ Legend: ✅ allowed · ❌ `403` · 🚫 `404` (deliberate privacy masking — r
 
 | Capability | Anonymous | CANDIDATE | RECRUITER | ADMIN |
 |---|---|---|---|---|
-`POST /auth/register` | ✅ | ✅ | ✅ | ✅ |
+`POST /auth/register` | ✅ | ✅ | ✅ org name | ✅ code |
 `POST /auth/login` · `/refresh` | ✅ | ✅ | ✅ | ✅ |
 `POST /auth/logout` | 401 | ✅ | ✅ | ✅ |
 `GET /auth/me` | 401 | ✅ | ✅ | ✅ |
 `GET /auth/admin/whoami` | 401 | ❌ | ❌ | ✅ |
 `GET /jobs` (OPEN only) | ✅ | ✅ | ✅ | ✅ |
+`GET /jobs?mine=true` | 401 | ❌ | ✅ own org | ❌ |
 `GET /jobs` (+ own DRAFT/CLOSED) | — | — | ✅ | — |
 `GET /jobs/{id}` OPEN | ✅ | ✅ | ✅ | ✅ |
 `GET /jobs/{id}` DRAFT/CLOSED | 🚫 | 🚫 | ✅ own org · 🚫 other | 🚫 |
@@ -122,12 +123,16 @@ Two rows deserve UI attention:
 - **Recruiters can never read documents.** `DocumentService.get` returns 404 for any non-owner, non-admin caller; the code comment states recruiter access is deferred past R1 **[V]**. Design accordingly (§5.14, **[GAP-02]**).
 - **`GET /notifications` is not role-gated.** It scopes by `jwt.sub`, so a recruiter or admin calling it gets their own (always empty) list rather than a 403 **[V]**. Do not surface a Notifications nav item for RECRUITER/ADMIN.
 
+`POST /auth/register` is public for candidates and recruiters. An administrator request is accepted only with the deployment's invitation code; when the operator leaves `AUTH_ADMIN_SIGNUP_CODE` blank, administrator registration is unavailable. Recruiter signup additionally requires an organization name. The selected role at login is a UI intention only — the token role decides the workspace.
+
 ### 2.4 Navigation per persona
 
 Navigation is **role-derived from `roles[]` in `GET /auth/me`**, never from a locally stored preference.
 
 **Anonymous** — top bar only, no sidebar:
 `Browse jobs` · `Sign in` · `Create account`
+
+The landing page (`/`) presents one workspace entry point per role and a direct path to public job browsing. The sign-in and registration links carry the intended role as `?role=`, but the role remains a preference until the server returns the account's real roles.
 
 **CANDIDATE** — sidebar:
 1. `Browse jobs` → `/jobs`
@@ -157,12 +162,12 @@ Navigation is **role-derived from `roles[]` in `GET /auth/me`**, never from a lo
 ## 3. Sitemap and screen inventory
 
 ```
-/                               → redirect to /jobs
+/                               S-00  Landing page (three workspaces)    [V]
 /jobs                           S-01  Public job browse                  [V]
 /jobs/:jobId                    S-02  Job detail (public)                [V]
 /jobs/:jobId/apply              S-03  Apply to job (candidate)           [V]
-/login                          S-04  Sign in                            [V]
-/register                       S-05  Create candidate account           [V]
+/login                          S-04  Sign in (role selector)            [V]
+/register                       S-05  Create account (role-aware)        [V]
 /session-expired                S-06  Session expired interstitial       [UX]
 /403                            S-07  Forbidden                          [V behaviour]
 /404                            S-08  Not found                          [V behaviour]
@@ -207,7 +212,7 @@ PLANNED — generate as locked/unavailable, do not wire
 /candidate/ai/resume-insights   S-39  AI résumé insights                 [P]
 ```
 
-**36 buildable screens + 3 locked planned screens.** 31 of 36 are fully grounded in verified endpoints; 5 carry a documented gap treatment (S-11, S-25, S-33, S-35 partial, S-20/32/36 read-only limitation).
+**37 buildable screens + 3 locked planned screens.** The landing page is static; 31 of the other 36 are fully grounded in verified endpoints, and 5 carry a documented gap treatment (S-11, S-25, S-33, S-35 partial, S-20/32/36 read-only limitation).
 
 ---
 
@@ -265,6 +270,31 @@ Minimum supported width **360 px**. No horizontal page scroll at any breakpoint;
 ## 5. Page-by-page specifications
 
 Each spec gives: purpose · access · data · layout · actions · states · validation. Endpoint detail is in §9; it is referenced here by name.
+
+---
+
+### S-00 · Landing page — `/`
+
+**Purpose** Explain SmartHire and give each visitor a direct path into the right workspace without hiding public job browsing.
+**Access** Public.
+**Data** None — static copy plus links. No authenticated request is needed to render the page.
+
+**Layout** Public shell.
+```
+Hero:  "Hiring decisions, on the record"
+       [Browse open roles]  [Open my workspace]
+Three workspace cards:
+  Candidate      → [Create candidate account]  [Browse open roles]
+  Recruiter      → [Create recruiter account]  [Recruiter sign in]
+  Administrator  → [Administrator sign in]      (registration link when invited)
+Trust strip: candidate owned · recruiter reviewed · administrator read-only
+```
+
+**Rules**
+- Workspace links use `?role=` so `/login` and `/register` open with the intended portal selected. The selection is intent only; the token role still decides where the account lands.
+- A signed-in visitor can use `Open my workspace`, which resolves through `/workspace`.
+- `Browse open roles` is always visible and never requires an account.
+- Do not render seeded credentials, administrator invitation codes, or account counts on this page.
 
 ---
 
@@ -384,19 +414,25 @@ Field  (none — the API accepts no cover letter, no answers)       [GAP-12]
 ### S-04 · Sign in — `/login`
 
 **Access** Public **[V]**.
-**Data** `POST /auth/login` `{ email, password }` → `200 { tokenType:"Bearer", accessToken, accessTokenExpiresAt }` + `Set-Cookie: smarthire_refresh` **[V]**.
+**Data** `POST /auth/login` `{ email, password }` → `200 { tokenType:"Bearer", accessToken, accessTokenExpiresAt }` + `Set-Cookie: smarthire_refresh` **[V]**. The role selector is a client-side intention and is **not** sent to `/login`.
 
 **Layout** Auth shell card.
 ```
 Wordmark
 H1 "Sign in"
+Role selector: Candidate · Recruiter · Administrator   → ?role=
 [ Email      ]  type=email, autocomplete=username
 [ Password   ]  type=password, autocomplete=current-password, [show/hide]
 ( no "remember me" — session length is server-fixed )
 [ Sign in ]  full-width primary
 ──────────────────────────────
-"New here?  Create a candidate account →"  /register
+"New to SmartHire?  Create a {role} account →"  /register?role={role}
 ```
+
+**Role intent and mismatch** The selector exists so each role has a clear entry point and role-specific copy. It never grants access. After login, compare the selected role with the `roles[]` returned by the server:
+- A generic `/login` link (no `?role=`) **must not** show a mismatch notice.
+- If the visitor explicitly chose `?role=` and the account does not hold it, open the account's real workspace and show a dismissible notice: “Signed in to the {actual} workspace — this account is registered as {actual}, so we opened that portal instead of the {selected} portal.”
+- Never reject the credentials or end the session because the selector was wrong.
 
 **Omit "Forgot password?"** — no such endpoint exists **[GAP-09]**. A dead link is worse than its absence.
 
@@ -417,22 +453,27 @@ H1 "Sign in"
 
 ---
 
-### S-05 · Create candidate account — `/register`
+### S-05 · Create account — `/register`
 
-**Access** Public **[V]**. Creates a `CANDIDATE` **[V]**.
-**Data** `POST /auth/register` `{ email, password }` → `201 { userId }` **[V]**.
+**Access** Public **[V]**. The role selector chooses `CANDIDATE` (default), `RECRUITER`, or `ADMIN`. Candidate and recruiter signup are open; administrator signup requires the deployment invitation code **[V]**.
+**Data** `POST /auth/register` `{ email, password, role?, organizationName?, adminInviteCode? }` → `201 { userId }` **[V]**.
 
 **Layout** Auth shell card.
 ```
-H1 "Create your candidate account"
-Subtitle "Recruiter and administrator accounts are provisioned by your administrator."
+H1 "Create an account"
+Subtitle: role-specific (candidate / recruiter / administrator)
+Role selector: Candidate · Recruiter · Administrator   → ?role=
 [ Email           ]  type=email, autocomplete=username
+role=RECRUITER:
+[ Organization name ]  required, 2–255, autocomplete=organization
+role=ADMIN:
+[ Administrator invitation code ]  type=password, required
 [ Password        ]  type=password, autocomplete=new-password, [show/hide]
    PasswordStrengthMeter + live rule checklist
 [ Confirm password]  client-side only
-[ Create account ]  full-width primary
+[ Create {role} account ]  full-width primary
 ──────────────────────────────
-"Already have an account?  Sign in →"
+"Already have an account?  Sign in →"  /login?role={role}
 ```
 
 **Validation — mirror the server exactly [V]**
@@ -441,17 +482,21 @@ Subtitle "Recruiter and administrator accounts are provisioned by your administr
 `email` | required · RFC-valid (`@Email`) · ≤255 | `RegisterRequest` |
 `password` | required · **≥12** · ≤128 | `RegisterRequest` `@Size(min=12,max=128)` |
 `confirmPassword` | must equal `password` | **[UX]** client-only |
+`role` | optional · one of `CANDIDATE`, `RECRUITER`, `ADMIN`; omitted means `CANDIDATE` | `@Pattern` |
+`organizationName` | required for `RECRUITER` (2–255 after trimming); rejected for other roles | `AuthService` |
+`adminInviteCode` | required for `ADMIN` (≤256); absent or wrong is denied | `RegistrationPolicy` |
 
 The live checklist shows exactly one server-enforced rule — “At least 12 characters” — plus **[UX]** advisory items (mixed case, a number, a symbol) rendered as *suggestions*, visually distinct from the enforced rule. Do not block submission on advisory items; the server does not.
 
 **Errors [V]**
 | Status | UI |
 |---|---|
-`409` | Field error on email: “An account with this email already exists.” + inline `Sign in instead →`. (`AuthExceptionHandler` maps `EmailAlreadyExistsException` → `409`, despite the OpenAPI annotation advertising `400` — trust the handler **[GAP-17]**.) |
-`400` | Field errors parsed from `detail`. |
+`409` | Field error on email: “An account with this email already exists.” + inline `Sign in instead →`. (`AuthExceptionHandler` maps `EmailAlreadyExistsException` → `409`.) |
+`400` | Field errors parsed from `detail`; includes a missing recruiter organization name or an organization supplied for a non-recruiter role. |
+`403` | Administrator-only: “Administrator registration is closed, or the invitation code is invalid.” Never echo the submitted code. |
 `429` | Per-IP limit; same treatment as S-04. |
 
-**On success** The endpoint returns only `userId` — **no token**. Do **not** attempt auto-login from the response. Navigate to `/login?registered=1&email={email}` and show a success banner: “Account created. Sign in to continue.” **[V]**
+**On success** The endpoint returns only `userId` — **no token**. Do **not** attempt auto-login from the response. Navigate to `/login?role={role}` with a success banner: “Account created. Sign in with the credentials you just created.” Preserve the email and any `next` destination across the handoff. [V]
 
 ---
 
@@ -692,7 +737,7 @@ Card  DefinitionList
 Card  "Session"
       Access token expires   {countdown}      [Refresh now]
       [Sign out]   [Sign out of this device]  ← same action, one button
-GapNotice "Profile details and password changes are managed by your administrator."
+GapNotice "Profile editing and password changes are not supported in this release."
 ```
 `orgId` is `null` for candidates and the seeded admin **[V]** — render the em-dash row, not a blank.
 **No edit affordance anywhere** — no update endpoint exists **[GAP-10]**, and no password change **[GAP-09]**. The gap notice replaces the buttons a user would otherwise hunt for.
@@ -702,13 +747,12 @@ GapNotice "Profile details and password changes are managed by your administrato
 ### S-21 · Job postings — `/recruiter/jobs`
 
 **Access** `RECRUITER`.
-**Data** `GET /jobs?status&location&q&page&size` **[V]**. The recruiter's result set is *all OPEN jobs across every organization* **plus** their own org's `DRAFT` and `CLOSED` **[V]** — the server has **no** `ownerOrgId` filter parameter, deliberately, so visibility cannot be widened by a query string **[V]**.
+**Data** `GET /jobs?mine=true&status&location&q&page&size` **[V]**. `mine=true` restricts the result to the caller's own organization on the server. Without it the recruiter's result set is *all OPEN jobs across every organization* **plus** their own org's `DRAFT` and `CLOSED` **[V]**. There is still no `ownerOrgId` parameter, so visibility cannot be widened by a query string **[V]**.
 
 **Layout**
 ```
 H1 "Job postings"                                    [Create posting]
-ScopeToggle   ( • My organization )  ( All open roles )     ← CLIENT-SIDE filter
-   "My organization" = rows where ownerOrgId === orgId from /auth/me
+ScopeToggle   ( • My organization )  ( All open roles )     ← SERVER-SIDE via mine=true
 FILTER BAR  [ q ] [ location ] [ status ▾ DRAFT|OPEN|CLOSED ] [Clear]
 JobTable (card list ≤767)
   Role | Company | Location | Status | Actions
@@ -717,7 +761,7 @@ JobTable (card list ≤767)
 Pagination (server-side)
 ```
 
-> **Be explicit in the UI about the client-side scope toggle.** Because filtering happens after paging, a page of 20 server rows may show fewer than 20 after `My organization` is applied. Add a muted line under the toggle: “Showing {n} of {pageSize} on this page owned by your organization.” Do not silently misreport counts. **[GAP-14]**
+> **The scope toggle is a server filter.** `My organization` sends `mine=true`, so paging and total counts describe only the caller's organization. `All open roles` omits the flag and returns the public-open set plus the caller's own draft/closed postings. Do not re-filter a page in the browser. **[V]**
 
 **Row actions** are status-conditional and reflect the exact legal transitions in `Job` **[V]**:
 `DRAFT → open()` · `OPEN → close()` · `CLOSED → reopen()`. Render **only** the one legal action; never show all three greyed.
@@ -1008,7 +1052,7 @@ Card "Your access"     — email, roles, user ID, "ADMIN — platform operations
 Card "Recruitments"    — {totalElements} total   [View all →]
 GapNotice "Administrator tooling is limited in this release. There are no APIs for
            managing users, organizations or job postings. Recruiter and administrator
-           accounts are provisioned at deployment."                       [GAP-03]
+           accounts can self-register, but there is no user-administration surface." [GAP-03]
 Card "Operations"      — [API documentation ↗]  [Service registry ↗ :8761]
 ```
 `GET /auth/admin/whoami` doubles as the ADMIN authorization probe: a `403` here means the token lacks the role → route to `/403` **[V]**.
@@ -1494,7 +1538,7 @@ Service ports are internal and listed for operator reference only; the frontend 
 
 | Method | Path | Role | Request | Success | Errors |
 |---|---|---|---|---|---|
-POST | `/register` | *public* | `{email, password}` | `201 {userId}` | 400 validation · 409 email exists |
+POST | `/register` | *public* (ADMIN needs code) | `{email, password, role?, organizationName?, adminInviteCode?}` | `201 {userId}` | 400 validation · 403 admin code · 409 email exists |
 POST | `/login` | *public* | `{email, password}` | `200 {tokenType,accessToken,accessTokenExpiresAt}` + `Set-Cookie` | 400 · 401 · 429 |
 POST | `/refresh` | *public* (cookie) | — (cookie `smarthire_refresh`) | `200 TokenResponse` + rotated cookie | 401 invalid/expired/missing |
 POST | `/logout` | authenticated | — | `204` | 401 |
@@ -1502,15 +1546,16 @@ GET | `/me` | authenticated | — | `200 {sub,email,roles[],orgId}` | 401 |
 GET | `/admin/whoami` | **ADMIN** | — | `200 MeResponse` | 401 · 403 |
 GET | `/oauth2/jwks` | *public* | — | `200` JWKS | — |
 
-**Validation [V]** `register.email` `@NotBlank @Email @Size(max=255)` · `register.password` `@NotBlank @Size(min=12,max=128)` · `login.email` `@NotBlank @Size(max=255)` · `login.password` `@NotBlank @Size(max=128)`.
-`MeResponse` is read from the **database**, not the token, so it reflects live state **[V]**. `orgId` is `null` for candidates and the seeded admin.
+**Validation [V]** `register.email` `@NotBlank @Email @Size(max=255)` · `register.password` `@NotBlank @Size(min=12,max=128)` · `register.role` `@Pattern("(?i)CANDIDATE|RECRUITER|ADMIN")`, optional and defaulting to `CANDIDATE` · `register.organizationName` `@Size(max=255)`, required for `RECRUITER` by `AuthService` · `register.adminInviteCode` `@Size(max=256)`, validated for `ADMIN` by `RegistrationPolicy` · `login.email` `@NotBlank @Size(max=255)` · `login.password` `@NotBlank @Size(max=128)`.
+`MeResponse` is read from the **database**, not the token, so it reflects live state **[V]**. `orgId` is `null` for candidates and administrators; a recruiter carries the organization created at registration (or the seeded organization).
+The login role selector is not part of the login request. Clients must treat the returned `roles[]` as authoritative and route accordingly.
 Note `/oauth2/jwks` is **not** under `/api/v1` **[V]**. The frontend has no reason to call it.
 
 ### 9.2 Jobs — `/api/v1/jobs`
 
 | Method | Path | Role | Request | Success | Errors |
 |---|---|---|---|---|---|
-GET | `/` | *public* | query `status,location,q,page,size` | `200 PagedModel<JobResponse>` | 401* |
+GET | `/` | *public* | query `status,location,q,mine,page,size` | `200 PagedModel<JobResponse>` | 400 · 403 for `mine` without recruiter role |
 GET | `/{jobId}` | *public* for OPEN | — | `200 JobResponse` | 404 |
 POST | `/` | **RECRUITER** | `{companyName,role,location}` | `201 JobResponse` (DRAFT) + `Location` | 400 · 401 · 403 |
 PUT | `/{jobId}` | **RECRUITER** owner | `{companyName,role,location}` | `200 JobResponse` | 400 · 401 · 403 · 404 |
@@ -1520,8 +1565,8 @@ POST | `/{jobId}/reopen` | **RECRUITER** owner | — | `200 JobResponse` (OPEN) 
 
 `JobResponse` = `{ jobId:UUID, companyName:String, role:String, location:String, status:"DRAFT"|"OPEN"|"CLOSED", ownerOrgId:UUID }` **[V]**.
 **Create/update validation** all three fields `@NotBlank @Size(max=255)` **[V]**.
-**Query params** `status` is the enum (unknown value → 400 at conversion) · `location` and `q` are contains matches, `q` spanning company **and** role · `page` floored at 0 · `size` defaults 20, **clamped to 100** · sort fixed to `jobId` **[V]**.
-**Visibility** anonymous/candidate/admin see `OPEN` only; `RECRUITER` additionally sees own-org `DRAFT`/`CLOSED` **[V]**. There is no `ownerOrgId` parameter, by design **[V]**.
+**Query params** `status` is the enum (unknown value → 400 at conversion) · `location` and `q` are contains matches, `q` spanning company **and** role · `mine` is a boolean that can only narrow a recruiter's listing to their own organization · `page` floored at 0 · `size` defaults 20, **clamped to 100** · sort fixed to `jobId` **[V]**.
+**Visibility** anonymous/candidate/admin see `OPEN` only; `RECRUITER` additionally sees own-org `DRAFT`/`CLOSED` **[V]**. `mine=true` restricts a recruiter to their own organization and returns `403` for any other role. There is no `ownerOrgId` parameter, by design **[V]**.
 **Transitions** `DRAFT→OPEN` · `OPEN→CLOSED` · `CLOSED→OPEN`. Strict and non-idempotent — repeating one returns `409` **[V]**.
 
 ### 9.3 Applications — `/api/v1/applications`
@@ -1715,11 +1760,12 @@ AC-G16 | `prefers-reduced-motion: reduce` disables transitions and shimmer. |
 
 | Screen | Acceptance criteria |
 |---|---|
+**S-00 Landing** | Three workspace cards present · each auth link carries `?role=` · public jobs link works without an account · no credentials or invitation codes rendered. |
 **S-01 Job browse** | Anonymous load succeeds with no token · filters `q`/`location`/`status` reach the server and live in the URL · size selector maxes at 100 · no sortable headers · empty-with-filters offers `[Clear filters]` · `status` control hidden for anonymous/candidate, shown for recruiter. |
 **S-02 Job detail** | OPEN renders for anonymous · DRAFT/CLOSED for a non-owner renders `/404` · apply panel reflects status exactly (OPEN enabled, CLOSED/DRAFT disabled with reason) · anonymous sees `Sign in to apply` carrying `next` · only the four real job fields appear, with the gap note. |
 **S-03 Apply** | `resumeLink` enforces required + ≤2048 · `candidateId` never in the payload · 409 shows “no longer accepting applications” and refreshes the job · 201 stores `applicationId` locally and routes to S-12 · duplicate warning appears when the local registry already holds this `jobId`. |
-**S-04 Sign in** | 401 shows one neutral message, clears password, keeps email · no 12-char minimum applied · no “Forgot password?” link · 429 disables submit for 10 s with a countdown · success routes by role and honours `next`. |
-**S-05 Register** | Password rejects < 12 characters client-side · 409 shows an email field error with `Sign in instead` · no auto-login attempt · success routes to `/login?registered=1`. |
+**S-04 Sign in** | 401 shows one neutral message, clears password, keeps email · no 12-char minimum applied · no “Forgot password?” link · 429 disables submit for 10 s with a countdown · success routes by the server role and honours a permitted `next` · a generic `/login` link never shows a mismatch notice · an explicit `?role=` mismatch opens the real workspace with a dismissible notice and keeps the session. |
+**S-05 Register** | Role selector switches copy and fields · password rejects < 12 characters client-side · recruiter requires an organization name · administrator requires an invitation code · 409 shows an email field error with `Sign in instead` · 403 administrator denial is a form-level alert that never echoes the code · no auto-login attempt · success routes to `/login?role={role}` with the email prefilled. |
 **S-11 My applications** | `GapNotice` present and dismissible · rows merge recruitment-derived and locally tracked ids, de-duplicated · each row's status comes from `GET /applications/{id}` · `Source` column distinguishes provenance · `Add by ID` validates the UUID and the fetch · empty state offers `[Browse jobs]`. |
 **S-12 Application detail** | Timeline marks the true current status · Withdraw shown **only** for `APPLIED`/`UNDER_REVIEW`/`SHORTLISTED` · confirm dialog is destructive · 409 explains and refreshes · “What happens next” copy matches the status · linked recruitment link appears only when one is found. |
 **S-13 My progress** | Interview and decision render as two independent badges · pagination is server-driven · no filter controls (endpoint supports none) · empty state explains how rows appear. |
@@ -1729,7 +1775,7 @@ AC-G16 | `prefers-reduced-motion: reduce` disables transitions and shimmer. |
 **S-18 Notifications** | No unread dots, no badge count, no `Mark all read` · `deliveryStatus` and `eventStatus` render as distinct chips · nav item absent for RECRUITER/ADMIN · empty state explains the trigger. |
 **S-19 Notification detail** | Non-owner renders `/403` (not `/404`) · `FAILED` reveals `errorMessage` · links to the related application. |
 **S-20/32/36 Profile** | `null` `orgId` renders `—` with explanatory text · no edit or change-password affordance · gap notice explains why · session card shows a live expiry countdown and `Refresh now`. |
-**S-21 Job postings** | Each row shows exactly one lifecycle action matching its status · lifecycle/edit actions hidden for rows not owned by the caller's org · scope toggle is labelled as client-side with the “{n} of {pageSize}” note · recruiter status filter offers all three values. |
+**S-21 Job postings** | Each row shows exactly one lifecycle action matching its status · lifecycle/edit actions hidden for rows not owned by the caller's org · scope toggle sends `mine=true` and keeps paging/counts server-accurate · recruiter status filter offers all three values. |
 **S-22 Create job** | All three fields enforce `@NotBlank` + 255 · info callout states DRAFT · `Save and publish` is two calls, and a failed publish keeps the draft and shows the warning banner with `[Try publishing again]`. |
 **S-23 Job detail (recruiter)** | One status-correct CTA · `Close` confirms · 409 refetches and re-renders the CTA without auto-retry · Applications card shows the gap notice and an ID-entry control · visibility copy matches the real rule. |
 **S-24 Edit job** | Status is read-only with a pointer to the detail page · 403 renders inline, not as a redirect · dirty-form guard active. |
@@ -1774,21 +1820,21 @@ The authoritative list. Every gap is reflected in a screen treatment above; none
 |---|---|---|---|---|---|
 **GAP-01** | **No application list/search endpoint.** | `ApplicationController` has only `POST /`, `GET /{id}`, `POST /{id}/withdraw`, `PATCH /{id}/status`. `ApplicationService.listForCandidate` and `ApplicationRepository.findByCandidateId`/`findByJobId` exist but are unwired. | **Severe.** Candidate “My applications” and recruiter “applications for this job” — the two most-expected screens — cannot be served. | S-11 composes recruitment-derived rows + a local registry, labelled by provenance. S-25 is an ID-lookup utility. | `GET /api/v1/applications?jobId&status&page&size`, caller-scoped. |
 **GAP-02** | **Recruiters cannot read documents.** | `DocumentService.get` returns 404 for any non-owner non-admin; source comment: “For R1 MVP, recruiters cannot directly access documents”. | Recruiters cannot open a candidate's résumé. Review relies on the free-text `resumeLink`. | S-26 Résumé card carries an explicit warning; S-03 warns when a document URL is chosen. | Recruiter read via recruitment ownership. |
-**GAP-03** | **No admin management API.** | Recruiters/admins only via `DevDataSeeder` under the `seed` profile. No user, org, or role endpoints. | No user/org admin screens are possible. | S-33 and S-35 carry gap notices; no invented KPI tiles. | `GET/POST /api/v1/admin/users`, `/organizations`. |
+**GAP-03** | **No admin management API.** | Recruiters and administrators can self-register (administrators with `AUTH_ADMIN_SIGNUP_CODE`), and company endpoints manage company records and memberships. There is no user, role, or organization administration API. | No user/org admin screens are possible. | S-33 and S-35 carry gap notices; no invented KPI tiles. | `GET/POST /api/v1/admin/users`, `/organizations`. |
 **GAP-04** | **Notifications have no read state.** | `Notification` entity has no `read`/`readAt` column; no mutating endpoint. | No unread badge, count, or mark-read. | S-18 omits all unread affordances. | `PATCH /api/v1/notifications/{id}/read` + a `read` field. |
 **GAP-05** | **`resumeLink` is unlinked free text.** | `Application.resumeLink` is `String` (≤2048); no FK or validation against `document_svc`. | A candidate can submit any URL; no server guarantee it resolves or is theirs. | S-03 offers a client-side document picker with an explicit caveat. | `documentId` on `ApplicationCreateRequest`, resolved server-side. |
 **GAP-06** | **Hidden ordering coupling on final status.** | `RecruitmentService.updateFinalStatus` → `PATCH /applications/{id}/status`; `Application.hire()`/`reject()` require `SHORTLISTED`. The Postman Review-1 collection goes Apply → Recruitment → Scheduled → Completed → **HIRED** with no application status steps, so that flow hits `409`. | A recruiter following the obvious path gets an opaque 409. | S-30 precondition banner + disabled CTA; S-28 warning callout; J-04 tests it; S-31 maps the error precisely. | Either have `shortlist` require `SHORTLISTED`, or have `final-status` drive the intermediate transitions. |
 **GAP-07** | **No duplicate-application guard.** | No unique constraint on `(job_id, candidate_id)`; no existence check in `ApplicationService.create`. | A candidate can apply repeatedly to one job. | S-03 shows a local-registry warning with `[Submit anyway]`; §8.9 forbids auto-retrying `POST`. | Unique constraint + `409` on duplicate. |
 **GAP-08** | **`Secure` refresh cookie breaks local silent refresh.** | `ResponseCookie…secure(true).sameSite("Strict").path("/api/v1/auth")`; the demo stack serves plain HTTP. | Over `http://localhost` the cookie is not stored; sessions end hard at 15 minutes. | `/session-expired` (S-06) is a designed state; §8.6 documents the constraint. | Serve over HTTPS locally, or make `secure` profile-conditional. |
-**GAP-09** | **No password reset / change / email verification.** | `AuthController` exposes only register, login, refresh, logout, me, admin/whoami. | A locked-out user has no self-service path. | S-04 omits “Forgot password?”; profile explains administrator-managed credentials. | `POST /auth/password/forgot`, `/reset`, `/change`. |
+**GAP-09** | **No password reset / change / email verification.** | `AuthController` exposes only register, login, refresh, logout, me, admin/whoami. | A locked-out user has no self-service path. | S-04 omits "Forgot password?"; profile explains there is no self-service reset. | `POST /auth/password/forgot`, `/reset`, `/change`. |
 **GAP-10** | **No profile update.** | `User` holds only `email`, `passwordHash`, `role`, `orgId`, `createdAt`; `MeResponse` is read-only. | No display name, phone, or avatar anywhere; profile is read-only. | S-20/32/36 are read-only with a gap notice. | `PATCH /api/v1/auth/me` + profile fields. |
 **GAP-11** | **Job has only four descriptive fields.** | `Job` = `jobId, companyName, role, location, status, ownerOrgId`. | No description, salary, employment type, skills, or deadline can be shown. | S-02 renders a four-field `DefinitionList` plus a gap note — no placeholder prose. | Extend `Job` + its DTOs. |
 **GAP-12** | **Application captures nothing but a link.** | `ApplicationCreateRequest` = `{jobId, resumeLink}`. | No cover letter, screening answers, or availability. | S-03 has a single field; no invented inputs. | Extend `ApplicationCreateRequest`. |
 **GAP-13** | **Three pagination envelopes, no sort parameter.** | `PagedModel` (jobs, recruitments), Jackson `Page` (documents), HATEOAS `PagedModel` (notifications), raw `List` (documents by type). Sort is hard-coded to `jobId` / `recruitmentId`. | Three parsers needed; no sortable columns possible. | §9.9 normalisation layer; §6.4 forbids sortable headers. | One envelope + a `sort` parameter. |
-**GAP-14** | **Server-side filtering is incomplete.** | Jobs have no `ownerOrgId` filter (deliberate); recruitments accept only `page`/`size`; no distinct-locations endpoint. | “My postings” and recruitment status filters must be client-side, post-paging, so counts can mislead. | S-21/S-29 label client-side filters and state “{n} of {pageSize}”. | `mine=true` on jobs; `interviewStatus`/`finalStatus` on recruitments. |
+**GAP-14** | **Recruitment filtering is incomplete.** | Jobs support `mine=true` for caller-organization scoping (recruiters only); recruitments still accept only `page`/`size`; no distinct-locations endpoint. | Recruiter job lists are now server-scoped, but recruitment status filters must remain client-side, post-paging, so counts can mislead. | S-21 uses `mine=true`; S-29 labels client-side filters and states "{n} of {pageSize}". | `interviewStatus`/`finalStatus` on recruitments. |
 **GAP-15** | **Candidate identity is a UUID only.** | No endpoint resolves another user's id. `MeResponse` covers the caller alone. | Recruiters and admins can never see a candidate's name or email. | `CopyableId` + gap notice on S-26 and S-29. | `GET /api/v1/users/{id}` returning a minimal public profile. |
 **GAP-16** | **Interview status carries no schedule.** | `InterviewStatus` is an enum; `Recruitment` has no date, time, location, or interviewer column. | No calendar, no reminders, no interview detail. | S-14/S-30 state that scheduling happens outside the platform. | Add `scheduledAt`, `interviewerId`, `location`. |
-**GAP-17** | **Registration conflict status contradicts its own docs.** | `AuthExceptionHandler` maps `EmailAlreadyExistsException` → `409`, while `AuthController`'s OpenAPI annotation advertises `400` for “email already exists”. | A client trusting the published spec mishandles a duplicate email. | S-05 handles `409`; the annotation is recorded as the defect. | Correct the `@ApiResponse` annotation. |
+**GAP-17** | **Registration conflict documentation corrected.** | `AuthExceptionHandler` maps `EmailAlreadyExistsException` → `409`; `AuthController` now advertises `409` for a duplicate email, so the earlier mismatch is closed. | None; clients handle `409`. | S-05 handles `409`. | — (closed). |
 **GAP-18** | **No job delete.** | `JobController` has no `DELETE`. | A mistaken draft cannot be removed. | S-22 keeps a draft after a failed publish rather than claiming a rollback. | `DELETE /api/v1/jobs/{jobId}` for DRAFT only. |
 **GAP-19** | **AI service unreachable.** | No gateway route for `/api/v1/ai/**`; absent from `docker-compose.yml`; `MockAiProvider` is the only provider; `claude` branch is a `TODO` falling back to mock. | No AI capability can ship. | §11 — three locked shells, no mock output rendered. | Add the route, add the compose service, implement a real provider. |
 **GAP-20** | **`README` / product-model drift.** | `docs/discovery/phase-2-product-model.md` AC-2 says a posted job is created with `status=OPEN`; the implementation creates `DRAFT` and requires an explicit `POST /{id}/open`. | A spec-trusting UI would omit the publish step. | S-22/S-23 implement the real two-step flow. | Reconcile the document with the code. |
@@ -1869,9 +1915,12 @@ Secrets, seeded demo credentials, and `deploy/.env` values are deliberately **no
 This document is derived from source. When any of the following change, update it and re-verify the affected §12 criteria:
 
 - A controller mapping, `@PreAuthorize`, or DTO validation annotation.
+- The role-aware registration contract (`role`, `organizationName`, `adminInviteCode`) or `AUTH_ADMIN_SIGNUP_CODE` availability.
+- The sign-in role-intent/mismatch behaviour or the `/workspace` role precedence.
 - A domain enum value or a state-machine guard.
 - A gateway route, security matcher, rate limit, or CORS setting.
 - `smarthire.document.upload.*` or multipart limits.
+- A job-listing visibility filter such as `mine=true`.
 - Any gap in §13 being closed — each row names the endpoint that would close it and the screens to revisit.
 
 Closing **GAP-01** alone reshapes S-11 and S-25 from gap workarounds into ordinary paginated tables; design both so that change is a data-layer swap, not a redesign.

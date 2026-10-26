@@ -3,10 +3,10 @@ package com.smarthire.auth.api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 
-/**
- * Request to request membership in a company.
- */
-@Schema(name = "CompanyMembershipCreateRequest", description = "Request to join a company as a member")
+/** Request to request membership in a company. */
+@Schema(
+    name = "CompanyMembershipCreateRequest",
+    description = "Request to join a company as a member")
 public record CompanyMembershipCreateRequest(
     @Schema(
             name = "role",

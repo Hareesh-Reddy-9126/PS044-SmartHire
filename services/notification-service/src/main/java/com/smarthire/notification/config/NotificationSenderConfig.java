@@ -54,11 +54,13 @@ public class NotificationSenderConfig {
 
     Properties javaMail = mailSender.getJavaMailProperties();
     javaMail.setProperty(
-        "mail.smtp.auth", String.valueOf(smtp.getUsername() != null && !smtp.getUsername().isBlank()));
+        "mail.smtp.auth",
+        String.valueOf(smtp.getUsername() != null && !smtp.getUsername().isBlank()));
     javaMail.setProperty("mail.smtp.starttls.enable", String.valueOf(smtp.isStarttls()));
     javaMail.setProperty("mail.smtp.starttls.required", String.valueOf(smtp.isStarttls()));
     javaMail.setProperty("mail.smtp.ssl.enable", String.valueOf(smtp.isSsl()));
-    javaMail.setProperty("mail.smtp.connectiontimeout", String.valueOf(smtp.getConnectionTimeoutMs()));
+    javaMail.setProperty(
+        "mail.smtp.connectiontimeout", String.valueOf(smtp.getConnectionTimeoutMs()));
     javaMail.setProperty("mail.smtp.timeout", String.valueOf(smtp.getTimeoutMs()));
     javaMail.setProperty("mail.smtp.writetimeout", String.valueOf(smtp.getWriteTimeoutMs()));
     return mailSender;

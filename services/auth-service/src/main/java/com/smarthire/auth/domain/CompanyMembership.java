@@ -10,22 +10,24 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Company membership domain entity. A membership links a user to a company with a specific role
- * and status.
+ * Company membership domain entity. A membership links a user to a company with a specific role and
+ * status.
  *
  * <p>Membership lifecycle:
+ *
  * <ul>
- *   <li>{@link #PENDING} - invited or requested, awaiting approval</li>
- *   <li>{@link #ACTIVE} - approved and active member</li>
- *   <li>{@link #REJECTED} - invitation/request rejected</li>
- *   <li>{@link #REVOKED} - membership revoked by company admin</li>
- *   <li>{@link #EXPIRED} - invitation expired before acceptance</li>
+ *   <li>{@link #PENDING} - invited or requested, awaiting approval
+ *   <li>{@link #ACTIVE} - approved and active member
+ *   <li>{@link #REJECTED} - invitation/request rejected
+ *   <li>{@link #REVOKED} - membership revoked by company admin
+ *   <li>{@link #EXPIRED} - invitation expired before acceptance
  * </ul>
  *
  * <p>Membership roles:
+ *
  * <ul>
- *   <li>{@link #COMPANY_ADMIN} - can manage company, invite/revoke members, approve jobs</li>
- *   <li>{@link #RECRUITER} - can create and manage company jobs and applications</li>
+ *   <li>{@link #COMPANY_ADMIN} - can manage company, invite/revoke members, approve jobs
+ *   <li>{@link #RECRUITER} - can create and manage company jobs and applications
  * </ul>
  */
 @Entity

@@ -71,8 +71,8 @@ Generated from Phase 0 discovery session.
 
 | Fact | Evidence | Confidence |
 |------|----------|------------|
-| 538 backend unit tests across 10 modules | `mvn test` output | Verified [V] |
-| 49 frontend unit tests across 8 files | `npm run test:run` output | Verified [V] |
+| Backend suites pass across 10 modules | `mvn test` output; auth 77, job 81, application 137, recruitment 122, ai 52, document+notification+common 44 | Verified [V] |
+| 69 frontend unit tests across 11 files | `npm run test:run` output | Verified [V] |
 | All 10 Maven modules compile | `mvn compile` output | Verified [V] |
 | Spotless passes on 203 files | `mvn spotless:check` output | Verified [V] |
 | SpotBugs passes with 0 bugs | `mvn spotbugs:check` output | Verified [V] |

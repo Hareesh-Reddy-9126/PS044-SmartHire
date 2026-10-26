@@ -8,8 +8,8 @@ import org.slf4j.LoggerFactory;
  * Logging implementation of {@link NotificationSender}. Used for local development and tests so no
  * real email leaves the machine.
  *
- * <p>Production uses {@link SmtpNotificationSender}. Recipient addresses and message bodies are
- * not logged because notification content is candidate personal data.
+ * <p>Production uses {@link SmtpNotificationSender}. Recipient addresses and message bodies are not
+ * logged because notification content is candidate personal data.
  */
 public class LoggingNotificationSender implements NotificationSender {
 

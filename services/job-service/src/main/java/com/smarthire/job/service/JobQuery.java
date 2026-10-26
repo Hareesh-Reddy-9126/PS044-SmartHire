@@ -11,12 +11,13 @@ import com.smarthire.job.domain.JobStatus;
  *
  * <p>All fields are optional; a {@code null} or blank value means "no constraint on this
  * attribute". Visibility is <em>not</em> part of this record — it is derived from the verified JWT
- * by {@link JobService} and can never be widened by a query parameter.
+ * by {@link JobService} and can never be widened by a query parameter. {@code mine} can only
+ * <em>narrow</em> the result to the caller's own organization and is ignored for non-recruiters.
  */
-public record JobQuery(JobStatus status, String location, String q) {
+public record JobQuery(JobStatus status, String location, String q, boolean mine) {
 
   /** An unfiltered query — every job the caller is allowed to see. */
   public static JobQuery unfiltered() {
-    return new JobQuery(null, null, null);
+    return new JobQuery(null, null, null, false);
   }
 }

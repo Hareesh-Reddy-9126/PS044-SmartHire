@@ -1,5 +1,75 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { authPath, type AccountRole } from '../../utils/roles';
+
+interface WorkspacePath {
+  role: AccountRole;
+  title: string;
+  copy: string;
+  bullets: string[];
+  primary: { label: string; to: string };
+  secondary: { label: string; to: string };
+}
+
+const WORKSPACE_PATHS: WorkspacePath[] = [
+  {
+    role: 'CANDIDATE',
+    title: 'For candidates',
+    copy:
+      'Find a published role, submit your application and follow it without guessing what happened next.',
+    bullets: [
+      'Browse open roles and filter by location',
+      'Apply with a résumé link',
+      'Track application and interview status',
+      'Upload documents and read notifications',
+    ],
+    primary: {
+      label: 'Create candidate account',
+      to: authPath('/register', 'CANDIDATE'),
+    },
+    secondary: { label: 'Browse open roles', to: '/jobs' },
+  },
+  {
+    role: 'RECRUITER',
+    title: 'For recruiters',
+    copy:
+      'Publish roles for your organization, review applications and carry each shortlisted candidate through a recorded decision.',
+    bullets: [
+      'Create and publish organization roles',
+      'Look up applications and shortlist candidates',
+      'Schedule interviews and record outcomes',
+      'Set the final hire or reject decision',
+    ],
+    primary: {
+      label: 'Create recruiter account',
+      to: authPath('/register', 'RECRUITER'),
+    },
+    secondary: {
+      label: 'Recruiter sign in',
+      to: authPath('/login', 'RECRUITER'),
+    },
+  },
+  {
+    role: 'ADMIN',
+    title: 'For administrators',
+    copy:
+      'Review the operating picture across recruitment records and confirm the decisions recorded by the platform.',
+    bullets: [
+      'Read-only overview of live recruitment activity',
+      'Inspect any recruitment record and its decisions',
+      'Look up applications without changing candidate data',
+      'Confirm the signed-in identity and its role scope',
+    ],
+    primary: {
+      label: 'Administrator sign in',
+      to: authPath('/login', 'ADMIN'),
+    },
+    secondary: {
+      label: 'Create with invitation code',
+      to: authPath('/register', 'ADMIN'),
+    },
+  },
+];
 
 /**
  * Public landing page.
@@ -39,10 +109,17 @@ export function LandingPage() {
                 </Link>
               ) : (
                 <Link to="/register" className="btn btn-secondary btn-lg px-6">
-                  Create candidate account
+                  Create an account
                 </Link>
               )}
             </div>
+
+            <p className="hero-switch">
+              Hiring or operating the platform?{' '}
+              <Link to={authPath('/login', 'RECRUITER')}>Recruiter sign in</Link>
+              <span aria-hidden="true"> · </span>
+              <Link to={authPath('/login', 'ADMIN')}>Administrator sign in</Link>
+            </p>
 
             <div className="hero-proof" aria-label="Platform guarantees">
               <span>Role-scoped access</span>
@@ -261,72 +338,45 @@ export function LandingPage() {
         </div>
       </section>
 
-      {/* Two sides of the table */}
-      <section className="landing-section paths-section">
+      {/* Three workspaces */}
+      <section className="landing-section paths-section" id="workspaces">
         <div className="landing-inner">
-          <p className="section-label">Two sides of the table</p>
+          <p className="section-label">Three workspaces, one record</p>
           <h2 className="section-title">The same record, seen from the right side.</h2>
           <p className="section-copy">
             Candidates see their own progress. Recruiters see the applications and
-            interviews they own. Administrators get a read-only operating view.
+            interviews they own. Administrators get a read-only operating view. Every
+            account enters through the same front door and lands in the workspace its
+            role is allowed to open.
           </p>
 
           <div className="paths-grid">
-            <div className="path-column">
-              <p className="path-title">For candidates</p>
-              <p className="path-copy">
-                Find a published role, submit your application and follow it
-                without guessing what happened next.
-              </p>
-              <ul className="path-list">
-                <li>Browse open roles and filter by location</li>
-                <li>Apply with a résumé link</li>
-                <li>Track application and interview status</li>
-                <li>Upload documents and read notifications</li>
-              </ul>
-              <div className="path-actions">
-                <Link to="/jobs" className="btn btn-primary btn-md">
-                  Browse open roles
-                </Link>
-                {!user && (
-                  <Link to="/register" className="btn btn-secondary btn-md">
-                    Create account
+            {WORKSPACE_PATHS.map(path => (
+              <div className="path-column" key={path.role}>
+                <p className="path-title">{path.title}</p>
+                <p className="path-copy">{path.copy}</p>
+                <ul className="path-list">
+                  {path.bullets.map(bullet => (
+                    <li key={bullet}>{bullet}</li>
+                  ))}
+                </ul>
+                <div className="path-actions">
+                  <Link to={path.primary.to} className="btn btn-primary btn-md">
+                    {path.primary.label}
                   </Link>
-                )}
+                  <Link to={path.secondary.to} className="btn btn-secondary btn-md">
+                    {path.secondary.label}
+                  </Link>
+                </div>
+                <p className="path-note">
+                  {path.role === 'ADMIN'
+                    ? 'Administrator views are read-only. Account creation requires a deployment-issued invitation code.'
+                    : path.role === 'RECRUITER'
+                    ? 'Recruiter actions are limited to the organization carried in the signed-in identity.'
+                    : 'Your application record is visible to you and the recruiter reviewing that role.'}
+                </p>
               </div>
-            </div>
-
-            <div className="path-column">
-              <p className="path-title">For hiring teams</p>
-              <p className="path-copy">
-                Publish roles, review applications and carry each shortlisted
-                candidate through a recorded interview and decision.
-              </p>
-              <ul className="path-list">
-                <li>Create and publish organization roles</li>
-                <li>Look up applications and shortlist candidates</li>
-                <li>Schedule interviews and record outcomes</li>
-                <li>Set the final hire or reject decision</li>
-              </ul>
-              <div className="path-actions">
-                <Link
-                  to="/login?next=%2Frecruiter%2Fjobs"
-                  className="btn btn-secondary btn-md"
-                >
-                  Recruiter sign in
-                </Link>
-                <Link
-                  to="/login?next=%2Fadmin%2Foverview"
-                  className="btn btn-ghost btn-md text-c-primary-100 hover:bg-white/10 hover:text-white"
-                >
-                  Admin sign in
-                </Link>
-              </div>
-              <p className="path-note">
-                Administrator views are read-only. Recruiter actions are limited to
-                the organization carried in the signed-in identity.
-              </p>
-            </div>
+            ))}
           </div>
         </div>
       </section>
@@ -368,8 +418,9 @@ export function LandingPage() {
           <div>
             <h2 className="closing-title">Start with the role. Keep the record.</h2>
             <p className="closing-copy">
-              Browse published roles, or create a candidate account and begin your
-              application trail.
+              Browse published roles, or create an account for the workspace you
+              need. Candidates, recruiters and administrators enter through the
+              same front door.
             </p>
           </div>
           <div className="closing-actions">
@@ -378,7 +429,7 @@ export function LandingPage() {
             </Link>
             {!user && (
               <Link to="/register" className="btn btn-secondary btn-lg">
-                Create account
+                Create an account
               </Link>
             )}
           </div>
@@ -393,7 +444,9 @@ export function LandingPage() {
           </div>
           <nav className="flex flex-wrap gap-5" aria-label="Footer">
             <Link to="/jobs">Browse roles</Link>
-            <Link to="/login">Sign in</Link>
+            <Link to={authPath('/login', 'CANDIDATE')}>Candidate sign in</Link>
+            <Link to={authPath('/login', 'RECRUITER')}>Recruiter sign in</Link>
+            <Link to={authPath('/login', 'ADMIN')}>Administrator sign in</Link>
             {!user && <Link to="/register">Create account</Link>}
           </nav>
           <p className="font-mono text-[10px] tracking-wide text-c-primary-400">

@@ -2,6 +2,8 @@
 
 Current project position. Facts verified from the repository are marked [V]; facts inherited from prior agent reports are marked [R] (reported, pending independent re-verification); anything not verifiable from the current working tree is marked unknown/pending.
 
+> **Current position (2026-10-26):** the public site is role-aware and all three roles register and sign in from one website. See **Role-aware website, authorization hardening, and cleanup [COMPLETE] [V]** at the end of this file. That section supersedes earlier sections that describe public registration as candidate-only or `DevDataSeeder` as the only source of recruiter/administrator accounts. Older sections are retained as history.
+
 ## Publish state — 2026-10-24 [V]
 
 - `README.md` rewritten as the industry-standard project entry point; `frontend/README.md` updated to the current design system and 49-test suite.
@@ -1717,3 +1719,141 @@ Landing/login; registration; candidate applications, application detail, progres
 5. **`services/application-service`** still lacks `feign-hc5`; it performs only GET/POST today, so this is not currently blocking.
 6. Admin UI intentionally cannot display candidate names/emails; the auth internal directory endpoint is not exposed to the admin browser.
 7. **Legacy data anomaly:** recruitment `f1df4b23-4836-423c-ac27-34aa92fb107d` is stored as `COMPLETED` with no interview date. Current domain guards enforce `SCHEDULED -> COMPLETED`, so this is stale/seed data rather than a reproducible transition; it is displayed truthfully as "No interview scheduled".
+
+---
+
+## Phase 9.1 — Auth/Navigation Audit & Role-Based Access Fix [COMPLETE] [V]
+
+### Goal
+
+Audit and fix role-aware authentication navigation, public route protection, and backend route guards across the frontend.
+
+### Root Causes Found
+
+1. **Company routes missing role guards** — `/company/dashboard`, `/company/recruitments`, `/company/members`, `/company/jobs/new` were rendered without `ProtectedRoute`, allowing unauthenticated users to access company management pages simply by knowing the URL.
+2. **Missing regression test coverage** — Several Task 5 scenarios lacked test coverage: navbar revert after logout, recruiter→admin 403, public job browsing (authenticated and unauthenticated), `next` parameter integration with role checks.
+
+### Files Changed
+
+| File | Change | Why |
+|------|--------|-----|
+| `frontend/src/routes/AppRoutes.tsx` | Added `ProtectedRoute allowedRoles={['RECRUITER', 'ADMIN', 'CANDIDATE']}` wrapping to 4 company routes | Security fix — prevents unauthenticated access to company management pages |
+| `frontend/src/__tests__/auth.test.tsx` | Added 2 tests: navbar reverts after logout, recruiter blocked from admin routes | Regression coverage for Tasks 4, 5 (items 4, 9) |
+| `frontend/src/__tests__/login-page.test.tsx` | Added 3 tests: valid `next` path honored, wrong-role `next` dropped, external `next` rejected | Regression coverage for Task 5 (item 10) — open redirect prevention |
+| `frontend/src/__tests__/job-browse.test.tsx` | New file with 4 tests: public browsing (auth/unauth), candidate/recruiter browsing, failed API doesn't redirect | Regression coverage for Task 5 (items 5, 6) |
+
+### Verification Results [V]
+
+| Check | Command | Result |
+|-------|---------|--------|
+| TypeScript typecheck | `npx tsc --noEmit` | PASS (0 errors) |
+| ESLint | `npx eslint src --ext ts,tsx --max-warnings 0` | PASS (0 warnings) |
+| Frontend tests | `npx vitest run` | PASS (60 tests across 10 files) |
+| Vite production build | `npx vite build` | PASS (328.79 kB JS) |
+
+### Test Coverage (Task 5 Requirements)
+
+| # | Scenario | Status | Location |
+|---|----------|--------|----------|
+| 1 | Candidate login → candidate dashboard + navbar | PASS | auth.test.tsx (existing) |
+| 2 | Recruiter login → recruiter dashboard + navbar | PASS | auth.test.tsx (existing) |
+| 3 | Admin login → admin dashboard + navbar | PASS | auth.test.tsx (existing) |
+| 4 | Navbar updates after login, reverts after logout | PASS | auth.test.tsx (new) |
+| 5 | Authenticated users browse public jobs | PASS | job-browse.test.tsx (new) |
+| 6 | Unauthenticated users browse public jobs | PASS | job-browse.test.tsx (new) |
+| 7 | Unauthenticated protected-route → login redirect | PASS | auth.test.tsx (existing) |
+| 8 | Candidate cannot access recruiter/admin routes | PASS | auth.test.tsx (existing) |
+| 9 | Recruiter cannot access admin routes | PASS | auth.test.tsx (new) |
+| 10 | Manipulated `next` cannot bypass roles or redirect externally | PASS | login-page.test.tsx (new) + role-routing.test.ts (existing) |
+| 11 | Session restoration preserves identity | PASS | auth.test.tsx (existing) |
+| 12 | Backend APIs reject unauthorized (frontend bypassed) | BLOCKED | Requires Docker/Testcontainers |
+
+### Remaining Risks
+
+1. **Backend API authorization not live-tested** — `@PreAuthorize` annotations verified in code, but live testing blocked by Docker/Testcontainers unavailability locally.
+2. **Company route backend enforcement** — Frontend now guards these routes, but backend `@PreAuthorize` should be verified separately when Docker is available.
+
+### Manual Browser Test Sequence
+
+1. **Candidate login** → `/recruiter/jobs` with recruiter creds → navbar shows recruiter links
+2. **Admin login** → `/admin/overview` with admin creds → navbar shows admin links
+3. **Candidate login** → `/candidate/applications` → navbar shows candidate links
+4. **Public browsing** → `/jobs` without login → displays jobs without redirect
+5. **Protected without login** → `/candidate/applications` → redirects to `/login?next=/candidate/applications`
+6. **Role bypass** → Log in as recruiter, go to `/admin/overview` → shows 403
+7. **Logout** → Click "Sign out" → navbar reverts to signed-out state
+8. **Next parameter** → `/login?next=/candidate/applications` as recruiter → lands on `/recruiter/jobs`
+9. **External next** → `/login?next=https://evil.com` → does not redirect externally
+
+---
+
+## Role-aware website, authorization hardening, and cleanup [COMPLETE] [V]
+
+**Date:** 2026-10-26
+
+### Objective
+
+Replace the candidate-only public authentication flow with one role-aware SmartHire website. Candidates, recruiters, and administrators register and sign in from the same site, then land in the correct workspace, while the existing three dashboards and public job browsing continue to work.
+
+### Backend changes
+
+- `RegisterRequest` now accepts optional `role`, `organizationName`, and `adminInviteCode`. A missing role still defaults to `CANDIDATE`, preserving the original client contract.
+- `RegistrationPolicy` + `RegistrationProperties` enforce role-specific rules:
+  - `CANDIDATE` and `RECRUITER` self-registration are open.
+  - `RECRUITER` requires a 2–255 character organization name; registration creates a dedicated `Organization` so job ownership works immediately.
+  - `ADMIN` requires `AUTH_ADMIN_SIGNUP_CODE`. The comparison is constant-time over SHA-256 digests; a blank configured value closes administrator signup. The code is never logged or returned.
+- Registration outcomes are audited (`role=…` on success; failure reasons on rejection). `InvalidRegistrationException` maps to 400 and `AdminRegistrationDeniedException` maps to 403.
+- The role stays out of the API DTO: the controller validates role text and converts to the domain enum, preserving the ArchUnit service/API boundary.
+- Removed the custom `JacksonConfig` workaround; standard Spring Boot Jackson auto-configuration is restored.
+
+### Authorization fixes found during the audit
+
+- **Critical:** auth-service declared `@Secured` on company administration endpoints but `@EnableMethodSecurity` did not have `securedEnabled = true`, so those annotations were inert. Any authenticated user could call company approve/reject/suspend. Fixed with `@EnableMethodSecurity(securedEnabled = true)` and a regression test for the 403 mapping.
+- Company list is now `ADMIN` only; company read is `ADMIN` or an active member; company registration requires `RECRUITER`; membership management requires an active `COMPANY_ADMIN` membership in that company (platform admins may also operate).
+- Added cross-tenant checks for reject/revoke membership IDs and blocked self-requesting `COMPANY_ADMIN`.
+- Added `CompanyNotFoundException` → 404 and `AccessDeniedException` → 403 handlers; these previously surfaced as generic 500s.
+- Added a server-side `mine` filter to `GET /api/v1/jobs`. Recruiters receive only their own organization's postings; a candidate asking for `mine=true` receives 403. Visibility still cannot be widened by a query parameter.
+
+### Database
+
+- Added `V4__company_membership_invitation_optional.sql` to drop `NOT NULL` from `company_memberships.invited_at`, because a self-requested membership has no inviter. This fixed a company-registration 500.
+- Applied checksums in the running database: V2 `-1913757116`, V3 `184818374`, V4 `855704999`. V2 keeps its corrected `--` comment content because that version was already applied; schema fixes go through forward migrations.
+- Flyway history shows V1–V4 successful.
+
+### Frontend changes
+
+- Added a shared accessible `RoleSelector` (native radios) used by both `/login` and `/register`; the selection is stored in `?role=` so links and refreshes preserve intent.
+- Registration is role-aware: recruiter shows an organization field, administrator shows an invitation-code field, and copy/eyebrow/submit label change per role. Successful registration hands off to the matching login portal with a success banner.
+- Login role selection is intent only. An explicit mismatch (`?role=`) opens the account's real workspace with a dismissible notice; a generic `/login` link never shows that notice. The JWT/server role remains authoritative and the session is never torn down for a mismatch.
+- `next` redirects are same-origin only and must be reachable by the account's roles. `/workspace` uses `ADMIN` > `RECRUITER` > `CANDIDATE` precedence through one shared `primaryRole` helper.
+- The public landing page now presents three workspace entry points (candidate, recruiter, administrator) while keeping public job browsing.
+- Removed the five unused `/company/*` pages (`CompanyDashboardPage`, `CompanyJobCreatePage`, `CompanyMembersPage`, `CompanyOnboardingPage`, `CompanyRecruitmentsPage`), their routes, and `companiesApi`/`membershipsApi` plus related types. Backend company endpoints remain, hardened as above.
+- Recruiter “My jobs” now sends `mine=true`, so the list reflects the caller's organization instead of every public posting.
+- Added regression tests for role-aware registration, the role selector, mismatch notices, generic login, role routing precedence, and public job browsing.
+
+### Verification
+
+| Check | Result |
+|---|---|
+| `mvn -pl services/auth-service test -Dnet.bytebuddy.experimental=true` | 77 tests, 0 failures/errors (6 ArchUnit) |
+| `mvn -pl services/job-service test -Dnet.bytebuddy.experimental=true` | 81 tests, 0 failures/errors |
+| `mvn -pl services/auth-service,services/job-service spotless:apply` | PASS; formatting/import cleanup only |
+| `npm run typecheck` | PASS (0 errors) |
+| `npm run lint` | PASS (0 warnings) |
+| `npm run test:run` | 69 tests across 11 files, all pass |
+| `npm run build` | PASS (production bundle) |
+| Live API through gateway `http://localhost:8080` | Candidate/recruiter/admin registration + login + `/me` pass; legacy no-role registration passes; wrong/missing admin code 403; correct code 201; duplicate email 409; invalid role 400; recruiter without organization 400; recruiter `mine=true` returns only own-org jobs; candidate `mine=true` 403; recruiter company registration 201; candidate 403; admin company read 200; recruiter approve 403 |
+| Browser E2E (Playwright, `http://localhost:5173`) | Landing page, candidate register/login/dashboard/public browsing, recruiter register/dashboard/recruitments, admin wrong-code then correct-code registration/dashboard, role-mismatch notice + dismiss, generic login without notice — all pass |
+
+Expected unauthenticated console noise during browser verification: 401 on `/api/v1/auth/me` and 403 on `/api/v1/auth/refresh`.
+
+### Cleanup
+
+Removed session scratch artifacts: `debug_*.py`, `explore_*.py`, `final_e2e_test.py`, `runtime_acceptance_test.py`, `mvn_*.txt`, `docker_auth_build.txt`, build logs, `frontend/*_check.txt`, and `services/auth-service/dep.txt`. Test and browser scripts remain outside the repository under the temporary workspace.
+
+### Remaining limitations
+
+- Testcontainers/integration tests still cannot run locally; verification used the running Compose stack plus unit and WebMvc tests.
+- Administrator self-registration is deliberately unavailable unless `AUTH_ADMIN_SIGNUP_CODE` is configured.
+- Company management is not exposed in the current frontend; the hardened backend endpoints remain available for a future administrative surface.
+- Recruiter applicant review remains job-scoped; global application lookup is still by application ID.

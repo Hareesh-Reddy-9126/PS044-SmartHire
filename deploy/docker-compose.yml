@@ -106,6 +106,8 @@ services:
       AUTH_SEED_RECRUITER_PASSWORD: ${AUTH_SEED_RECRUITER_PASSWORD:-}
       AUTH_SEED_ADMIN_EMAIL: ${AUTH_SEED_ADMIN_EMAIL:-}
       AUTH_SEED_ADMIN_PASSWORD: ${AUTH_SEED_ADMIN_PASSWORD:-}
+      # Invitation code for administrator self-registration. Blank disables admin signup.
+      AUTH_ADMIN_SIGNUP_CODE: ${AUTH_ADMIN_SIGNUP_CODE:-}
     # Not published to the host: reachable only via the gateway. The gateway fetches JWKS over the
     # internal network (GATEWAY_JWK_SET_URI below), not through a published port.
     depends_on:

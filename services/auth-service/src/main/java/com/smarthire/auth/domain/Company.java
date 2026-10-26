@@ -15,11 +15,12 @@ import java.util.UUID;
  * belong to exactly one active company.
  *
  * <p>Company status lifecycle:
+ *
  * <ul>
- *   <li>{@link #PENDING_APPROVAL} - submitted but not yet reviewed</li>
- *   <li>{@link #ACTIVE} - approved and operational</li>
- *   <li>{@link #REJECTED} - rejected by Platform Admin</li>
- *   <li>{@link #SUSPENDED} - temporarily disabled by Platform Admin</li>
+ *   <li>{@link #PENDING_APPROVAL} - submitted but not yet reviewed
+ *   <li>{@link #ACTIVE} - approved and operational
+ *   <li>{@link #REJECTED} - rejected by Platform Admin
+ *   <li>{@link #SUSPENDED} - temporarily disabled by Platform Admin
  * </ul>
  */
 @Entity

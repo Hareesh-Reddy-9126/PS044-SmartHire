@@ -5,6 +5,7 @@ import com.smarthire.auth.api.dto.MeResponse;
 import com.smarthire.auth.api.dto.RegisterRequest;
 import com.smarthire.auth.api.dto.RegisterResponse;
 import com.smarthire.auth.api.dto.TokenResponse;
+import com.smarthire.auth.domain.Role;
 import com.smarthire.auth.service.AuthService;
 import com.smarthire.auth.service.AuthTokens;
 import io.swagger.v3.oas.annotations.Operation;
@@ -17,6 +18,7 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import java.time.Duration;
 import java.util.Arrays;
+import java.util.Locale;
 import java.util.UUID;
 import org.springframework.core.env.Environment;
 import org.springframework.http.HttpHeaders;
@@ -62,7 +64,10 @@ public class AuthController {
 
   @Operation(
       summary = "Register a new user",
-      description = "Registers a new user account. Public endpoint.")
+      description =
+          "Registers a candidate, recruiter or administrator account. Candidates and recruiters "
+              + "self-register; recruiters must name their organization and administrators must "
+              + "present the deployment's invitation code. Public endpoint.")
   @ApiResponses(
       value = {
         @ApiResponse(
@@ -74,14 +79,33 @@ public class AuthController {
                     schema = @Schema(implementation = RegisterResponse.class))),
         @ApiResponse(
             responseCode = "400",
-            description = "Validation failed or email already exists",
+            description = "Validation failed or a role-specific field is missing",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "403",
+            description = "Administrator registration denied (missing or invalid invitation code)",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "409",
+            description = "Email already registered",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
       })
   @SecurityRequirement(name = "")
   @PostMapping("/register")
   @ResponseStatus(HttpStatus.CREATED)
   public RegisterResponse register(@Valid @RequestBody RegisterRequest request) {
-    UUID userId = authService.register(request.email(), request.password());
+    // Bean validation has already constrained the value to the three self-service roles.
+    Role role =
+        request.role() == null
+            ? null
+            : Role.valueOf(request.role().trim().toUpperCase(Locale.ROOT));
+    UUID userId =
+        authService.register(
+            request.email(),
+            request.password(),
+            role,
+            request.organizationName(),
+            request.adminInviteCode());
     return new RegisterResponse(userId.toString());
   }
 

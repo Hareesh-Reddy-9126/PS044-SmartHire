@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { roleHome, safeNextPath } from '../utils/roles';
+import {
+  authPath,
+  normaliseRole,
+  primaryRole,
+  roleHome,
+  safeNextPath,
+} from '../utils/roles';
 
 describe('role-aware routing', () => {
   it('maps each role to its workspace', () => {
@@ -7,7 +13,28 @@ describe('role-aware routing', () => {
     expect(roleHome(['RECRUITER'])).toBe('/recruiter/jobs');
     expect(roleHome(['ADMIN'])).toBe('/admin/overview');
     expect(roleHome(['CANDIDATE', 'RECRUITER'])).toBe('/recruiter/jobs');
+    expect(roleHome(['CANDIDATE', 'ADMIN'])).toBe('/admin/overview');
     expect(roleHome(undefined)).toBe('/jobs');
+  });
+
+  it('reports the dominant role without widening unknown values', () => {
+    expect(primaryRole(['CANDIDATE'])).toBe('CANDIDATE');
+    expect(primaryRole(['CANDIDATE', 'RECRUITER'])).toBe('RECRUITER');
+    expect(primaryRole(['RECRUITER', 'ADMIN'])).toBe('ADMIN');
+    expect(primaryRole(['SOMETHING_ELSE'])).toBe('CANDIDATE');
+    expect(primaryRole(undefined)).toBe('CANDIDATE');
+  });
+
+  it('normalises portal query values and builds role-preserving auth links', () => {
+    expect(normaliseRole('recruiter')).toBe('RECRUITER');
+    expect(normaliseRole(' ADMIN ')).toBe('ADMIN');
+    expect(normaliseRole('unknown')).toBe('CANDIDATE');
+    expect(normaliseRole(null)).toBe('CANDIDATE');
+
+    expect(authPath('/login', 'RECRUITER')).toBe('/login?role=RECRUITER');
+    expect(authPath('/register', 'ADMIN', '/admin/overview')).toBe(
+      '/register?role=ADMIN&next=%2Fadmin%2Foverview'
+    );
   });
 
   it('keeps a next path that belongs to the signed-in role', () => {

@@ -2,7 +2,7 @@
 -- Companies table for multi-company recruitment platform.
 -- Runs with search_path = auth_svc (spring.flyway.default-schema).
 -- Each company represents an independent recruiting organization that can post jobs,
-# recruit candidates, and manage its own recruiters and administrators.
+-- recruit candidates, and manage its own recruiters and administrators.
 -- Status lifecycle: PENDING_APPROVAL -> ACTIVE/REJECTED; ACTIVE can be SUSPENDED/reactivated.
 
 CREATE TABLE companies (

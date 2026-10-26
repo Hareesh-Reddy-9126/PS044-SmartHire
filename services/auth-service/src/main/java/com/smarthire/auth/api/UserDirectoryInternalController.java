@@ -13,9 +13,9 @@ import org.springframework.web.bind.annotation.RestController;
 /**
  * Internal user-directory endpoint for service-to-service calls.
  *
- * <p>Like notification-service's internal endpoints, this path is not routed by the API Gateway:
- * it exists for trusted services on the Docker network. It still requires a valid bearer token
- * because notification-service forwards the authenticated caller's token on its Feign calls.
+ * <p>Like notification-service's internal endpoints, this path is not routed by the API Gateway: it
+ * exists for trusted services on the Docker network. It still requires a valid bearer token because
+ * notification-service forwards the authenticated caller's token on its Feign calls.
  */
 @RestController
 @RequestMapping("/internal/v1/users")

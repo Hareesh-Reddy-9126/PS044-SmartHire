@@ -4,9 +4,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import java.time.Instant;
 import java.util.UUID;
 
-/**
- * Response for company operations.
- */
+/** Response for company operations. */
 @Schema(name = "CompanyResponse", description = "Company information response")
 public record CompanyResponse(
     @Schema(
@@ -14,17 +12,9 @@ public record CompanyResponse(
             description = "Company ID",
             example = "550e8400-e29b-41d4-a716-446655440000")
         UUID id,
-    @Schema(
-            name = "name",
-            description = "Company name",
-            example = "Acme Corp",
-            required = true)
+    @Schema(name = "name", description = "Company name", example = "Acme Corp", required = true)
         String name,
-    @Schema(
-            name = "status",
-            description = "Company status",
-            example = "ACTIVE",
-            required = true)
+    @Schema(name = "status", description = "Company status", example = "ACTIVE", required = true)
         String status,
     @Schema(
             name = "createdAt",

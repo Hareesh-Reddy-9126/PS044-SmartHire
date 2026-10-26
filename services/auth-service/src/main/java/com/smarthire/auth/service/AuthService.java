@@ -1,12 +1,15 @@
 package com.smarthire.auth.service;
 
+import com.smarthire.auth.domain.Organization;
 import com.smarthire.auth.domain.Role;
 import com.smarthire.auth.domain.User;
+import com.smarthire.auth.infra.OrganizationRepository;
 import com.smarthire.auth.infra.UserRepository;
 import com.smarthire.common.audit.AuditService;
 import java.time.Clock;
 import java.time.Instant;
 import java.util.List;
+import java.util.Locale;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,9 +19,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Authentication use-cases (register, login, refresh, logout). Public self-registration creates
- * {@code CANDIDATE} accounts only (decision 7); RECRUITER/ADMIN are provisioned by the dev seeder.
- * Access tokens are RS256 JWTs (15m); refresh tokens are rotated opaque tokens (7d).
+ * Authentication use-cases (register, login, refresh, logout).
+ *
+ * <p>Self-registration is role-aware: candidates register openly, recruiters register with an
+ * organization that owns their job postings, and administrators must present the deployment's
+ * invitation code. Access tokens are RS256 JWTs (15m); refresh tokens are rotated opaque tokens
+ * (7d).
  */
 @Service
 public class AuthService {
@@ -29,58 +35,108 @@ public class AuthService {
       "{bcrypt}$2a$12$aIBWy02mSzSW3ybBC41KCOHoLO.xaC69G3HyqXv1PTGsOrfGKfeZG";
 
   private final UserRepository userRepository;
+  private final OrganizationRepository organizationRepository;
   private final PasswordEncoder passwordEncoder;
   private final JwtIssuer jwtIssuer;
   private final RefreshTokenService refreshTokenService;
   private final RevocationService revocationService;
+  private final RegistrationPolicy registrationPolicy;
   private final Clock clock;
 
   public AuthService(
       UserRepository userRepository,
+      OrganizationRepository organizationRepository,
       PasswordEncoder passwordEncoder,
       JwtIssuer jwtIssuer,
       RefreshTokenService refreshTokenService,
       RevocationService revocationService,
+      RegistrationPolicy registrationPolicy,
       Clock clock) {
     this.userRepository = userRepository;
+    this.organizationRepository = organizationRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtIssuer = jwtIssuer;
     this.refreshTokenService = refreshTokenService;
     this.revocationService = revocationService;
+    this.registrationPolicy = registrationPolicy;
     this.clock = clock;
   }
 
-  /** Public self-registration — always a CANDIDATE (decision 7). Returns the new user id. */
+  /** Candidate self-registration. Retained for callers that predate role-aware registration. */
   @Transactional
   public UUID register(String email, String rawPassword) {
-    String normalized = email.trim().toLowerCase();
-    if (userRepository.existsByEmail(normalized)) {
+    return register(email, rawPassword, Role.CANDIDATE, null, null);
+  }
+
+  /**
+   * Role-aware self-registration. Returns the new user id.
+   *
+   * <p>A recruiter account is created with a freshly created organization, so ownership checks in
+   * job-service work on the very first request. Administrator accounts are created only when the
+   * deployment has configured an invitation code and the request presents it correctly.
+   *
+   * @param role requested role; {@code null} keeps the original candidate-only behaviour
+   * @param organizationName required for {@code RECRUITER}
+   * @param adminInviteCode required for {@code ADMIN}
+   * @throws InvalidRegistrationException when a role-specific field is missing or invalid
+   * @throws AdminRegistrationDeniedException when administrator registration is not authorised
+   * @throws EmailAlreadyExistsException when the email is already registered
+   */
+  @Transactional
+  public UUID register(
+      String email,
+      String rawPassword,
+      Role role,
+      String organizationName,
+      String adminInviteCode) {
+    Role requestedRole = role == null ? Role.CANDIDATE : role;
+    String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
+
+    UUID orgId = resolveOrganizationId(requestedRole, organizationName, normalizedEmail);
+    if (requestedRole == Role.ADMIN
+        && !registrationPolicy.isAdminInviteCodeValid(adminInviteCode)) {
       AuditService.auth(
           AuditService.AuthEvent.REGISTER,
           null,
-          normalized,
+          normalizedEmail,
+          AuditService.Outcome.FAILURE,
+          "Administrator invitation code rejected");
+      throw new AdminRegistrationDeniedException();
+    }
+
+    if (userRepository.existsByEmail(normalizedEmail)) {
+      AuditService.auth(
+          AuditService.AuthEvent.REGISTER,
+          null,
+          normalizedEmail,
           AuditService.Outcome.FAILURE,
           "Email already exists");
       throw new EmailAlreadyExistsException("Email already registered");
     }
+
     User user =
         new User(
             UUID.randomUUID(),
-            normalized,
+            normalizedEmail,
             passwordEncoder.encode(rawPassword),
-            Role.CANDIDATE,
-            null,
+            requestedRole,
+            orgId,
             Instant.now(clock));
     try {
       UUID userId = userRepository.saveAndFlush(user).getId();
       AuditService.auth(
-          AuditService.AuthEvent.REGISTER, userId, normalized, AuditService.Outcome.SUCCESS, null);
+          AuditService.AuthEvent.REGISTER,
+          userId,
+          normalizedEmail,
+          AuditService.Outcome.SUCCESS,
+          "role=" + requestedRole);
+      log.info("Registered {} account {}", requestedRole, userId);
       return userId;
     } catch (DataIntegrityViolationException ex) {
       AuditService.auth(
           AuditService.AuthEvent.REGISTER,
           null,
-          normalized,
+          normalizedEmail,
           AuditService.Outcome.FAILURE,
           "Email already exists");
       throw new EmailAlreadyExistsException("Email already registered");
@@ -89,9 +145,9 @@ public class AuthService {
 
   @Transactional
   public AuthTokens login(String email, String rawPassword) {
-    User user = userRepository.findByEmail(email.trim().toLowerCase()).orElse(null);
+    User user = userRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT)).orElse(null);
     String passwordHash = user == null ? DUMMY_PASSWORD_HASH : user.getPasswordHash();
-    String normalizedEmail = email.trim().toLowerCase();
+    String normalizedEmail = email.trim().toLowerCase(Locale.ROOT);
     if (!passwordEncoder.matches(rawPassword, passwordHash) || user == null) {
       AuditService.auth(
           AuditService.AuthEvent.LOGIN_FAILURE,
@@ -188,6 +244,41 @@ public class AuthService {
         .findById(userId)
         .map(User::getEmail)
         .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+  }
+
+  /**
+   * Creates the organization that owns a new recruiter's postings. Candidate and administrator
+   * accounts do not belong to an employer organization.
+   */
+  private UUID resolveOrganizationId(Role role, String organizationName, String normalizedEmail) {
+    if (role != Role.RECRUITER) {
+      if (organizationName != null && !organizationName.isBlank()) {
+        throw new InvalidRegistrationException(
+            "An organization name is only accepted for recruiter registration.");
+      }
+      return null;
+    }
+
+    String name = organizationName == null ? "" : organizationName.trim().replaceAll("\\s+", " ");
+    if (name.length() < 2) {
+      AuditService.auth(
+          AuditService.AuthEvent.REGISTER,
+          null,
+          normalizedEmail,
+          AuditService.Outcome.FAILURE,
+          "Missing organization name");
+      throw new InvalidRegistrationException(
+          "An organization name is required for recruiter registration.");
+    }
+    if (name.length() > 255) {
+      throw new InvalidRegistrationException(
+          "The organization name must be 255 characters or fewer.");
+    }
+
+    Organization organization =
+        organizationRepository.saveAndFlush(
+            new Organization(UUID.randomUUID(), name, Instant.now(clock)));
+    return organization.getId();
   }
 
   private AuthTokens issueFor(User user) {

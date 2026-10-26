@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { primaryRole } from '../../utils/roles';
+import { Alert, type AlertTone } from '../ui/Alert';
 import { RoleChip } from '../ui/RoleChip';
 import { Button } from '../ui/Button';
 import { Spinner } from '../ui/Spinner';
@@ -47,14 +49,6 @@ const WORKSPACE_LABEL: Record<string, string> = {
   ADMIN: 'Administration',
 };
 
-/** The role that decides which menu is shown, when a token carries several. */
-function primaryRole(roles: string[] | undefined): string {
-  if (!roles || roles.length === 0) return 'CANDIDATE';
-  if (roles.includes('ADMIN')) return 'ADMIN';
-  if (roles.includes('RECRUITER')) return 'RECRUITER';
-  return 'CANDIDATE';
-}
-
 function BrandMark({ className = '' }: { className?: string }) {
   return (
     <Link
@@ -93,6 +87,7 @@ export function Layout({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const closeButtonRef = useRef<HTMLButtonElement>(null);
   const [signingOut, setSigningOut] = useState(false);
+  const [dismissedNotice, setDismissedNotice] = useState<string | null>(null);
 
   // Close the drawer whenever the route changes.
   useEffect(() => {
@@ -123,6 +118,13 @@ export function Layout({ children }: { children: ReactNode }) {
   const role = primaryRole(user?.roles);
   const navItems = NAV_BY_ROLE[role] ?? [];
   const workspaceLabel = WORKSPACE_LABEL[role] ?? 'Workspace';
+
+  const notice = (
+    location.state as
+      | { notice?: { tone?: AlertTone; title: string; message: string } }
+      | null
+  )?.notice;
+  const noticeKey = notice ? `${notice.title}|${notice.message}` : null;
 
   const handleSignOut = async () => {
     setSigningOut(true);
@@ -192,7 +194,28 @@ export function Layout({ children }: { children: ReactNode }) {
       )}
 
       <main id="main-content" className="min-h-screen pt-topbar lg:pl-sidebar">
-        <div className="app-content">{children}</div>
+        <div className="app-content">
+          {notice && noticeKey !== dismissedNotice && (
+            <div className="mb-5">
+              <Alert
+                tone={notice.tone ?? 'info'}
+                title={notice.title}
+                action={
+                  <button
+                    type="button"
+                    onClick={() => setDismissedNotice(noticeKey)}
+                    className="rounded px-2 py-1 font-label-md text-label-md text-current transition-opacity hover:opacity-70 focus-ring"
+                  >
+                    Dismiss
+                  </button>
+                }
+              >
+                {notice.message}
+              </Alert>
+            </div>
+          )}
+          {children}
+        </div>
       </main>
     </div>
   );
@@ -371,6 +394,9 @@ export function PublicLayout({ children }: { children: ReactNode }) {
           <nav className="flex min-w-0 items-center gap-4 sm:gap-5" aria-label="Account">
             <Link to="/jobs" className="public-link hidden sm:inline">
               Browse jobs
+            </Link>
+            <Link to="/#workspaces" className="public-link hidden lg:inline">
+              Portals
             </Link>
 
             {user ? (

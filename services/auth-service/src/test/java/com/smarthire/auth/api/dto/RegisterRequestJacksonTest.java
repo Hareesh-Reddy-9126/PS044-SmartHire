@@ -3,16 +3,13 @@ package com.smarthire.auth.api.dto;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
 import org.junit.jupiter.api.Test;
 
 /** Test to verify Jackson can deserialize RegisterRequest and LoginRequest records. */
 class RegisterRequestJacksonTest {
 
   private final ObjectMapper objectMapper =
-      new ObjectMapper()
-          .registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule())
-          .registerModule(new ParameterNamesModule());
+      new ObjectMapper().registerModule(new com.fasterxml.jackson.datatype.jsr310.JavaTimeModule());
 
   @Test
   void registerRequestDeserializesFromValidJson() throws Exception {
@@ -28,6 +25,45 @@ class RegisterRequestJacksonTest {
 
     assertThat(request.email()).isEqualTo("test@example.com");
     assertThat(request.password()).isEqualTo("Test1234567890!");
+    assertThat(request.role()).isNull();
+    assertThat(request.organizationName()).isNull();
+    assertThat(request.adminInviteCode()).isNull();
+  }
+
+  @Test
+  void recruiterRegistrationDeserializesRoleAndOrganization() throws Exception {
+    String json =
+        """
+        {
+          "email": "hire@acme.example",
+          "password": "Test1234567890!",
+          "role": "RECRUITER",
+          "organizationName": "Acme Corp"
+        }
+        """;
+
+    RegisterRequest request = objectMapper.readValue(json, RegisterRequest.class);
+
+    assertThat(request.role()).isEqualTo("RECRUITER");
+    assertThat(request.organizationName()).isEqualTo("Acme Corp");
+  }
+
+  @Test
+  void adminRegistrationDeserializesInviteCode() throws Exception {
+    String json =
+        """
+        {
+          "email": "ops@smarthire.example",
+          "password": "Test1234567890!",
+          "role": "ADMIN",
+          "adminInviteCode": "deployment-code"
+        }
+        """;
+
+    RegisterRequest request = objectMapper.readValue(json, RegisterRequest.class);
+
+    assertThat(request.role()).isEqualTo("ADMIN");
+    assertThat(request.adminInviteCode()).isEqualTo("deployment-code");
   }
 
   @Test

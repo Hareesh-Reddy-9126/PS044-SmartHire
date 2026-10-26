@@ -127,6 +127,13 @@ public class JobService {
   public Page<Job> list(JobQuery query, UUID callerOrgId, boolean isRecruiter, Pageable pageable) {
     List<Specification<Job>> specs = new ArrayList<>();
     specs.add(visibleTo(callerOrgId, isRecruiter));
+    if (query.mine()) {
+      if (!isRecruiter) {
+        throw new JobForbiddenException("Only recruiters can list their organization's jobs.");
+      }
+      requireOrg(callerOrgId);
+      specs.add(ownedBy(callerOrgId));
+    }
     if (query.status() != null) {
       specs.add(hasStatus(query.status()));
     }
@@ -175,6 +182,10 @@ public class JobService {
       }
       return cb.or(open, cb.equal(root.get("ownerOrgId"), callerOrgId));
     };
+  }
+
+  private static Specification<Job> ownedBy(UUID callerOrgId) {
+    return (root, query, cb) -> cb.equal(root.get("ownerOrgId"), callerOrgId);
   }
 
   private static Specification<Job> hasStatus(JobStatus status) {

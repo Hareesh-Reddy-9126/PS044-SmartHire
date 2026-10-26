@@ -89,6 +89,7 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
       AUTH_JWT_PRIVATE_KEY: ${AUTH_JWT_PRIVATE_KEY:?AUTH_JWT_PRIVATE_KEY must be set in deploy/.env}
+      AUTH_ADMIN_SIGNUP_CODE: ${AUTH_ADMIN_SIGNUP_CODE:-}
       REDIS_PORT: 6379
     mem_limit: 768m
     cpus: "1.0"

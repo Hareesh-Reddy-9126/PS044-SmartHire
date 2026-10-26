@@ -1,7 +1,6 @@
 package com.smarthire.auth.service;
 
 import com.smarthire.auth.domain.CompanyMembership;
-import com.smarthire.auth.domain.User;
 import com.smarthire.auth.infra.CompanyMembershipRepository;
 import com.smarthire.auth.infra.CompanyRepository;
 import com.smarthire.auth.infra.UserRepository;
@@ -13,9 +12,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- * Service for company membership management. Handles membership requests, invitations,
- * approvals, rejections, and revocations. Membership is the link between a user and a company
- * with a specific role (COMPANY_ADMIN or RECRUITER).
+ * Service for company membership management. Handles membership requests, invitations, approvals,
+ * rejections, and revocations. Membership is the link between a user and a company with a specific
+ * role (COMPANY_ADMIN or RECRUITER).
  */
 @Service
 public class CompanyMembershipService {
@@ -117,7 +116,9 @@ public class CompanyMembershipService {
   @Transactional
   public void acceptMembership(UUID membershipId, UUID userId) {
     CompanyMembership membership =
-        membershipRepository.findById(membershipId).orElseThrow(() -> new IllegalStateException("Membership not found: " + membershipId));
+        membershipRepository
+            .findById(membershipId)
+            .orElseThrow(() -> new IllegalStateException("Membership not found: " + membershipId));
 
     if (!membership.getUserId().equals(userId)) {
       throw new IllegalStateException("You are not the invited user for this membership");
@@ -127,7 +128,8 @@ public class CompanyMembershipService {
       throw new IllegalStateException("Only PENDING memberships can be accepted");
     }
 
-    if (membership.getInvitationExpiresAt() != null && membership.getInvitationExpiresAt().isBefore(Instant.now(clock))) {
+    if (membership.getInvitationExpiresAt() != null
+        && membership.getInvitationExpiresAt().isBefore(Instant.now(clock))) {
       membership.expire();
       membershipRepository.save(membership);
       throw new IllegalStateException("Invitation has expired");
@@ -146,7 +148,9 @@ public class CompanyMembershipService {
   @Transactional
   public void rejectMembership(UUID membershipId, UUID approvedBy) {
     CompanyMembership membership =
-        membershipRepository.findById(membershipId).orElseThrow(() -> new IllegalStateException("Membership not found: " + membershipId));
+        membershipRepository
+            .findById(membershipId)
+            .orElseThrow(() -> new IllegalStateException("Membership not found: " + membershipId));
 
     if (membership.getStatus() != CompanyMembership.Status.PENDING) {
       throw new IllegalStateException("Only PENDING memberships can be rejected");
@@ -165,7 +169,9 @@ public class CompanyMembershipService {
   @Transactional
   public void revokeMembership(UUID membershipId, UUID revokedBy) {
     CompanyMembership membership =
-        membershipRepository.findById(membershipId).orElseThrow(() -> new IllegalStateException("Membership not found: " + membershipId));
+        membershipRepository
+            .findById(membershipId)
+            .orElseThrow(() -> new IllegalStateException("Membership not found: " + membershipId));
 
     if (membership.getStatus() != CompanyMembership.Status.ACTIVE) {
       throw new IllegalStateException("Only ACTIVE memberships can be revoked");
@@ -175,36 +181,33 @@ public class CompanyMembershipService {
     membershipRepository.save(membership);
   }
 
-  /**
-   * List all memberships for a company.
-   */
+  /** List all memberships for a company. */
   @Transactional(readOnly = true)
   public List<CompanyMembership> listMembers(UUID companyId) {
     return membershipRepository.findByCompanyId(companyId);
   }
 
-  /**
-   * List all active memberships for a user (companies they belong to).
-   */
+  /** List all active memberships for a user (companies they belong to). */
   @Transactional(readOnly = true)
   public List<CompanyMembership> listUserMemberships(UUID userId) {
     return membershipRepository.findByUserIdAndStatus(userId, CompanyMembership.Status.ACTIVE);
   }
 
-  /**
-   * Find an active membership by company and user.
-   */
+  /** Find an active membership by company and user. */
   @Transactional(readOnly = true)
   public CompanyMembership getMembership(UUID companyId, UUID userId) {
-    return membershipRepository.findByCompanyIdAndUserId(companyId, userId)
-        .orElseThrow(() -> new IllegalStateException("No membership found for company " + companyId + " and user " + userId));
+    return membershipRepository
+        .findByCompanyIdAndUserId(companyId, userId)
+        .orElseThrow(
+            () ->
+                new IllegalStateException(
+                    "No membership found for company " + companyId + " and user " + userId));
   }
 
-  /**
-   * Count active members in a company.
-   */
+  /** Count active members in a company. */
   @Transactional(readOnly = true)
   public long countActiveMembers(UUID companyId) {
-    return membershipRepository.countByCompanyIdAndStatus(companyId, CompanyMembership.Status.ACTIVE);
+    return membershipRepository.countByCompanyIdAndStatus(
+        companyId, CompanyMembership.Status.ACTIVE);
   }
 }

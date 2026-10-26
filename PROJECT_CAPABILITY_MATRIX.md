@@ -34,12 +34,12 @@ All classifications based on observed evidence from the current working tree, no
 | ArchUnit | Yes | Yes | Yes | Yes | N/A | Partial | No | No | Warnings on JDK 24 class files |
 | npm | Yes | Yes | Yes | Yes | N/A | Yes | No | No | Frontend package manager |
 | Vite | Yes | Yes | Yes | Yes | N/A | Yes | No | No | Frontend build/dev server |
-| Vitest | Yes | Yes | Yes | Yes | N/A | Yes | No | No | 32 frontend tests |
+| Vitest | Yes | Yes | Yes | Yes | N/A | Yes | No | No | 69 frontend tests |
 | TypeScript (tsc) | Yes | Yes | Yes | Yes | N/A | Yes | No | No | `tsc --noEmit` |
 | ESLint | Yes | Yes | Yes | Yes | N/A | Yes | No | No | Frontend linting |
 | Tailwind CSS | Yes | Yes | Yes | Yes | N/A | Yes | No | No | Styling framework |
 | Testcontainers | No | No | No | No | No | No | N/A | Yes | Docker/Testcontainers unavailable locally |
-| Selenium/Playwright | No | No | No | No | No | No | N/A | Yes | No browser automation installed |
+| Selenium/Playwright | No | No | No | No | No | No | N/A | Yes | Playwright used ad hoc from a temporary workspace; not a repo dependency |
 
 ---
 
@@ -49,8 +49,8 @@ All classifications based on observed evidence from the current working tree, no
 |----------|---|---|---|---|---|---|---|---|----------|
 | service-registry | Yes | Yes | Yes | Yes | No | Yes | No | No | Compiles, tests pass |
 | api-gateway | Yes | Yes | Yes | Yes | No | Yes | No | No | Compiles, tests pass |
-| auth-service | Yes | Yes | Yes | Yes | No | Yes | No | No | Compiles, 55 tests pass |
-| job-service | Yes | Yes | Yes | Yes | No | Yes | No | No | Compiles, 78 tests pass |
+| auth-service | Yes | Yes | Yes | Yes | No | Yes | No | No | Compiles, 77 tests pass |
+| job-service | Yes | Yes | Yes | Yes | No | Yes | No | No | Compiles, 81 tests pass |
 | application-service | Yes | Yes | Yes | Yes | No | Yes | No | No | Compiles, 137 tests pass |
 | recruitment-service | Yes | Yes | Yes | Yes | No | Yes | No | No | Compiles, 122 tests pass |
 | document-service | Yes | Yes | Yes | Yes | No | Yes | No | No | Compiles, tests pass |

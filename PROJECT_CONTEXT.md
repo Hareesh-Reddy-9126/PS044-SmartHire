@@ -5,7 +5,7 @@ Persistent project context for future Claude/Kilo Code sessions. Concise, durabl
 ## 1. Project purpose and technology stack
 
 - **Purpose**: Online job recruitment platform (microservices + React SPA) for course project 24SDCS03A/R — SOA Programming and Microservices (AY 2026-27). [V: README.md]
-- **Status**: Phase 4 (Quality/Security/CI) complete. Review-1 complete (Inc 0+1+2+3); Inc 4/5 services present; Phase 2 backend integration complete (ai-service tests pass). [V: README.md, phase2_report.md, PROJECT_STATUS.md]
+- **Status**: Phase 4 (Quality/Security/CI) complete. Review-1 complete (Inc 0+1+2+3); Inc 4/5 services present; Phase 2 backend integration complete (ai-service tests pass). The public website is role-aware: candidates, recruiters, and invited administrators register and sign in from one site and land in their own workspace. [V: README.md, phase2_report.md, PROJECT_STATUS.md]
 - **Backend**: Java 21, Spring Boot 3.4.1, Spring Cloud 2024.0.0 (Moorgate), Spring Cloud Gateway, Eureka service discovery, OpenFeign inter-service clients, Resilience4j (circuit breaker/retry/bulkhead), Spring Security 6 (OAuth2 resource server + JWKS), Spring Data JPA, Flyway migrations, PostgreSQL 16, Redis (refresh-token store + JWT jti denylist), springdoc-openapi (Inc 5). [V: pom.xml, docker-compose.yml]
 - **Frontend**: React 18, TypeScript 5, Vite 5, Tailwind CSS, React Router 6, Vitest + Testing Library. [V: frontend/package.json, frontend/README.md]
 - **Build tool**: Maven multi-module (root `pom.xml` aggregator), wrapper conventions. Host JDK 24 locally; build targets Java 21 bytecode. [V: pom.xml, environment memory]
@@ -19,10 +19,12 @@ Persistent project context for future Claude/Kilo Code sessions. Concise, durabl
 - **Build**: `npm run build` (`tsc && vite build` to `dist/`)
 - **Typecheck**: `npm run typecheck` (`tsc --noEmit`)
 - **Lint**: `npm run lint` (ESLint, zero warnings)
-- **Test**: `npm run test:run` (Vitest, 49 tests across 8 files, per frontend README [V])
+- **Test**: `npm run test:run` (Vitest, 69 tests across 11 files [V])
 - **API config**: All calls via API Gateway `/api/v1/*`; `VITE_API_BASE_URL` env var for non-proxy deployments; `VITE_DEBUG` for logging
 - **Auth**: Access tokens in memory only (never localStorage); refresh token HttpOnly cookie; proactive refresh via `AuthContext`; role-gated client routes (ProtectedRoute/WorkspaceRedirect); real authorization enforced by gateway + services
-- **Roles/routes**: Public `/jobs`, `/jobs/:jobId`, `/login`, `/register`; CANDIDATE `/candidate/applications` (+apply/progress/documents/notifications/profile); RECRUITER `/recruiter/jobs` (+create/detail/edit/recruitments/application lookup/profile); ADMIN `/admin/overview` (+recruitments/application lookup/profile)
+- **Registration**: One `/register` form with a shared native-radio role selector. Candidate and recruiter signup are open; recruiter registration requires an organization name and creates a dedicated `Organization`; administrator signup requires the deployment's `AUTH_ADMIN_SIGNUP_CODE` and is closed when blank. The API defaults a missing role to `CANDIDATE` for older clients.
+- **Login**: `/login` also carries the role selector, but the choice is intent only. The JWT/`/auth/me` role is authoritative; an explicit mismatch opens the account's real workspace with a dismissible notice. A generic `/login` link never shows that notice. `next` targets are restricted to same-origin paths the account can open.
+- **Roles/routes**: Public `/` (landing with three workspace entry points), `/jobs`, `/jobs/:jobId`, `/login`, `/register`; CANDIDATE `/candidate/applications` (+apply/progress/documents/notifications/profile); RECRUITER `/recruiter/jobs` (+create/detail/edit/recruitments/application lookup/profile); ADMIN `/admin/overview` (+recruitments/application lookup/profile). The former `/company/*` pages were removed; company endpoints remain in auth-service but are not exposed by this client.
 - **Known gaps [R: memory]**: Candidate-facing `ProgressDetailPage.tsx` and `ApplicationDetailPage.tsx` omit interview fields despite API returning them; recruiter application list unsupported by backend (lookup by ID only); no password reset/profile-edit endpoints; AI features out of scope for frontend
 
 ## 3. Backend services
@@ -31,8 +33,8 @@ Persistent project context for future Claude/Kilo Code sessions. Concise, durabl
 |---|---|---|---|
 | service-registry | `services/service-registry` | 8761 | Eureka server (service discovery) |
 | api-gateway | `services/api-gateway` | 8080 | Spring Cloud Gateway, single public entry point, edge auth/rate limiting |
-| auth-service | `services/auth-service` | 8082 | JWT issuance + JWKS, refresh-token store (Redis), seed accounts |
-| job-service | `services/job-service` | 8081 | Job aggregate, `job_svc` schema |
+| auth-service | `services/auth-service` | 8082 | JWT issuance + JWKS, refresh-token store (Redis), role-aware registration and organization creation, company/membership administration, seed accounts |
+| job-service | `services/job-service` | 8081 | Job aggregate, `job_svc` schema, organization-scoped listing (`mine=true`) |
 | application-service | `services/application-service` | 8083 | Applications, `application_svc` schema, Feign calls to job/notification |
 | recruitment-service | `services/recruitment-service` | 8084 | Recruitment workflow, `recruitment_svc` schema, Feign calls to application/job |
 | document-service | `services/document-service` | 8085 | Document management, local storage abstraction, `document_svc` schema |
@@ -54,18 +56,18 @@ Each service has its own `pom.xml`, `src/main/java`, `src/main/resources/applica
 ## 5. Databases, migrations, inter-service communication, configuration
 
 - **Database**: Single PostgreSQL 16 instance (`postgres:16-alpine`), shared app user, per-service schemas (`auth_svc`, `job_svc`, `application_svc`, `recruitment_svc`, `document_svc`, `notification_svc`). Not published to host by default. [V: docker-compose.yml]
-- **Migrations**: Flyway, `src/main/resources/db/migration/` per service (e.g. `V2__interview_schedule_details.sql`). Per-schema least-privilege users deferred to later increments. [V: docker-compose.yml, README]
+- **Migrations**: Flyway, `src/main/resources/db/migration/` per service (e.g. `V2__interview_schedule_details.sql`). Auth-service has V1–V4; V4 makes `company_memberships.invited_at` nullable so a self-requested membership can exist without an inviter. Applied checksums in the running database: V2 `-1913757116`, V3 `184818374`, V4 `855704999`. Never edit an applied migration; add a forward migration instead. Per-schema least-privilege users deferred to later increments. [V: docker-compose.yml, README]
 - **Redis**: `redis:7-alpine`, refresh-token store + shared JWT jti denylist (`revoked:jti:*`), used by auth-service and gateway. [V: docker-compose.yml]
 - **Inter-service communication**: OpenFeign clients + Eureka client-side load balancing; Resilience4j fault tolerance on all Feign clients (CB/Retry/Bulkhead). [V: phase2_report.md, backend_integration_gaps_summary.md]
 - **Configuration**: `application.yml` per service; `application-prod.yml` and `application-local.yml` present for api-gateway/application-service/auth-service/job-service/recruitment-service; secrets from `deploy/.env` (git-ignored, never committed); `deploy/.env.example` lists keys only.
-- **Required env vars**: `POSTGRES_USER`, `POSTGRES_PASSWORD` (fail fast via `${VAR:?...}`); optional `POSTGRES_DB`, `GATEWAY_CORS_ALLOWED_ORIGINS`, seed account vars, `AUTH_JWT_PRIVATE_KEY`.
+- **Required env vars**: `POSTGRES_USER`, `POSTGRES_PASSWORD` (fail fast via `${VAR:?...}`); optional `POSTGRES_DB`, `GATEWAY_CORS_ALLOWED_ORIGINS`, seed account vars, `AUTH_JWT_PRIVATE_KEY`, `AUTH_ADMIN_SIGNUP_CODE` (enables administrator self-registration when non-blank; secret).
 
 ## 6. Maven module structure and verified build/test commands
 
 Root `pom.xml` modules: 7 in committed `HEAD` (`common`, `service-registry`, `api-gateway`, `job-service`, `auth-service`, `application-service`, `recruitment-service`); 10 in working tree (adds `document-service`, `notification-service`, `ai-service` — Claude's Phase 2 work, untracked). All 10 compile successfully. [V: `mvn compile`]
 
 - **Compile all**: `mvn compile` (or `mvn -pl <module> compile`) — [V: all 10 modules SUCCESS on JDK 24]
-- **Test one module**: `mvn -pl services/<module> test` — verified results: application-service 137/0 [V], auth-service 55/0 [V], job-service 78/0 [V], recruitment-service 122/0 [V], document+notification+common 44/0 [V]; ai-service 52/0 [V]
+- **Test one module**: `mvn -pl services/<module> test` — verified results: application-service 137/0 [V], auth-service 77/0 [V], job-service 81/0 [V], recruitment-service 122/0 [V], document+notification+common 44/0 [V]; ai-service 52/0 [V]
 - **Full quality gate**: `mvn verify` (CI excludes `services/ai-service`: `mvn -B verify -pl '!services/ai-service' -am`) — cannot run locally (Testcontainers/PostgreSQL unavailable) [R: environment memory]
 - **Spotless check**: `mvn spotless:check` — passes on all modules [V: `mvn spotless:check`]
 - **SpotBugs**: `mvn spotbugs:check` — passes on all modules (0 bugs) [V: `mvn spotbugs:check`]
@@ -83,11 +85,12 @@ Root `pom.xml` modules: 7 in committed `HEAD` (`common`, `service-registry`, `ap
 
 - **Project rules** (`CLAUDE.md`): new project, no reviving old implementations; simple maintainable solutions; no unjustified dependencies; never expose secrets; validate with tests; incremental changes; synchronized docs; use project skills; security-first; inspect before creating/changing; explain architectural trade-offs. [V: CLAUDE.md]
 - **Java**: Java 21 bytecode/language level regardless of host JVM; `-parameters` compiler flag for Jackson record deserialization (JEP 118); `-Dnet.bytebuddy.experimental=true` for Surefire/Failsafe on JDK 24 host. [V: pom.xml]
-- **DTOs**: `RegisterRequest`/`LoginRequest` use immutable classes with `@JsonCreator`/`@JsonProperty` (not records) to avoid Jackson 2.18.2 deserialization issues on JDK 21+ [R: memory]
+- **DTOs**: `RegisterRequest`/`LoginRequest` use immutable classes with `@JsonCreator`/`@JsonProperty` (not records) so validation annotations and role-specific optional fields stay explicit; Jackson uses standard Spring Boot auto-configuration (the earlier custom `JacksonConfig` workaround was removed). [V]
 - **Formatting**: Spotless + Google Java Format (`google-java-format 1.22.0`), `removeUnusedImports`, `trimTrailingWhitespace`, `endWithNewline`; hard gate at `verify` phase. [V: pom.xml]
 - **Static analysis**: SpotBugs `effort=Max`, `threshold=Medium`, `failOnError=true`; SpotBugs annotations `provided` scope for targeted `@SuppressFBWarnings`. [V: pom.xml]
 - **ArchUnit**: Architecture rules enforced in tests. [V: pom.xml]
-- **Secrets**: Never in source/committed config; runtime from environment; `deploy/.env` git-ignored. [V: README.md, docker-compose.yml]
+- **Secrets**: Never in source/committed config; runtime from environment; `deploy/.env` git-ignored. `AUTH_ADMIN_SIGNUP_CODE` is a secret and is compared in constant time. [V: README.md, docker-compose.yml, RegistrationPolicy]
+- **Registration**: auth-service decides role-specific policy (`RegistrationPolicy`). Password minimum is 12 characters; candidate/recruiter signup open; recruiter requires `organizationName`; admin requires the deployment invitation code. Registration returns only a user id, so clients sign in separately. [V: RegisterRequest, AuthService]
 - **API style**: REST, RFC 9457 Problem Details for errors, correlation-id header on every response, UUID primary keys for cross-service opacity. [V: README.md, common module description]
 
 ## 9. Links and paths to key documentation and tests
@@ -101,10 +104,13 @@ Root `pom.xml` modules: 7 in committed `HEAD` (`common`, `service-registry`, `ap
 - `deploy/docker-compose.yml` — local demonstration stack
 - `deploy/.env.example` — environment variable template (keys only)
 - `deploy/postman/` — Postman E2E collection + environment
-- Tests: `services/*/src/test/java/...`; frontend `frontend/src/` (Vitest, 49 tests/8 files per README)
+- Tests: `services/*/src/test/java/...`; frontend `frontend/src/` (Vitest, 69 tests/11 files [V])
 
 ## 10. Known technical constraints future agents must account for
 
 - Docker and Testcontainers unavailable locally → integration tests, live Swagger runtime verification, and `mvn verify` full gate cannot run locally [R: environment memory]
 - Host JDK 24 vs build target Java 21 → Surefire/Failsafe need `-Dnet.bytebuddy.experimental=true`; ArchUnit warnings on JDK 24 class files [R: environment memory]
+- Administrator self-registration stays closed unless `AUTH_ADMIN_SIGNUP_CODE` is set for auth-service; the value is a secret and must never be committed [V]
+- Live browser verification must use `http://localhost:5173` (not `127.0.0.1`), because the gateway CORS default allows only the configured origin [V]
+- After recreating auth-service or job-service, the gateway can return 503 for roughly 30–45 seconds while Eureka refreshes [V]
 - No Kubernetes manifests, Helm, Terraform; secrets only via `.env` file; no Vault/SealedSecrets

@@ -1,13 +1,17 @@
 package com.smarthire.auth.api;
 
+import com.smarthire.auth.service.AdminRegistrationDeniedException;
+import com.smarthire.auth.service.CompanyNotFoundException;
 import com.smarthire.auth.service.EmailAlreadyExistsException;
 import com.smarthire.auth.service.InvalidCredentialsException;
+import com.smarthire.auth.service.InvalidRegistrationException;
 import com.smarthire.auth.service.InvalidTokenException;
 import com.smarthire.auth.service.UserNotFoundException;
 import com.smarthire.common.web.CorrelationId;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
@@ -25,6 +29,16 @@ public class AuthExceptionHandler {
     return problem(HttpStatus.CONFLICT, "Email already registered", ex.getMessage());
   }
 
+  @ExceptionHandler(InvalidRegistrationException.class)
+  public ProblemDetail handleInvalidRegistration(InvalidRegistrationException ex) {
+    return problem(HttpStatus.BAD_REQUEST, "Registration not accepted", ex.getMessage());
+  }
+
+  @ExceptionHandler(AdminRegistrationDeniedException.class)
+  public ProblemDetail handleAdminRegistrationDenied(AdminRegistrationDeniedException ex) {
+    return problem(HttpStatus.FORBIDDEN, "Administrator registration denied", ex.getMessage());
+  }
+
   @ExceptionHandler(InvalidCredentialsException.class)
   public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
     return problem(HttpStatus.UNAUTHORIZED, "Invalid credentials", ex.getMessage());
@@ -38,6 +52,22 @@ public class AuthExceptionHandler {
   @ExceptionHandler(UserNotFoundException.class)
   public ProblemDetail handleUserNotFound(UserNotFoundException ex) {
     return problem(HttpStatus.NOT_FOUND, "User not found", ex.getMessage());
+  }
+
+  @ExceptionHandler(CompanyNotFoundException.class)
+  public ProblemDetail handleCompanyNotFound(CompanyNotFoundException ex) {
+    return problem(HttpStatus.NOT_FOUND, "Company not found", ex.getMessage());
+  }
+
+  /**
+   * Role and ownership denials raised by method security ({@code @Secured}) or by a controller's
+   * own authorization check. Without this handler they would surface as 500s through the generic
+   * fallback.
+   */
+  @ExceptionHandler(AccessDeniedException.class)
+  public ProblemDetail handleAccessDenied(AccessDeniedException ex) {
+    return problem(
+        HttpStatus.FORBIDDEN, "Forbidden", "Your account is not permitted to perform this action.");
   }
 
   private static ProblemDetail problem(HttpStatus status, String title, String detail) {

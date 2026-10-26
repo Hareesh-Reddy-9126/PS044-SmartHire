@@ -7,7 +7,7 @@ React + TypeScript + Vite client for the SmartHire recruitment platform. Talks t
 - React 18, TypeScript 5, Vite 5
 - Tailwind CSS design tokens (`tailwind.config.js`, `src/styles/index.css`)
 - React Router 6
-- Vitest + Testing Library (49 tests across 8 files)
+- Vitest + Testing Library (69 tests across 11 files)
 - No UI framework beyond Tailwind and Material Symbols icons
 
 ## Prerequisites
@@ -56,13 +56,14 @@ Vite proxies `/api`, `/oauth2`, `/actuator`, and `/v3` to `http://localhost:8080
 src/
 ├── api/client.ts          # Typed Gateway client, in-memory access token
 ├── components/
+│   ├── auth/RoleSelector.tsx  # Shared role picker for sign-in and registration
 │   ├── layout/Layout.tsx  # App shell, public layout, and auth layout
 │   └── ui/                # Full design system component library (see below)
 ├── context/               # AuthContext (token management), ToastContext
 ├── hooks/useApi.ts        # Generic data-fetching hook with loading/error state
 ├── pages/
-│   ├── auth/              # LoginPage, RegisterPage
-│   ├── public/            # JobBrowsePage, JobDetailPage
+│   ├── auth/              # LoginPage, RegisterPage (role-aware)
+│   ├── public/            # LandingPage, JobBrowsePage, JobDetailPage
 │   ├── candidate/         # Applications, progress, documents, notifications, profile
 │   ├── recruiter/         # Jobs CRUD, recruitments, application lookup, profile
 │   ├── admin/             # Overview, recruitments list, application lookup, profile
@@ -110,18 +111,30 @@ All components are barrel-exported from `src/components/ui/index.ts`.
 - On plain `http://localhost`, a `Secure` refresh cookie may be rejected — silent refresh then fails; re-login is expected
 - Route guards enforce role menus in the UI; the Gateway and services enforce real authorization
 
+### Role-aware sign-in and registration
+
+- `/login` and `/register` share `components/auth/RoleSelector.tsx`; the choice is stored in `?role=` so links and refreshes preserve the intended portal.
+- Candidates and recruiters self-register. A recruiter supplies an organization name, and the backend creates a dedicated organization for that account.
+- Administrator registration requires the deployment's `AUTH_ADMIN_SIGNUP_CODE`; when the operator leaves it blank, the admin form is rejected by the backend.
+- Registration returns only a user id, so the client hands off to `/login?role=…` with a success banner and a prefilled email.
+- Login role selection is intent only. The JWT role is authoritative: a mismatch opens the account's real workspace with a dismissible notice rather than failing the sign-in.
+- A plain `/login` link does not show a mismatch notice; only an explicit `?role=` choice can mismatch.
+- Post-login `next` targets are restricted to same-origin paths the account's roles can open. `/workspace` redirects to the most privileged role home (`ADMIN` > `RECRUITER` > `CANDIDATE`).
+
 ## Roles and Routes
 
 | Role | Home | Routes |
 |------|------|--------|
-| Public | `/jobs` | `/jobs`, `/jobs/:jobId`, `/login`, `/register` |
+| Public | `/jobs` | `/` (landing), `/jobs`, `/jobs/:jobId`, `/login`, `/register` |
 | `CANDIDATE` | `/candidate/applications` | applications list & detail, apply `/jobs/:jobId/apply`, progress, documents, notifications, profile |
 | `RECRUITER` | `/recruiter/jobs` | jobs list, create `/recruiter/jobs/new`, detail & edit, recruitments list & detail, application lookup, profile |
 | `ADMIN` | `/admin/overview` | overview (recruitment count), recruitments list, application lookup, profile |
 
+- `/` is a public landing page with a workspace entry point for each role; it does not require an account.
 - `/workspace` redirects to role home after auth check
 - `/403`, `/404`, `/error`, `/offline`, `/session-expired` are standalone error pages
 - Unknown paths redirect to `/404`
+- The former `/company/*` recruiter pages were removed; company management is handled by the role-aware recruiter workspace and the backend company endpoints are not surfaced in this client.
 
 ## API Surface
 
@@ -129,8 +142,8 @@ All calls go through the API Gateway (`/api/v1/*`):
 
 | Endpoint prefix | Operations |
 |-----------------|-----------|
-| `/api/v1/auth/*` | login, register, refresh, logout, me |
-| `/api/v1/jobs/*` | list (paginated, filterable), get, create, update, open / close / reopen |
+| `/api/v1/auth/*` | login, register (candidate / recruiter / invited administrator), refresh, logout, me |
+| `/api/v1/jobs/*` | list (paginated, filterable; `mine=true` scopes to the recruiter's organization), get, create, update, open / close / reopen |
 | `/api/v1/applications/*` | list (candidate-scoped), get, create (apply), withdraw, status update (recruiter) |
 | `/api/v1/recruitments/*` | list, get, create, schedule interview, update interview status, set final status |
 | `/api/v1/documents/*` | list, upload, download (redirect), delete |
@@ -150,6 +163,8 @@ All calls go through the API Gateway (`/api/v1/*`):
 ## Known Limitations
 
 - Recruiter applicant review is scoped to a job; global lookup remains by application ID
+- Administrator self-registration depends on the deployment setting `AUTH_ADMIN_SIGNUP_CODE`; when blank, only a seeded administrator can sign in
+- Recruiter job lists request the server-side `mine=true` filter, so organization scope is enforced by the API rather than by filtering a public page
 - No password reset or profile-edit backend endpoints
 - Admin overview shows only a verified recruitment count, not a full analytics dashboard
 - Document download for other users is constrained by backend ownership rules
@@ -162,7 +177,7 @@ From `frontend/`:
 ```bash
 npm run lint        # 0 warnings
 npm run typecheck   # 0 errors
-npm run test:run    # 49/49 tests pass across 8 test files
+npm run test:run    # 69/69 tests pass across 11 test files
 npm run build       # clean production bundle (dist/)
 ```
 

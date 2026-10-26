@@ -5,7 +5,6 @@ import com.smarthire.auth.api.dto.CompanyResponse;
 import com.smarthire.auth.service.CompanyMembershipService;
 import com.smarthire.auth.service.CompanyService;
 import io.swagger.v3.oas.annotations.Operation;
-import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
@@ -16,20 +15,21 @@ import java.util.List;
 import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.access.annotation.Secured;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 /**
- * Company management endpoints. Company registration is public; approval/rejection/suspension are
- * Platform Admin operations; company lookup is available to authenticated users.
+ * Company management endpoints. Company registration is available to recruiters; approval,
+ * rejection and suspension are Platform Admin operations; a company is visible to its active
+ * members and to Platform Admins.
  */
 @RestController
 @RequestMapping("/api/v1/auth/companies")
@@ -39,40 +39,46 @@ public class CompanyController {
   private final CompanyService companyService;
   private final CompanyMembershipService membershipService;
 
-  public CompanyController(CompanyService companyService, CompanyMembershipService membershipService) {
+  public CompanyController(
+      CompanyService companyService, CompanyMembershipService membershipService) {
     this.companyService = companyService;
     this.membershipService = membershipService;
   }
 
   /**
    * Register a new company. Creates a PENDING_APPROVAL company; the caller becomes a pending
-   * COMPANY_ADMIN member. Public endpoint.
+   * COMPANY_ADMIN member. Requires RECRUITER role: the caller is the owner.
    */
-  @Operation(summary = "Register a new company", description = "Creates a company in PENDING_APPROVAL status")
+  @Operation(
+      summary = "Register a new company",
+      description =
+          "Creates a company in PENDING_APPROVAL status owned by the authenticated recruiter. Requires RECRUITER role.")
   @ApiResponses(
       value = {
         @ApiResponse(
             responseCode = "201",
             description = "Company registration submitted",
-            content = @io.swagger.v3.oas.annotations.media.Content(
-                mediaType = "application/json",
-                schema = @Schema(implementation = CompanyResponse.class)))
+            content =
+                @io.swagger.v3.oas.annotations.media.Content(
+                    mediaType = "application/json",
+                    schema = @Schema(implementation = CompanyResponse.class))),
+        @ApiResponse(responseCode = "401", description = "Unauthorized")
       })
-  @SecurityRequirement(name = "")
+  @SecurityRequirement(name = "bearerAuth")
   @PostMapping
+  @Secured("ROLE_RECRUITER")
   public ResponseEntity<CompanyResponse> registerCompany(
-      @Valid @RequestBody CompanyCreateRequest request,
-      @AuthenticationPrincipal Jwt jwt) {
+      @Valid @RequestBody CompanyCreateRequest request, @AuthenticationPrincipal Jwt jwt) {
     UUID ownerId = UUID.fromString(jwt.getSubject());
     UUID companyId = companyService.registerCompany(request.companyName(), ownerId);
     com.smarthire.auth.domain.Company company = companyService.getCompany(companyId);
     return ResponseEntity.status(HttpStatus.CREATED).body(CompanyResponse.from(company));
   }
 
-  /**
-   * Approve a pending company. Platform Admin only.
-   */
-  @Operation(summary = "Approve a company", description = "Platform Admin approves a pending company")
+  /** Approve a pending company. Platform Admin only. */
+  @Operation(
+      summary = "Approve a company",
+      description = "Platform Admin approves a pending company")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "Company approved"),
@@ -89,9 +95,7 @@ public class CompanyController {
     return ResponseEntity.ok().build();
   }
 
-  /**
-   * Reject a pending company. Platform Admin only.
-   */
+  /** Reject a pending company. Platform Admin only. */
   @Operation(summary = "Reject a company", description = "Platform Admin rejects a pending company")
   @ApiResponses(
       value = {
@@ -111,10 +115,10 @@ public class CompanyController {
     return ResponseEntity.ok().build();
   }
 
-  /**
-   * Suspend an active company. Platform Admin only.
-   */
-  @Operation(summary = "Suspend a company", description = "Platform Admin suspends an active company")
+  /** Suspend an active company. Platform Admin only. */
+  @Operation(
+      summary = "Suspend a company",
+      description = "Platform Admin suspends an active company")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "Company suspended"),
@@ -131,10 +135,10 @@ public class CompanyController {
     return ResponseEntity.ok().build();
   }
 
-  /**
-   * Reactivate a suspended company. Platform Admin only.
-   */
-  @Operation(summary = "Reactivate a company", description = "Platform Admin reactivates a suspended company")
+  /** Reactivate a suspended company. Platform Admin only. */
+  @Operation(
+      summary = "Reactivate a company",
+      description = "Platform Admin reactivates a suspended company")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "Company reactivated"),
@@ -151,47 +155,54 @@ public class CompanyController {
     return ResponseEntity.ok().build();
   }
 
-  /**
-   * Get a company by ID. Authenticated users only.
-   */
-  @Operation(summary = "Get company details", description = "Get company details by ID")
+  /** Get a company by ID. Visible to Platform Admins and that company's active members. */
+  @Operation(
+      summary = "Get company details",
+      description = "Get company details by ID. Platform Admin or an active member of the company.")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "Company details"),
         @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - not a member"),
         @ApiResponse(responseCode = "404", description = "Company not found")
       })
   @SecurityRequirement(name = "bearerAuth")
   @GetMapping("/{companyId}")
-  public ResponseEntity<CompanyResponse> getCompany(@PathVariable UUID companyId) {
+  public ResponseEntity<CompanyResponse> getCompany(
+      @PathVariable UUID companyId, @AuthenticationPrincipal Jwt jwt) {
+    UUID userId = UUID.fromString(jwt.getSubject());
+    if (!isAdmin(jwt) && !isMember(companyId, userId)) {
+      throw new AccessDeniedException("This company is not visible to your account.");
+    }
     com.smarthire.auth.domain.Company company = companyService.getCompany(companyId);
     return ResponseEntity.ok(CompanyResponse.from(company));
   }
 
-  /**
-   * List all companies (optionally filtered by status). Authenticated users only.
-   */
-  @Operation(summary = "List companies", description = "List all companies, optionally filtered by status")
+  /** List all companies (optionally filtered by status). Platform Admin only. */
+  @Operation(
+      summary = "List companies",
+      description = "List all companies, optionally filtered by status. Platform Admin only.")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "Company list"),
-        @ApiResponse(responseCode = "401", description = "Unauthorized")
+        @ApiResponse(responseCode = "401", description = "Unauthorized"),
+        @ApiResponse(responseCode = "403", description = "Forbidden - requires ADMIN role")
       })
   @SecurityRequirement(name = "bearerAuth")
   @GetMapping
+  @Secured("ROLE_ADMIN")
   public ResponseEntity<List<CompanyResponse>> listCompanies(
-      @org.springframework.web.bind.annotation.RequestParam(required = false) String status) {
-    com.smarthire.auth.domain.Company.Status statusEnum = status != null ? com.smarthire.auth.domain.Company.Status.valueOf(status) : null;
-    List<com.smarthire.auth.domain.Company> companies = companyService.listCompanies(statusEnum);
-    List<CompanyResponse> responses =
-        companies.stream().map(CompanyResponse::from).toList();
+      @org.springframework.web.bind.annotation.RequestParam(required = false)
+          com.smarthire.auth.domain.Company.Status status) {
+    List<com.smarthire.auth.domain.Company> companies = companyService.listCompanies(status);
+    List<CompanyResponse> responses = companies.stream().map(CompanyResponse::from).toList();
     return ResponseEntity.ok(responses);
   }
 
-  /**
-   * Get companies the current user is an active member of.
-   */
-  @Operation(summary = "Get my companies", description = "Get companies the current user is an active member of")
+  /** Get companies the current user is an active member of. */
+  @Operation(
+      summary = "Get my companies",
+      description = "Get companies the current user is an active member of")
   @ApiResponses(
       value = {
         @ApiResponse(responseCode = "200", description = "User's companies"),
@@ -202,8 +213,17 @@ public class CompanyController {
   public ResponseEntity<List<CompanyResponse>> getMyCompanies(@AuthenticationPrincipal Jwt jwt) {
     UUID userId = UUID.fromString(jwt.getSubject());
     List<com.smarthire.auth.domain.Company> companies = companyService.getUserCompanies(userId);
-    List<CompanyResponse> responses =
-        companies.stream().map(CompanyResponse::from).toList();
+    List<CompanyResponse> responses = companies.stream().map(CompanyResponse::from).toList();
     return ResponseEntity.ok(responses);
+  }
+
+  private static boolean isAdmin(Jwt jwt) {
+    List<String> roles = jwt.getClaimAsStringList("roles");
+    return roles != null && roles.contains("ADMIN");
+  }
+
+  private boolean isMember(UUID companyId, UUID userId) {
+    return membershipService.listUserMemberships(userId).stream()
+        .anyMatch(membership -> companyId.equals(membership.getCompanyId()));
   }
 }

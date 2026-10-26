@@ -8,9 +8,9 @@ import java.time.Instant;
 import java.util.UUID;
 
 /**
- * Employer organization. Recruiters and admins may belong to one (see {@link User#getOrgId()});
- * candidates do not. Inc 1 seeds a single demo org; recruiter self-service onboarding is explicitly
- * out of scope (decision 7).
+ * Employer organization. Recruiters may belong to one (see {@link User#getOrgId()}); candidates do
+ * not. Recruiter registration creates a dedicated organization; seeded demo accounts attach to the
+ * demo organization created by the initial migration.
  */
 @Entity
 @Table(name = "organizations")

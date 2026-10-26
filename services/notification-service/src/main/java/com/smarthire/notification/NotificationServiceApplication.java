@@ -9,8 +9,8 @@ import org.springframework.cloud.openfeign.EnableFeignClients;
  * Notification Service entry point.
  *
  * <p>{@code @EnableDiscoveryClient} registers this service with Eureka so the gateway can resolve
- * {@code lb://NOTIFICATION-SERVICE}. {@code @EnableFeignClients} enables the internal user-directory
- * lookup used to address notifications to a real candidate email.
+ * {@code lb://NOTIFICATION-SERVICE}. {@code @EnableFeignClients} enables the internal
+ * user-directory lookup used to address notifications to a real candidate email.
  */
 @SpringBootApplication
 @EnableDiscoveryClient

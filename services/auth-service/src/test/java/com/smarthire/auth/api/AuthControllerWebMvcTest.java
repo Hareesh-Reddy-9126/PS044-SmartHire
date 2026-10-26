@@ -9,8 +9,11 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 import com.smarthire.auth.config.SecurityConfig;
+import com.smarthire.auth.domain.Role;
+import com.smarthire.auth.service.AdminRegistrationDeniedException;
 import com.smarthire.auth.service.AuthService;
 import com.smarthire.auth.service.AuthTokens;
+import com.smarthire.auth.service.InvalidRegistrationException;
 import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
@@ -125,7 +128,8 @@ class AuthControllerWebMvcTest {
   @Test
   void logoutStillClearsTheRefreshCookieWithoutAnAccessToken() throws Exception {
     mvc.perform(
-            post("/api/v1/auth/logout").cookie(new jakarta.servlet.http.Cookie("smarthire_refresh", "refresh-token")))
+            post("/api/v1/auth/logout")
+                .cookie(new jakarta.servlet.http.Cookie("smarthire_refresh", "refresh-token")))
         .andExpect(status().isNoContent())
         .andExpect(
             result ->
@@ -144,6 +148,71 @@ class AuthControllerWebMvcTest {
                 .content(
                     "{\"email\":\"" + "a".repeat(256) + "@example.com\",\"password\":\"short\"}"))
         .andExpect(status().isBadRequest());
+  }
+
+  @Test
+  void recruiterRegistrationPassesTheRoleAndOrganizationToTheService() throws Exception {
+    when(authService.register(
+            "hire@acme.example", "secret-password", Role.RECRUITER, "Acme Corp", null))
+        .thenReturn(UUID.fromString(USER_ID));
+
+    mvc.perform(
+            post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "email": "hire@acme.example",
+                      "password": "secret-password",
+                      "role": "RECRUITER",
+                      "organizationName": "Acme Corp"
+                    }
+                    """))
+        .andExpect(status().isCreated())
+        .andExpect(jsonPath("$.userId").value(USER_ID));
+  }
+
+  @Test
+  void administratorRegistrationWithoutAValidCodeReturnsAProblem403() throws Exception {
+    when(authService.register(
+            "ops@smarthire.example", "secret-password", Role.ADMIN, null, "wrong-code"))
+        .thenThrow(new AdminRegistrationDeniedException());
+
+    mvc.perform(
+            post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "email": "ops@smarthire.example",
+                      "password": "secret-password",
+                      "role": "ADMIN",
+                      "adminInviteCode": "wrong-code"
+                    }
+                    """))
+        .andExpect(status().isForbidden())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.title").value("Administrator registration denied"));
+  }
+
+  @Test
+  void recruiterRegistrationWithoutAnOrganizationReturnsAProblem400() throws Exception {
+    when(authService.register("hire@acme.example", "secret-password", Role.RECRUITER, null, null))
+        .thenThrow(new InvalidRegistrationException("An organization name is required."));
+
+    mvc.perform(
+            post("/api/v1/auth/register")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(
+                    """
+                    {
+                      "email": "hire@acme.example",
+                      "password": "secret-password",
+                      "role": "RECRUITER"
+                    }
+                    """))
+        .andExpect(status().isBadRequest())
+        .andExpect(jsonPath("$.title").value("Registration not accepted"));
   }
 
   @Test

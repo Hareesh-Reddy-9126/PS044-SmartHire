@@ -12,9 +12,9 @@ import org.springframework.stereotype.Repository;
 /**
  * Repository for {@link Company} entities.
  *
- * <p>Company records are owned by the auth-service and accessed only through the CompanyService.
- * No cross-service foreign keys reference this table; each service stores its own copy of
- * owner_org_id and enforces authorization at the service boundary.
+ * <p>Company records are owned by the auth-service and accessed only through the CompanyService. No
+ * cross-service foreign keys reference this table; each service stores its own copy of owner_org_id
+ * and enforces authorization at the service boundary.
  */
 @Repository
 public interface CompanyRepository extends JpaRepository<Company, UUID> {
@@ -26,8 +26,7 @@ public interface CompanyRepository extends JpaRepository<Company, UUID> {
   List<Company> findByStatus(Company.Status status);
 
   /** Find companies by name (case-insensitive partial match). */
-  @Query(
-      "SELECT c FROM Company c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))")
+  @Query("SELECT c FROM Company c WHERE LOWER(c.name) LIKE LOWER(CONCAT('%', :name, '%'))")
   List<Company> findByNameContainingIgnoreCase(@Param("name") String name);
 
   /** Check if a company name already exists (case-insensitive). */

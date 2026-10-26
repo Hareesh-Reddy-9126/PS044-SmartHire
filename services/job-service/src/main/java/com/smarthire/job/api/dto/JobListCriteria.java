@@ -12,7 +12,8 @@ import io.swagger.v3.oas.annotations.media.Schema;
  * #MAX_SIZE} so {@code ?size=1000000} cannot be used to pull the whole table in one request.
  *
  * <p>Note what is <em>absent</em>: there is no {@code ownerOrgId} parameter. Visibility is derived
- * from the verified JWT inside the service, so no query string can widen what the caller sees.
+ * from the verified JWT inside the service, so no query string can widen what the caller sees. The
+ * {@code mine} flag can only narrow the result to the caller's own organization.
  *
  * <p>Deliberately not a record, and deliberately free of Spring Data types. The status filter is
  * held as the domain enum — Spring converts the query parameter and rejects an unknown value with
@@ -45,16 +46,23 @@ public final class JobListCriteria {
       example = "software engineer")
   private final String q;
 
+  @Schema(
+      name = "mine",
+      description = "Restrict the result to the caller's own organization (recruiters only)")
+  private final boolean mine;
+
   @Schema(name = "page", description = "Zero-based page index, default is 0")
   private final int page;
 
   @Schema(name = "size", description = "Page size, default is 20, max is 100")
   private final int size;
 
-  public JobListCriteria(JobStatus status, String location, String q, int page, int size) {
+  public JobListCriteria(
+      JobStatus status, String location, String q, boolean mine, int page, int size) {
     this.status = status;
     this.location = location;
     this.q = q;
+    this.mine = mine;
     this.page = Math.max(0, page);
     this.size = size <= 0 ? DEFAULT_SIZE : Math.min(size, MAX_SIZE);
   }
@@ -71,6 +79,6 @@ public final class JobListCriteria {
 
   /** The domain-facing filter, without any transport concerns. */
   public JobQuery toQuery() {
-    return new JobQuery(status, location, q);
+    return new JobQuery(status, location, q, mine);
   }
 }

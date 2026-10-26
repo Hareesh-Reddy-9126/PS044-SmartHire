@@ -57,7 +57,7 @@ The backend is the source of truth for authorization. The frontend route guards 
 | Candidate workspace | Applications list and detail, apply and withdraw, progress timeline, document upload/download/delete, notifications, profile |
 | Recruiter workspace | Job CRUD and lifecycle actions, job-scoped applicant list, application lookup, recruitment creation, interview scheduling, interview status and final decision |
 | Admin workspace | Recruitment overview, recruitment detail, application lookup, profile |
-| Identity | RS256 JWT access tokens, JWKS verification, Redis-backed refresh sessions and revocation, role-based access control |
+| Identity | Role-aware self-registration for candidates, recruiters, and invited administrators; RS256 JWT access tokens, JWKS verification, Redis-backed refresh sessions and revocation, role-based access control |
 | Reliability | Eureka discovery, OpenFeign clients, Resilience4j circuit breakers/retries/bulkheads, RFC 9457 error responses, correlation IDs |
 | AI service | Deterministic mock provider by default; optional Claude provider, PII redaction, prompt-injection defenses, and a kill switch |
 | Frontend system | Custom “decision record” visual language, accessible primitives, responsive app/auth/public shells, reduced-motion support |
@@ -160,12 +160,18 @@ Fill in at least:
 - `POSTGRES_USER`
 - `POSTGRES_PASSWORD`
 
-To create the non-self-service demo roles, also set both values for each account:
+To seed demo accounts, also set both values for each account:
 
 - `AUTH_SEED_RECRUITER_EMAIL` and `AUTH_SEED_RECRUITER_PASSWORD`
 - `AUTH_SEED_ADMIN_EMAIL` and `AUTH_SEED_ADMIN_PASSWORD`
 
 The seed profile only creates an account when both its email and password are present. `deploy/.env` is git-ignored and must never be committed.
+
+Candidates and recruiters can also create their own accounts from the website. Administrator self-registration is closed by default and opens only when you set a deployment-specific invitation code:
+
+- `AUTH_ADMIN_SIGNUP_CODE` — the code an administrator must present at registration; blank disables administrator signup entirely.
+
+Treat this value as a secret. It is compared in constant time and is never written to logs or returned by the API.
 
 ### 3. Start the backend stack
 
@@ -216,6 +222,7 @@ Do not add `-v` unless you intend to delete the PostgreSQL and document volumes.
 | `AUTH_JWT_PRIVATE_KEY` | No | PKCS#8 PEM signing key; an ephemeral development key is generated when blank |
 | `AUTH_SEED_RECRUITER_EMAIL` / `AUTH_SEED_RECRUITER_PASSWORD` | No | Development recruiter seed account; both required |
 | `AUTH_SEED_ADMIN_EMAIL` / `AUTH_SEED_ADMIN_PASSWORD` | No | Development admin seed account; both required |
+| `AUTH_ADMIN_SIGNUP_CODE` | No | Invitation code that enables administrator self-registration; blank disables it; secret |
 | `SMARTHIRE_AI_ENABLED` | No | AI kill switch |
 | `SMARTHIRE_AI_PROVIDER` | No | `mock` (default) or `claude` |
 | `SMARTHIRE_AI_CLAUDE_API_KEY` | No | Required only for the Claude provider; secret |
@@ -232,13 +239,22 @@ Copy `frontend/.env.example` to `frontend/.env.local` for local overrides. Never
 
 ## Roles and routes
 
+All three roles sign in through the same website. `/login` and `/register` share an accessible role selector, and the portal links on the landing page pre-select the intended role.
+
+- **Candidates** register openly and land in `/candidate/applications`.
+- **Recruiters** register openly, must name their organization, and land in `/recruiter/jobs`. Registration creates a dedicated organization so job ownership works immediately, and recruiter job lists are scoped to that organization.
+- **Administrators** register only with the deployment's `AUTH_ADMIN_SIGNUP_CODE`, or use a seeded account, and land in `/admin/overview`.
+
+The selected role at sign-in expresses intent only. The role in the JWT and the `/auth/me` response remain authoritative: if the choice does not match the account, SmartHire opens the account's real workspace and shows a dismissible notice instead of ending the session.
+
 | Role | Home | Main routes |
 |---|---|---|
-| Public | `/jobs` | `/`, `/jobs`, `/jobs/:jobId`, `/login`, `/register` |
+| Public | `/jobs` | `/` (landing), `/jobs`, `/jobs/:jobId`, `/login`, `/register` |
 | `CANDIDATE` | `/candidate/applications` | Applications, application detail, apply, progress, documents, notifications, profile |
 | `RECRUITER` | `/recruiter/jobs` | Jobs, create/edit job, job detail and applicants, recruitments, application lookup, profile |
 | `ADMIN` | `/admin/overview` | Overview, recruitments, recruitment detail, application lookup, profile |
 
+- `/` is the public landing page with a workspace entry point for each role and direct access to public job browsing.
 - `/workspace` redirects authenticated users to their role home.
 - `/403`, `/404`, `/error`, `/offline`, and `/session-expired` are standalone error pages.
 - Client-side route guards live in `frontend/src/utils/roles.ts` and `frontend/src/routes/AppRoutes.tsx`.
@@ -266,7 +282,7 @@ From `frontend/`:
 ```bash
 npm run lint        # ESLint, zero warnings
 npm run typecheck   # tsc --noEmit
-npm run test:run    # 49 Vitest tests across 8 files
+npm run test:run    # 69 Vitest tests across 11 files
 npm run build       # typecheck + production bundle
 ```
 
@@ -278,8 +294,8 @@ All application calls go through the API Gateway at `/api/v1/*`.
 
 | Prefix | Operations |
 |---|---|
-| `/api/v1/auth/*` | Register, login, refresh, logout, current user |
-| `/api/v1/jobs/*` | List, get, create, update, open, close, reopen |
+| `/api/v1/auth/*` | Register (role-aware), login, refresh, logout, current user |
+| `/api/v1/jobs/*` | List (`mine=true` limits a recruiter to their organization), get, create, update, open, close, reopen |
 | `/api/v1/applications/*` | Candidate list, get, apply, withdraw, recruiter status update, job-scoped list |
 | `/api/v1/recruitments/*` | List, get, create, schedule interview, update interview status, final status |
 | `/api/v1/documents/*` | List, upload, download, delete |
@@ -344,6 +360,8 @@ mvn test -Dnet.bytebuddy.experimental=true
 - RS256 access tokens are verified with the auth-service JWKS.
 - Access tokens stay in memory in the browser; the refresh token is an HttpOnly cookie.
 - Refresh-token state and JWT revocation live in Redis.
+- Candidate and recruiter self-registration are open; administrator signup requires the deployment's `AUTH_ADMIN_SIGNUP_CODE` and is disabled when the value is blank.
+- A recruiter registration creates a dedicated organization, so one recruiter cannot see another organization's draft or closed postings.
 - Gateway and service-level authorization enforce ownership and role boundaries.
 - No real secrets belong in the repository; use `deploy/.env` or CI secrets.
 - `deploy/.env.example` lists keys only and contains no usable credentials.

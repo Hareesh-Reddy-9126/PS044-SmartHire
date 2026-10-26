@@ -32,9 +32,9 @@ import reactor.core.publisher.Mono;
 public class GatewayRateLimitConfig {
 
   /**
-   * Caddy is the only public entry point and appends the real client address to
-   * X-Forwarded-For. Reading the last trusted hop prevents every anonymous caller from sharing
-   * Caddy's container IP (which would make the rate limit effectively global).
+   * Caddy is the only public entry point and appends the real client address to X-Forwarded-For.
+   * Reading the last trusted hop prevents every anonymous caller from sharing Caddy's container IP
+   * (which would make the rate limit effectively global).
    */
   private final XForwardedRemoteAddressResolver forwardedAddressResolver =
       XForwardedRemoteAddressResolver.maxTrustedIndex(1);

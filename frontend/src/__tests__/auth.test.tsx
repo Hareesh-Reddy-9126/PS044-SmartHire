@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, waitFor, act } from '@testing-library/react';
+import { render, screen, waitFor, act, fireEvent } from '@testing-library/react';
 import { MemoryRouter, Routes, Route } from 'react-router-dom';
 
 // Mock the api/client module BEFORE importing anything that uses it
@@ -24,7 +24,7 @@ vi.mock('../api/client', () => ({
 // Import after mocks are set up
 import { AuthProvider, useAuth } from '../context/AuthContext';
 import { ProtectedRoute } from '../routes/AppRoutes';
-import { authApi, getAccessToken, clearAccessToken, isTokenExpired } from '../api/client';
+import { authApi, getAccessToken, clearAccessToken, isTokenExpired, endSession } from '../api/client';
 
 describe('AuthContext', () => {
   beforeEach(() => {
@@ -333,6 +333,103 @@ describe('ProtectedRoute', () => {
     await waitFor(() => {
       expect(screen.getByText('Signed in as newuser@example.com (CANDIDATE)')).toBeInTheDocument();
     });
+  });
+
+  it('reverts navbar to signed-out state after logout', async () => {
+    const mockMeResponse = {
+      sub: 'user-123',
+      email: 'candidate@example.com',
+      roles: ['CANDIDATE'],
+      orgId: null,
+    };
+
+    vi.mocked(getAccessToken).mockReturnValue('valid-token');
+    vi.mocked(isTokenExpired).mockReturnValue(false);
+    vi.mocked(authApi.me).mockResolvedValue(mockMeResponse);
+    vi.mocked(endSession).mockImplementation(async () => {
+      clearAccessToken();
+    });
+
+    function NavbarDisplay() {
+      const { user, isAuthenticated, logout } = useAuth();
+      if (!isAuthenticated || !user) {
+        return (
+          <div>
+            <button onClick={logout}>Sign out</button>
+            <span data-testid="navbar-state">Signed out</span>
+          </div>
+        );
+      }
+      return (
+        <div>
+          <button onClick={logout}>Sign out</button>
+          <span data-testid="navbar-state">
+            Signed in as {user.email} ({user.roles.join(', ')})
+          </span>
+        </div>
+      );
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <AuthProvider>
+          <NavbarDisplay />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    // After login, navbar shows signed-in state
+    await waitFor(() => {
+      expect(screen.getByText('Signed in as candidate@example.com (CANDIDATE)')).toBeInTheDocument();
+    });
+
+    // Click logout
+    fireEvent.click(screen.getByRole('button', { name: 'Sign out' }));
+
+    // Navbar reverts to signed-out state
+    await waitFor(() => {
+      expect(screen.getByText('Signed out')).toBeInTheDocument();
+    });
+    expect(clearAccessToken).toHaveBeenCalled();
+  });
+
+  it('blocks recruiter from accessing admin routes', async () => {
+    const mockMeResponse = {
+      sub: 'user-456',
+      email: 'recruiter@example.com',
+      roles: ['RECRUITER'],
+      orgId: 'org-123',
+    };
+
+    vi.mocked(getAccessToken).mockReturnValue('valid-token');
+    vi.mocked(isTokenExpired).mockReturnValue(false);
+    vi.mocked(authApi.me).mockResolvedValue(mockMeResponse);
+
+    render(
+      <MemoryRouter initialEntries={['/admin/overview']}>
+        <AuthProvider>
+          <Routes>
+            <Route
+              path="/admin/overview"
+              element={
+                <ProtectedRoute allowedRoles={['ADMIN']}>
+                  <div data-testid="admin-content">Admin Overview</div>
+                </ProtectedRoute>
+              }
+            />
+            <Route path="/login" element={<div data-testid="login-page">Login Page</div>} />
+            <Route path="/403" element={<div data-testid="forbidden-page">403 Forbidden</div>} />
+          </Routes>
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    await waitFor(() => {
+      expect(screen.getByText('403 Forbidden')).toBeInTheDocument();
+    });
+
+    expect(screen.queryByText('Admin Overview')).not.toBeInTheDocument();
+    expect(screen.queryByText('Login Page')).not.toBeInTheDocument();
   });
 
   it('shows loading state while auth is initializing', async () => {

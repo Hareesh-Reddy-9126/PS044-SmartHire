@@ -5,6 +5,8 @@
 // localStorage or sessionStorage — and the refresh token lives in an HttpOnly
 // cookie the browser manages.
 
+import type { AccountRole } from '../utils/roles';
+
 const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
 
 /* ============================================================ Error shapes */
@@ -375,7 +377,7 @@ async function request<T>(path: string, options: RequestOptions = {}): Promise<T
 }
 
 /** Build a query string, omitting empty values so the server sees clean input. */
-function query(params: Record<string, string | number | undefined | null>): string {
+function query(params: Record<string, string | number | boolean | undefined | null>): string {
   const search = new URLSearchParams();
   Object.entries(params).forEach(([key, value]) => {
     if (value !== undefined && value !== null && value !== '') {
@@ -405,6 +407,17 @@ export interface RegisterResponse {
   userId: string;
 }
 
+/** Payload accepted by the role-aware registration endpoint. */
+export interface RegisterPayload {
+  email: string;
+  password: string;
+  role: AccountRole;
+  /** Required for RECRUITER; rejected for the other roles. */
+  organizationName?: string;
+  /** Required for ADMIN; never persisted, logged or echoed. */
+  adminInviteCode?: string;
+}
+
 export const authApi = {
   login: async (email: string, password: string): Promise<TokenResponse> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
@@ -425,11 +438,17 @@ export const authApi = {
     return data;
   },
 
-  register: async (email: string, password: string): Promise<RegisterResponse> => {
+  register: async (payload: RegisterPayload): Promise<RegisterResponse> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
+      body: JSON.stringify({
+        email: payload.email,
+        password: payload.password,
+        role: payload.role,
+        organizationName: payload.organizationName?.trim() || undefined,
+        adminInviteCode: payload.adminInviteCode?.trim() || undefined,
+      }),
       credentials: 'include',
     });
 
@@ -494,6 +513,8 @@ export interface JobListParams {
   q?: string;
   location?: string;
   status?: string;
+  /** Restrict to the caller's own organization; only meaningful for recruiters. */
+  mine?: boolean;
   page?: number;
   size?: number;
 }
@@ -505,6 +526,7 @@ export const jobsApi = {
         q: params.q,
         location: params.location,
         status: params.status,
+        mine: params.mine,
         page: params.page,
         size: params.size,
       })}`
@@ -779,62 +801,4 @@ export const recruitmentsApi = {
         body: JSON.stringify(data),
       }
     ),
-};
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-export interface CompanyResponse {
-  companyId: string;
-  name: string;
-  status: 'PENDING_APPROVAL' | 'ACTIVE' | 'SUSPENDED';
-  ownerId: string;
-  memberCount: number;
-  createdAt: string;
-  updatedAt: string;
-}
-
-export interface CompanyListParams {
-  page?: number;
-  size?: number;
-}
-
-export const companiesApi = {
-  list: async (params: CompanyListParams = {}): Promise<PagedModel<CompanyResponse>> =>
-    request<PagedModel<CompanyResponse>>(
-      `/api/v1/companies${query({
-        page: params.page,
-        size: params.size,
-      })}`
-    ),
-
-  get: async (companyId: string): Promise<CompanyResponse> =>
-    request<CompanyResponse>(`/api/v1/companies/${companyId}`),
-
-  create: async (data: { name: string }): Promise<CompanyResponse> =>
-    request<CompanyResponse>('/api/v1/companies', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }),
-
-  update: async (companyId: string, data: { name: string }): Promise<CompanyResponse> =>
-    request<CompanyResponse>(`/api/v1/companies/${companyId}`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(data),
-    }),
 };

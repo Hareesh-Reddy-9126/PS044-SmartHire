@@ -3,9 +3,7 @@ package com.smarthire.auth.api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import java.util.UUID;
 
-/**
- * Response for company membership operations.
- */
+/** Response for company membership operations. */
 @Schema(name = "CompanyMembershipResponse", description = "Company membership response")
 public record CompanyMembershipResponse(
     @Schema(
@@ -29,9 +27,5 @@ public record CompanyMembershipResponse(
             example = "RECRUITER",
             required = true)
         CompanyMembershipRole role,
-    @Schema(
-            name = "status",
-            description = "Membership status",
-            example = "ACTIVE",
-            required = true)
+    @Schema(name = "status", description = "Membership status", example = "ACTIVE", required = true)
         String status) {}

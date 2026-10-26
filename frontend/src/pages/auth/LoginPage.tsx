@@ -1,88 +1,134 @@
-import { useCallback, useState, FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { RoleSelector } from '../../components/auth/RoleSelector';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
 import { errorMessage } from '../../utils/errors';
-import { safeNextPath } from '../../utils/roles';
+import {
+  authPath,
+  normaliseRole,
+  primaryRole,
+  roleHome,
+  roleLabel,
+  safeNextPath,
+  type AccountRole,
+} from '../../utils/roles';
 
-type Role = 'CANDIDATE' | 'RECRUITER' | 'ADMIN';
+interface LoginLocationState {
+  /** Prefilled after registration. */
+  email?: string;
+  /** Set by the registration screen after a successful account creation. */
+  registered?: boolean;
+  /** Destination preserved across the registration round-trip. */
+  next?: string;
+}
 
-const ROLE_OPTIONS: { value: Role; label: string }[] = [
-  { value: 'CANDIDATE', label: 'Candidate' },
-  { value: 'RECRUITER', label: 'Recruiter' },
-  { value: 'ADMIN', label: 'Admin' },
-];
+const ROLE_SUBTITLE: Record<AccountRole, string> = {
+  CANDIDATE:
+    'Track your applications, documents and interview progress in one accountable record.',
+  RECRUITER:
+    'Publish roles, review applicants and record interview and hiring decisions.',
+  ADMIN: 'Review the platform operating picture and the decisions recorded across workspaces.',
+};
 
 export function LoginPage() {
   const location = useLocation();
-  const registeredEmail =
-    (location.state as { email?: string } | null)?.email?.trim() ?? '';
-  const [email, setEmail] = useState(registeredEmail);
+  const locationState = (location.state as LoginLocationState | null) ?? null;
+  const [email, setEmail] = useState(locationState?.email?.trim() ?? '');
   const [password, setPassword] = useState('');
-  const [selectedRole, setSelectedRole] = useState<Role>('CANDIDATE');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
-  const { login, logout } = useAuth();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const { login } = useAuth();
 
-  const handleSubmit = useCallback(async (event: FormEvent<HTMLFormElement>) => {
-    event.preventDefault();
+  const roleParam = searchParams.get('role');
+  const selectedRole = normaliseRole(roleParam);
+  // Only an explicit portal choice can be "wrong". A generic /login link must not
+  // greet a recruiter with a mismatch notice.
+  const roleWasExplicit = roleParam !== null;
+  const next = locationState?.next ?? searchParams.get('next');
+
+  const selectRole = (role: AccountRole) => {
     setError('');
-    setIsSubmitting(true);
+    const updated = new URLSearchParams(searchParams);
+    updated.set('role', role);
+    // Keep the requested destination when the visitor switches portal.
+    setSearchParams(updated, { replace: true });
+  };
 
-    try {
-      const me = await login(email, password);
+  const handleSubmit = useCallback(
+    async (event: FormEvent<HTMLFormElement>) => {
+      event.preventDefault();
+      setError('');
+      setIsSubmitting(true);
 
-      if (!me.roles.includes(selectedRole)) {
-        await logout();
-        setError('This account does not have the selected role.');
-        return;
+      try {
+        const me = await login(email, password);
+        const roles = me.roles ?? [];
+
+        if (roleWasExplicit && !roles.includes(selectedRole)) {
+          // The token is authoritative: never tear the session down because the
+          // visitor picked the wrong tab. Open the account's real workspace and
+          // explain the switch instead.
+          const actualRole = roleLabel(primaryRole(roles));
+          navigate(roleHome(roles), {
+            replace: true,
+            state: {
+              notice: {
+                tone: 'info',
+                title: `Signed in to the ${actualRole} workspace`,
+                message: `This account is registered as ${actualRole}, so we opened that portal instead of the ${roleLabel(
+                  selectedRole
+                )} portal.`,
+              },
+            },
+          });
+          return;
+        }
+
+        navigate(safeNextPath(next, roles), { replace: true });
+      } catch (caught) {
+        setError(errorMessage(caught, 'Login failed. Please check your credentials and try again.'));
+      } finally {
+        setIsSubmitting(false);
       }
-
-      const next = searchParams.get('next');
-      navigate(safeNextPath(next, me.roles), { replace: true });
-    } catch (err) {
-      setError(errorMessage(err, 'Login failed. Please check your credentials and try again.'));
-    } finally {
-      setIsSubmitting(false);
-    }
-  }, [email, password, navigate, login, logout, searchParams, selectedRole]);
+    },
+    [email, password, navigate, login, next, roleWasExplicit, selectedRole]
+  );
 
   return (
     <>
       <div>
         <p className="page-eyebrow">Your workspace</p>
         <h1 className="auth-form-title">Sign in</h1>
-        <p className="auth-form-subtitle">
-          Welcome back. Sign in to see your applications, recruitment progress and
-          notifications.
-        </p>
+        <p className="auth-form-subtitle">{ROLE_SUBTITLE[selectedRole]}</p>
       </div>
 
-      {error && <Alert tone="danger">{error}</Alert>}
+      <RoleSelector
+        value={selectedRole}
+        onChange={selectRole}
+        legend="Sign in as"
+        disabled={isSubmitting}
+      />
+
+      {locationState?.registered && (
+        <div className="mt-5">
+          <Alert tone="success" title="Account created">
+            Sign in with the credentials you just created.
+          </Alert>
+        </div>
+      )}
+
+      {error && (
+        <div className="mt-5">
+          <Alert tone="danger">{error}</Alert>
+        </div>
+      )}
 
       <form onSubmit={handleSubmit} className="mt-6 space-y-5">
-        <div className="space-y-2">
-          <label htmlFor="role" className="font-label-md text-label-md text-c-text-muted">
-            Sign in as
-          </label>
-          <select
-            id="role"
-            value={selectedRole}
-            onChange={event => setSelectedRole(event.target.value as Role)}
-            className="input w-full"
-          >
-            {ROLE_OPTIONS.map(option => (
-              <option key={option.value} value={option.value}>
-                {option.label}
-              </option>
-            ))}
-          </select>
-        </div>
-
         <Input
           id="email"
           label="Email"
@@ -91,7 +137,7 @@ export function LoginPage() {
           value={email}
           onChange={event => setEmail(event.target.value)}
           required
-          error={error.includes('email') ? error : undefined}
+          error={error.toLowerCase().includes('email') ? error : undefined}
           autoComplete="email"
         />
 
@@ -103,7 +149,7 @@ export function LoginPage() {
           value={password}
           onChange={event => setPassword(event.target.value)}
           required
-          error={error.includes('password') ? error : undefined}
+          error={error.toLowerCase().includes('password') ? error : undefined}
           autoComplete="current-password"
           showPasswordToggle
         />
@@ -116,10 +162,10 @@ export function LoginPage() {
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-c-border pt-5">
         <p className="font-body-sm text-body-sm text-c-text-muted">New to SmartHire?</p>
         <Link
-          to="/register"
+          to={authPath('/register', selectedRole)}
           className="font-label-md text-label-md text-c-primary-700 transition-colors hover:text-c-primary-900"
         >
-          Create an account
+          Create a {roleLabel(selectedRole).toLowerCase()} account
         </Link>
       </div>
     </>

@@ -11,7 +11,6 @@ import java.util.UUID;
  */
 @Schema(name = "UserEmailResponse", description = "Email address for a single user id")
 public record UserEmailResponse(
-    @Schema(description = "User id", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6")
-        UUID userId,
+    @Schema(description = "User id", example = "3fa85f64-5717-4562-b3fc-2c963f66afa6") UUID userId,
     @Schema(description = "Verified email address", example = "candidate@example.com")
         String email) {}

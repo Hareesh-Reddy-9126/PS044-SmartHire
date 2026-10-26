@@ -1,7 +1,7 @@
 package com.smarthire.ai.config;
 
-import java.util.List;
 import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
+import java.util.List;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -47,8 +47,8 @@ public class AiSecurityConfig {
 
   @SuppressFBWarnings(
       value = "EI_EXPOSE_REP2",
-      justification = "Spring-injected configuration properties; not mutated after injection. Spring manages the lifecycle of AiProperties."
-  )
+      justification =
+          "Spring-injected configuration properties; not mutated after injection. Spring manages the lifecycle of AiProperties.")
   public AiSecurityConfig(AiProperties aiProperties) {
     this.aiProperties = aiProperties;
   }

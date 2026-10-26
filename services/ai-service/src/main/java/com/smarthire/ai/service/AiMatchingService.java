@@ -12,16 +12,13 @@ import com.smarthire.ai.config.AiProperties;
 import com.smarthire.ai.domain.MatchScore;
 import com.smarthire.ai.infra.AiProvider;
 import com.smarthire.ai.infra.MatchScoreRepository;
-import com.smarthire.ai.config.AiProperties;
-import com.smarthire.ai.infra.AiProvider;
-import com.smarthire.ai.infra.MatchScoreRepository;
 import com.smarthire.common.audit.AuditService;
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 
 /**
  * Core AI service orchestrating match scoring, candidate summaries, JD assistance, and resume
@@ -54,8 +51,7 @@ public class AiMatchingService {
 
   @SuppressFBWarnings(
       value = "EI_EXPOSE_REP2",
-      justification = "Spring-injected configuration properties; not mutated after injection"
-  )
+      justification = "Spring-injected configuration properties; not mutated after injection")
   public AiMatchingService(
       AiProvider aiProvider,
       PiiRedactionService piiRedactionService,

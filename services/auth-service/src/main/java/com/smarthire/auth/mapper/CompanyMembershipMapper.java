@@ -3,9 +3,7 @@ package com.smarthire.auth.mapper;
 import com.smarthire.auth.api.dto.CompanyMembershipRole;
 import com.smarthire.auth.domain.CompanyMembership;
 
-/**
- * Mapper for converting between DTO and domain enums for company membership.
- */
+/** Mapper for converting between DTO and domain enums for company membership. */
 public class CompanyMembershipMapper {
 
   public static CompanyMembershipRole toDtoRole(CompanyMembership.Role role) {
