@@ -14,7 +14,7 @@ import { SkeletonDetail } from '../../components/ui/Skeleton';
 import { StatusBadge } from '../../components/ui/StatusBadge';
 import { useAuth } from '../../context/AuthContext';
 import { useApi } from '../../hooks/useApi';
-import { errorMessage } from '../../utils/errors';
+import { errorMessage, isNotFound } from '../../utils/errors';
 
 const PAGE_SIZE = 10;
 
@@ -68,8 +68,12 @@ export function RecruiterJobDetailPage() {
       setTotalElements(result.page?.totalElements ?? 0);
     } catch (caught) {
       setApplications([]);
+      // A 404 here means the job is outside the caller's organization: the job
+      // itself loaded from the public catalogue, so it is not actually missing.
       setApplicationsError(
-        errorMessage(caught, "We couldn't load the applications for this job.")
+        isNotFound(caught)
+          ? 'Applications are visible only to the organization that owns this job.'
+          : errorMessage(caught, "We couldn't load the applications for this job.")
       );
     }
   }, [jobId, page]);

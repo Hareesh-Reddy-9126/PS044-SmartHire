@@ -32,8 +32,18 @@ import {
 /** The linear happy path; off-ramps are declared as terminal values. */
 const APPLICATION_STEPS = ['APPLIED', 'UNDER_REVIEW', 'SHORTLISTED', 'HIRED'];
 
+/** Statuses that end the application outside the happy path. */
+const TERMINAL_STATUSES = ['REJECTED', 'WITHDRAWN'];
+
 /** Optional interview detail rows, only shown once a schedule exists. */
 const SCHEDULED_STATES = ['SCHEDULED', 'COMPLETED', 'NO_SHOW'];
+
+/** The interview card heading follows the recorded interview state. */
+const INTERVIEW_SECTION_TITLE: Record<string, string> = {
+  SCHEDULED: 'Interview scheduled',
+  COMPLETED: 'Interview completed',
+  NO_SHOW: 'Interview not attended',
+};
 
 const NEXT_STEP_COPY: Record<string, string> = {
   APPLIED: 'Your application has been received and is waiting to be reviewed.',
@@ -162,6 +172,11 @@ export function ApplicationDetailPage() {
   }
 
   const canWithdraw = ['APPLIED', 'UNDER_REVIEW', 'SHORTLISTED'].includes(application.status);
+  // An off-ramp replaces the remaining happy-path steps; we do not know how far
+  // the application progressed before it ended, so only APPLIED is asserted.
+  const timelineSteps = TERMINAL_STATUSES.includes(application.status)
+    ? ['APPLIED', application.status]
+    : APPLICATION_STEPS;
   const showSchedule =
     Boolean(recruitment) &&
     SCHEDULED_STATES.includes(recruitment!.interviewStatus) &&
@@ -203,7 +218,7 @@ export function ApplicationDetailPage() {
               application status. TimelineProps accepts `items`, not `steps`.
             */}
             <Timeline
-              items={APPLICATION_STEPS.map((step, index, steps) => ({
+              items={timelineSteps.map((step, index, steps) => ({
                 title: step,
                 status: index < steps.indexOf(application.status)
                   ? 'completed'
@@ -272,7 +287,7 @@ export function ApplicationDetailPage() {
                 {showSchedule && (
                   <div className="mt-5 space-y-4 rounded-xl bg-c-primary-50 border border-c-primary-100 p-4">
                     <h3 className="font-caption text-caption uppercase tracking-wide text-c-text-subtle">
-                      Interview scheduled
+                      {INTERVIEW_SECTION_TITLE[recruitment.interviewStatus] ?? 'Interview'}
                     </h3>
                     <dl className="grid grid-cols-2 gap-4">
                       <div>

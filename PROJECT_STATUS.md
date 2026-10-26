@@ -2,7 +2,7 @@
 
 Current project position. Facts verified from the repository are marked [V]; facts inherited from prior agent reports are marked [R] (reported, pending independent re-verification); anything not verifiable from the current working tree is marked unknown/pending.
 
-> **Current position (2026-10-26):** the public site is role-aware and all three roles register and sign in from one website. See **Role-aware website, authorization hardening, and cleanup [COMPLETE] [V]** and **Live multi-user verification [V]** at the end of this file. Those sections supersede earlier sections that describe public registration as candidate-only or `DevDataSeeder` as the only source of recruiter/administrator accounts. Older sections are retained as history.
+> **Current position (2026-10-26):** the public site is role-aware and all three roles register and sign in from one website. See **Role-aware website, authorization hardening, and cleanup [COMPLETE] [V]**, **Live multi-user verification [V]**, and **Final pre-deployment verification and README [V]** at the end of this file. Those sections supersede earlier sections that describe public registration as candidate-only or `DevDataSeeder` as the only source of recruiter/administrator accounts. Older sections are retained as history.
 
 ## Publish state — 2026-10-24 [V]
 
@@ -1881,4 +1881,43 @@ The only browser console/HTTP noise was intentional negative-path traffic: 404s 
 - The candidate application detail's "Linked recruitment" card keeps the static kicker `INTERVIEW SCHEDULED` after the recruitment reaches `COMPLETED`/`HIRED`; the adjacent status badges are correct.
 - Recruiter B's read of another organization's job shows "Applications unavailable - Job not found" while the same page renders the job; isolation is correct but the copy is contradictory.
 
+**Follow-up (2026-10-26, final pass):** all three observations were fixed and re-verified through the UI — the interview kicker now follows the recorded state (`INTERVIEW COMPLETED`), the withdrawn timeline names the off-ramp (`APPLIED → WITHDRAWN`), and a cross-organization job now reads "Applications are visible only to the organization that owns this job."
+
 **Limitations:** Testcontainers/integration suites still cannot run locally. Administrator self-registration was not exercised with the real deployment code (deliberately not read), only its rejection paths.
+
+## Final pre-deployment verification and README [V]
+
+**Date:** 2026-10-26
+**Scope:** final pre-deployment pass — the three UI observations above were fixed at the source, the `ai-service` image was repaired so a fresh clone builds and boots from Compose, the repository was cleaned, and the README was rebuilt as the project's public entry point.
+
+**UI fixes, verified in the live browser**
+- Candidate application detail: the interview card heading now follows the recorded interview state (`Interview scheduled`, `Interview completed`, `Interview not attended`) instead of a static kicker.
+- Candidate application detail: terminal statuses render the off-ramp timeline (`APPLIED → WITHDRAWN` / `REJECTED`) instead of the remaining happy-path steps.
+- Recruiter job detail: a 404 on a job outside the caller's organization now reads "Applications are visible only to the organization that owns this job." instead of the contradictory "Job not found".
+- All five README screenshots were re-captured after the fixes; the landing capture was cropped to remove a dead strip.
+
+**`ai-service` repair**
+- `AiController.java` was missing its entire Spring/Swagger/Java import block; restored, and `mvn -pl services/ai-service -am compile` now succeeds.
+- `application.yml` read `POSTGRES_USER`/`POSTGRES_PASSWORD` while Compose supplies `AI_SVC_DB_USER`/`AI_SVC_DB_PASSWORD`; aligned with the local/prod profiles so Compose credentials are actually used.
+- Module `spotless:check` passes.
+- The image was rebuilt from clean source through `docker compose ... up -d --build ai-service` with no override; the container is healthy, Hikari connects, Flyway migrates `ai_svc`, and the application starts. All 11 containers are healthy.
+- The module's 52 unit tests pass locally against in-memory H2 (`mvn -pl services/ai-service test`).
+
+**Frontend gates (all exit 0)**
+- `npm run lint` — zero warnings.
+- `npm run typecheck` — clean.
+- `npm run test:run` — 69 tests across 11 files.
+- `npm run build` — production bundle built.
+
+**README and assets**
+- `README.md` rewritten: animated hero (`docs/assets/hero.gif`), pure-HTML badge header (renders outside GitHub too), table of contents, product tour with five live screenshots, role capability tables, architecture diagram (`docs/assets/architecture.svg`) plus a Mermaid dependency graph, technology stack, repository layout, quick start, configuration, routes, API surface, verification evidence, security, known limitations, documentation index, contributing, and license status.
+- The architecture diagram was rebuilt at 1360×690 so every service name fits, the data links align to card centres, and no text overlaps.
+- No `LICENSE` file exists; the README states that plainly rather than inventing a license.
+
+**Repository cleanup**
+- 12 ignored scratch artifacts (test JSON payloads, `test.pdf`, `BOOT-INF/`, a stray log) were moved out of the working tree to `C:\Users\HP\AppData\Local\Temp\opencode\smarthire-cleanup-backup\`; nothing tracked was deleted.
+- `git status` now shows only intended changes; `git diff --check` is clean apart from line-ending notices; no secrets appear in the diff.
+
+**Limitations (unchanged):** full `mvn verify` / Testcontainers integration suites cannot run locally; administrator self-registration's positive path was not exercised (the deployment invite code was deliberately not read).
+
+**CI runner block (external):** every GitHub Actions job on `main` has been refused before startup with "The job was not started because your account is locked due to a billing issue." The workflow itself is valid and unchanged; this is an account-level GitHub Actions runner restriction, not a code or configuration failure. The README therefore shows a neutral GitHub Actions badge and states that verification evidence comes from local runs.

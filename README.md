@@ -1,68 +1,126 @@
-# SmartHire
+<p align="center">
+  <img src="docs/assets/hero.gif" alt="Animated SmartHire record: an application moves from APPLIED through interview to HIRED" width="800" />
+</p>
 
-### Employment decision architecture
+<h1 align="center">SmartHire</h1>
 
-**SmartHire** is a full-stack, microservices recruitment platform for candidates, recruiters, and administrators. It covers public job discovery, applications, interview scheduling, documents, notifications, and AI-assisted matching in one accountable hiring record.
+<p align="center"><strong>Employment decision architecture</strong></p>
 
-[![CI](https://github.com/Hareesh-Reddy-9126/PS044-SmartHire/actions/workflows/ci.yml/badge.svg)](https://github.com/Hareesh-Reddy-9126/PS044-SmartHire/actions/workflows/ci.yml)
-[![Java 21](https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&logoColor=white)](https://openjdk.org/projects/jdk/21/)
-[![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.4.1-6DB33F?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
-[![React](https://img.shields.io/badge/React-18-61DAFB?logo=react&logoColor=111111)](https://react.dev/)
-[![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
-[![Tailwind CSS](https://img.shields.io/badge/Tailwind%20CSS-3-06B6D4?logo=tailwindcss&logoColor=white)](https://tailwindcss.com/)
-[![Docker](https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&logoColor=white)](https://docs.docker.com/compose/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+<p align="center">
+  A full-stack, microservice recruitment platform where every application,<br />
+  interview, and hiring decision stays on the record.
+</p>
 
-> **Project 44** — 24SDCS03A/R, SOA Programming and Microservices (AY 2026–27).
+<p align="center">
+  <a href="https://github.com/Hareesh-Reddy-9126/PS044-SmartHire/actions/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?logo=githubactions&amp;logoColor=white" alt="CI workflow" /></a>
+  <a href="https://openjdk.org/projects/jdk/21/"><img src="https://img.shields.io/badge/Java-21-ED8B00?logo=openjdk&amp;logoColor=white" alt="Java 21" /></a>
+  <a href="https://spring.io/projects/spring-boot"><img src="https://img.shields.io/badge/Spring%20Boot-3.4.1-6DB33F?logo=springboot&amp;logoColor=white" alt="Spring Boot 3.4.1" /></a>
+  <a href="https://react.dev/"><img src="https://img.shields.io/badge/React-18-61DAFB?logo=react&amp;logoColor=111111" alt="React 18" /></a>
+  <a href="https://www.typescriptlang.org/"><img src="https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript&amp;logoColor=white" alt="TypeScript 5" /></a>
+  <a href="https://tailwindcss.com/"><img src="https://img.shields.io/badge/Tailwind%20CSS-3-06B6D4?logo=tailwindcss&amp;logoColor=white" alt="Tailwind CSS 3" /></a>
+  <a href="https://www.postgresql.org/"><img src="https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&amp;logoColor=white" alt="PostgreSQL 16" /></a>
+  <a href="https://docs.docker.com/compose/"><img src="https://img.shields.io/badge/Docker-Compose-2496ED?logo=docker&amp;logoColor=white" alt="Docker Compose" /></a>
+  <a href="PROJECT_STATUS.md"><img src="https://img.shields.io/badge/live%20E2E-79%2F79%20passed-2F5D4E" alt="Live end-to-end verification: 79 of 79 passed" /></a>
+</p>
+
+<p align="center"><sub>Verified end to end across candidate, recruiter, administrator, and anonymous journeys.</sub></p>
 
 ---
 
 ## Contents
 
 - [Overview](#overview)
-- [Feature highlights](#feature-highlights)
+- [Product tour](#product-tour)
+- [What each role can do](#what-each-role-can-do)
 - [Architecture](#architecture)
 - [Technology stack](#technology-stack)
 - [Repository layout](#repository-layout)
 - [Quick start](#quick-start)
 - [Configuration](#configuration)
 - [Roles and routes](#roles-and-routes)
-- [Frontend](#frontend)
 - [API surface](#api-surface)
-- [Quality and testing](#quality-and-testing)
+- [Quality and verification](#quality-and-verification)
 - [Security](#security)
 - [Known limitations](#known-limitations)
 - [Documentation](#documentation)
 - [Contributing](#contributing)
+- [License](#license)
 
 ---
 
 ## Overview
 
-SmartHire is built as a set of independently deployable Spring Boot services behind a single Spring Cloud Gateway, with a React single-page application as the client.
+SmartHire is built as a set of independently deployable Spring Boot services behind a single Spring Cloud Gateway, with a React single-page application as the client. The backend is the source of truth for authorization; frontend route guards improve navigation but are not a security boundary.
 
-The platform has three authenticated workspaces:
+The product is organised around one idea: **a hiring decision should be readable after the fact.** Every application carries its submission, its status trail, the linked recruitment, the interview record, and the final decision — in one place, for the people allowed to see it.
 
-- **Candidate** — discover roles, apply, track application and interview progress, manage documents, and read notifications.
-- **Recruiter** — create and manage job postings, review applicants by job, run the recruitment workflow, schedule interviews, and record final decisions.
-- **Administrator** — monitor the recruitment pipeline, inspect recruitments, look up applications, and manage the account profile.
-
-The backend is the source of truth for authorization. The frontend route guards improve navigation but are not a security boundary.
-
-## Feature highlights
-
-| Area | Capabilities |
+| At a glance | |
 |---|---|
-| Public discovery | Paginated job search, location and status filters, job detail pages, responsive public shell |
-| Candidate workspace | Applications list and detail, apply and withdraw, progress timeline, document upload/download/delete, notifications, profile |
-| Recruiter workspace | Job CRUD and lifecycle actions, job-scoped applicant list, application lookup, recruitment creation, interview scheduling, interview status and final decision |
-| Admin workspace | Recruitment overview, recruitment detail, application lookup, profile |
-| Identity | Role-aware self-registration for candidates, recruiters, and invited administrators; RS256 JWT access tokens, JWKS verification, Redis-backed refresh sessions and revocation, role-based access control |
+| Workspaces | Candidate · Recruiter · Administrator |
+| Business services | 7 behind one gateway, plus Eureka discovery |
+| Local stack | 11 containers (PostgreSQL, Redis, registry, gateway, 7 services) |
+| Frontend | React 18 + TypeScript 5 + Vite, no UI framework |
+| Verification | 69 frontend tests · 79/79 live end-to-end checks |
+
+## Product tour
+
+<img src="docs/assets/screenshots/01-landing.png" alt="SmartHire landing page with role entry points and the decision-record visual language" width="100%" />
+
+<sub><strong>Public landing page</strong> — role entry points, the hiring lifecycle, and the editorial “decision record” visual language.</sub>
+
+<table>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/screenshots/02-jobs.png" alt="Public job board with search, location filter, and pagination" width="100%" />
+      <br /><sub><strong>Job board</strong> — search, location filter, pagination, and empty states.</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/assets/screenshots/03-candidate-application.png" alt="Candidate application detail with status timeline and linked recruitment" width="100%" />
+      <br /><sub><strong>Candidate record</strong> — status trail, submission, and linked recruitment.</sub>
+    </td>
+  </tr>
+  <tr>
+    <td width="50%">
+      <img src="docs/assets/screenshots/04-recruiter-recruitment.png" alt="Recruiter recruitment screen with interview details and final decision" width="100%" />
+      <br /><sub><strong>Recruiter workflow</strong> — interview record and the final decision.</sub>
+    </td>
+    <td width="50%">
+      <img src="docs/assets/screenshots/05-admin-overview.png" alt="Admin platform overview with hiring pipeline metrics" width="100%" />
+      <br /><sub><strong>Admin overview</strong> — a read-only operational view of the pipeline.</sub>
+    </td>
+  </tr>
+</table>
+
+## What each role can do
+
+| Workspace | Capabilities |
+|---|---|
+| **Public** | Paginated job search, location and status filters, job detail pages, apply hand-off, responsive public shell |
+| **Candidate** | Applications list and detail, apply and withdraw, progress timeline, document upload/download/delete, notifications, profile |
+| **Recruiter** | Job CRUD and lifecycle (draft → open → closed → reopened), job-scoped applicants, application lookup, recruitment creation, interview scheduling and completion, final hire/reject decision |
+| **Administrator** | Platform overview, all recruitments, recruitment detail, application lookup, profile — read-only on hiring decisions |
+
+| Platform capability | Implementation |
+|---|---|
+| Identity | Role-aware self-registration; RS256 access tokens, JWKS verification, Redis-backed refresh sessions and JWT revocation |
+| Authorization | Gateway and service-level checks; recruiters are scoped to their own organization, candidates to their own applications |
 | Reliability | Eureka discovery, OpenFeign clients, Resilience4j circuit breakers/retries/bulkheads, RFC 9457 error responses, correlation IDs |
-| AI service | Deterministic mock provider by default; optional Claude provider, PII redaction, prompt-injection defenses, and a kill switch |
-| Frontend system | Custom “decision record” visual language, accessible primitives, responsive app/auth/public shells, reduced-motion support |
+| AI service | Deterministic mock provider by default; optional Claude provider with PII redaction, prompt-injection defences, and a kill switch |
+| Frontend system | Project-owned accessible primitives, responsive public/auth/workspace shells, reduced-motion support |
 
 ## Architecture
+
+<img src="docs/assets/architecture.svg" alt="SmartHire architecture: React SPA to API Gateway, seven services on a discovery bus, PostgreSQL with one schema per service, and Redis for sessions" width="100%" />
+
+- The **API Gateway** is the only public backend entry point. It routes through Eureka and verifies JWTs against the auth-service JWKS.
+- Each service owns its **PostgreSQL schema** and Flyway migration history.
+- **Redis** holds refresh-token state and the shared JWT `jti` denylist.
+- **OpenFeign** calls are protected with Resilience4j fault-tolerance policies.
+- **Document storage** is an abstraction with a local volume in the Compose stack; it can be replaced without changing the API.
+- **AI** runs as an optional service with a kill switch and a deterministic mock provider for local development.
+
+<details>
+<summary><strong>Service dependency graph</strong></summary>
 
 ```mermaid
 flowchart LR
@@ -94,12 +152,7 @@ flowchart LR
     AI -. OpenFeign .-> Docs
 ```
 
-- The **API Gateway** is the only public backend entry point. It routes to services through Eureka and verifies JWTs against the auth-service JWKS.
-- Each service owns its **PostgreSQL schema** and Flyway migration history.
-- **Redis** holds refresh-token state and the shared JWT `jti` denylist.
-- **OpenFeign** calls are protected with Resilience4j fault-tolerance policies.
-- **Document storage** is an abstraction with a local volume in the Compose stack; it can be replaced without changing the API.
-- **AI** runs as an optional service with a kill switch and a deterministic mock provider for local development.
+</details>
 
 ## Technology stack
 
@@ -128,7 +181,7 @@ flowchart LR
 │   └── ai-service/             # Matching, parsing, AI provider abstraction, safety controls
 ├── frontend/                   # React SPA and design system
 ├── deploy/                     # Docker Compose, environment template, Postman assets
-├── docs/                       # Architecture, discovery, governance, roadmap
+├── docs/                       # Architecture, discovery, governance, roadmap, README assets
 ├── .github/workflows/          # CI pipeline
 └── pom.xml                     # Maven aggregator
 ```
@@ -179,7 +232,7 @@ Treat this value as a secret. It is compared in constant time and is never writt
 docker compose -f deploy/docker-compose.yml --env-file deploy/.env up -d --build
 ```
 
-Useful endpoints:
+The first build compiles every Maven module inside Docker and can take several minutes. Useful endpoints:
 
 | Endpoint | URL |
 |---|---|
@@ -200,6 +253,8 @@ npm run dev
 Open <http://localhost:5173>. Vite proxies `/api`, `/oauth2`, `/actuator`, and `/v3` to the gateway on port `8080`.
 
 For a non-proxied deployment, set `VITE_API_BASE_URL` to the public gateway URL before building.
+
+> Use `http://localhost:5173`, not `http://127.0.0.1:5173`: the default gateway CORS policy allows the `localhost` origin only.
 
 ### 5. Stop the stack
 
@@ -223,10 +278,10 @@ Do not add `-v` unless you intend to delete the PostgreSQL and document volumes.
 | `AUTH_SEED_RECRUITER_EMAIL` / `AUTH_SEED_RECRUITER_PASSWORD` | No | Development recruiter seed account; both required |
 | `AUTH_SEED_ADMIN_EMAIL` / `AUTH_SEED_ADMIN_PASSWORD` | No | Development admin seed account; both required |
 | `AUTH_ADMIN_SIGNUP_CODE` | No | Invitation code that enables administrator self-registration; blank disables it; secret |
-| `SMARTHIRE_AI_ENABLED` | No | AI kill switch |
-| `SMARTHIRE_AI_PROVIDER` | No | `mock` (default) or `claude` |
-| `SMARTHIRE_AI_CLAUDE_API_KEY` | No | Required only for the Claude provider; secret |
-| `SMARTHIRE_AI_CLAUDE_MODEL` | No | Claude model identifier |
+| `AI_ENABLED` | No | AI kill switch |
+| `AI_PROVIDER` | No | `mock` (default) or `claude` |
+| `AI_CLAUDE_API_KEY` | No | Required only for the Claude provider; secret |
+| `AI_CLAUDE_MODEL` | No | Claude model identifier |
 
 ### Frontend environment variables
 
@@ -239,7 +294,7 @@ Copy `frontend/.env.example` to `frontend/.env.local` for local overrides. Never
 
 ## Roles and routes
 
-All three roles sign in through the same website. `/login` and `/register` share an accessible role selector, and the portal links on the landing page pre-select the intended role.
+All three roles sign in through the same website. `/login` and `/register` share an accessible role selector, and the role cards on the landing page pre-select the intended role.
 
 - **Candidates** register openly and land in `/candidate/applications`.
 - **Recruiters** register openly, must name their organization, and land in `/recruiter/jobs`. Registration creates a dedicated organization so job ownership works immediately, and recruiter job lists are scoped to that organization.
@@ -260,34 +315,6 @@ The selected role at sign-in expresses intent only. The role in the JWT and the 
 - Client-side route guards live in `frontend/src/utils/roles.ts` and `frontend/src/routes/AppRoutes.tsx`.
 - Backend authorization is enforced independently by the gateway and each service.
 
-## Frontend
-
-The frontend was rebuilt as **“The decision record”** — a calm, editorial system for hiring evidence rather than a generic dashboard skin.
-
-### Design system
-
-- **Palette:** deep evergreen ink, chalk paper, restrained brass.
-- **Typography:** Newsreader for display, Instrument Sans for interface text, IBM Plex Mono for identifiers and metadata.
-- **Surfaces:** public marketing shell, split-screen auth shell, and full-height dark workspace sidebar.
-- **Primitives:** buttons, inputs, cards, badges, tables, tabs, timelines, modals, empty states, pagination, skeletons, and record detail surfaces.
-- **Accessibility:** semantic landmarks, labelled controls, visible focus, keyboard navigation, `aria-live` toasts, reduced-motion support, and no horizontal overflow at mobile widths.
-- **Select control:** a branded accessible combobox with keyboard navigation, typeahead, outside-click dismissal, placement flipping, and a hidden native `<select>` fallback for form/test compatibility.
-
-No UI component framework is used; the system is Tailwind tokens plus project-owned React primitives and Material Symbols icons.
-
-### Verification
-
-From `frontend/`:
-
-```bash
-npm run lint        # ESLint, zero warnings
-npm run typecheck   # tsc --noEmit
-npm run test:run    # 69 Vitest tests across 11 files
-npm run build       # typecheck + production bundle
-```
-
-All four gates currently pass. See [`frontend/README.md`](frontend/README.md) for the full frontend architecture, auth model, route map, and component catalogue.
-
 ## API surface
 
 All application calls go through the API Gateway at `/api/v1/*`.
@@ -304,13 +331,41 @@ All application calls go through the API Gateway at `/api/v1/*`.
 
 Errors use RFC 9457 Problem Details. Responses carry a correlation ID so a browser failure can be traced through gateway and service logs.
 
-Example:
-
 ```bash
 curl "http://localhost:8080/api/v1/jobs?page=0&size=20"
 ```
 
-## Quality and testing
+Interactive API documentation is served at <http://localhost:8080/swagger-ui.html>.
+
+## Quality and verification
+
+### Live end-to-end verification
+
+The complete product was exercised through the real browser UI with six actors — candidate A, candidate B, recruiter A, recruiter B, administrator, and an anonymous visitor — against the running Compose stack.
+
+| Area | Verified behaviour |
+|---|---|
+| Public | Landing, job search, location filter, pagination, empty state, job detail, apply hand-off, 404, 403, offline, session-expired, error pages |
+| Candidate | Register, sign in, apply, withdraw, applications list and detail, documents upload/download/delete, profile, token refresh, notifications |
+| Recruiter | Sign in, job list, applicant list, shortlist, schedule interview, complete interview, hire, create job, publish, close, reopen |
+| Administrator | Sign in, overview, recruitment list and detail, application lookup, profile, role guard |
+| Isolation | Candidate B cannot open candidate A's application; recruiter B cannot see recruiter A's organization; admin is read-only on hiring decisions |
+| Persistence | Every transition cross-checked in PostgreSQL: application status, recruitment state, documents, notifications |
+
+**Result: 79 passed · 0 failed · 0 skipped.**
+
+### Frontend
+
+From `frontend/`:
+
+```bash
+npm run lint        # ESLint, zero warnings
+npm run typecheck   # tsc --noEmit
+npm run test:run    # 69 Vitest tests across 11 files
+npm run build       # typecheck + production bundle
+```
+
+All four gates pass. See [`frontend/README.md`](frontend/README.md) for the full frontend architecture, auth model, route map, and component catalogue.
 
 ### Backend
 
@@ -325,16 +380,8 @@ mvn -B -Psecurity-scan verify -DskipTests
 - ArchUnit rules enforce the service architecture.
 - Flyway migrations are validated by the application test context.
 - Integration tests need Docker. If Docker is unavailable, scope unit tests with `-pl` and `-am`.
-
-### Frontend
-
-```bash
-cd frontend
-npm run lint
-npm run typecheck
-npm run test:run
-npm run build
-```
+- `services/ai-service` unit tests run against in-memory H2; all 52 pass locally (`mvn -pl services/ai-service test`).
+- CI runs the full reactor with `mvn -B verify`, so no module is excluded.
 
 ### CI
 
@@ -343,9 +390,11 @@ npm run build
 - Maven verify on JDK 21
 - Spotless
 - SpotBugs
-- OWASP Dependency-Check on pushes and pull requests targeting `main`
+- OWASP Dependency-Check on every push and on pull requests targeting `main`
 
 Test reports and dependency-check reports are uploaded as workflow artifacts.
+
+> The workflow is versioned and ready, but GitHub Actions jobs cannot currently start on this repository because the account's runner allocation is blocked at the account level. The verification evidence in this README comes from local runs against the Compose stack, not from CI.
 
 ### Local JDK note
 
@@ -365,7 +414,7 @@ mvn test -Dnet.bytebuddy.experimental=true
 - Gateway and service-level authorization enforce ownership and role boundaries.
 - No real secrets belong in the repository; use `deploy/.env` or CI secrets.
 - `deploy/.env.example` lists keys only and contains no usable credentials.
-- AI requests pass through PII redaction and prompt-injection defenses; the kill switch can disable the service.
+- AI requests pass through PII redaction and prompt-injection defences; the kill switch can disable the service.
 - Errors do not expose stack traces or internal implementation details.
 
 ## Known limitations
@@ -397,11 +446,19 @@ mvn test -Dnet.bytebuddy.experimental=true
 
 1. Create a focused branch from `main`.
 2. Keep changes scoped and preserve existing public contracts.
-3. Add or update tests for behavior changes.
+3. Add or update tests for behaviour changes.
 4. Run the relevant backend and frontend gates before opening a pull request.
 5. Never commit secrets, generated build output, local audit files, or environment files.
 6. Use clear commit messages and describe verification evidence in the pull request.
 
+## License
+
+This repository does not currently include a `LICENSE` file. Until one is added, all rights are reserved by the author; contact the maintainer before redistributing or reusing the code.
+
 ---
 
-Built for **Project 44 — Online Job Recruitment System**.
+<div align="center">
+
+<sub>Built for <strong>Project 44 — Online Job Recruitment System</strong> · 24SDCS03A/R, SOA Programming and Microservices (AY 2026–27)</sub>
+
+</div>
