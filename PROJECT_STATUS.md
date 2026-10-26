@@ -1921,3 +1921,58 @@ The only browser console/HTTP noise was intentional negative-path traffic: 404s 
 **Limitations (unchanged):** full `mvn verify` / Testcontainers integration suites cannot run locally; administrator self-registration's positive path was not exercised (the deployment invite code was deliberately not read).
 
 **CI runner block (external):** every GitHub Actions job on `main` has been refused before startup with "The job was not started because your account is locked due to a billing issue." The workflow itself is valid and unchanged; this is an account-level GitHub Actions runner restriction, not a code or configuration failure. The README therefore shows a neutral GitHub Actions badge and states that verification evidence comes from local runs.
+
+---
+
+## Phase 10 — Production Deployment Preparation & Verification [COMPLETE]
+
+### 10.1 Production-ready deployment assets committed (`09052ae`)
+
+| Asset | Path | Purpose |
+|---|---|---|
+| Production Compose overlay | `deploy/docker-compose.prod.yml` | Resource limits, Caddy TLS frontend, configurable notification sender; Postgres/Redis internal-only |
+| Base stack env wiring | `deploy/docker-compose.yml` | `AUTH_JWT_ISSUER`/`AUTH_JWT_AUDIENCE`/`GATEWAY_JWK_SET_URI` to auth-service + api-gateway |
+| VM bootstrap | `deploy/scripts/bootstrap-vm.sh` | Docker Engine + Compose v2, 2 GiB swap, firewall 22/80/443, dirs (idempotent, Ubuntu) |
+| Env generator | `deploy/scripts/init-env.sh` | `deploy/.env` with random DB password + flattened PKCS#8 RSA JWT key, mode 600, secrets never printed |
+| Env template | `deploy/.env.production.example` | Tracked; documents `NOTIFICATION_SENDER_TYPE` (smtp default / logging opt-out) |
+| Runbook | `docs/deployment/production-runbook.md` | Provision/deploy/verify/admin/backups/rollback/rotation; Always Free cost guardrails |
+| Gateway prod profile | `services/api-gateway/application-prod.yml` | Route list removed (was dropping jobs/notifications/AI/JWKS/docs); only rate limits + JWT |
+| JWT fail-fast guard | `services/auth-service/.../JwtProperties.java` | Rejects unresolved `${...}` issuer/audience at startup |
+| Shared Maven build stage | `services/*/Dockerfile` (8 files) | BuildKit reactor compile once, reused across images (~2:43 cold locally) |
+| Self-hosted web fonts | `frontend/src/styles/fonts.css` + `frontend/public/fonts/` | Replaces fonts.googleapis.com (blocked by prod CSP `style-src 'self'`); icon font preloaded |
+
+### 10.2 Production stack verified locally (`DOMAIN=localhost`, `NOTIFICATION_SENDER_TYPE=logging`)
+
+- Full stack: `docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.prod.yml --env-file deploy/.env.prodtest up -d --build` → all 11 containers healthy
+- Caddy TLS (internal CA for localhost): `https://localhost/` → 200 with HSTS/CSP/CSP frame-ancestors DENY; `http://` → 308 to `https://`; SPA deep link `/jobs/abc123` → 200; `/actuator/health` → `{"status":"UP"}`
+- Backend E2E over HTTPS: **22/22 PASS** (health, public jobs, candidate register/login/`/me`/apply/application list/RBAC 403, recruiter register/login/create+open job/apply/create recruitment/schedule/complete interview/HIRED/candidate view recruitment/refresh via HttpOnly cookie/logout 204/anonymous 401)
+- Fonts: CSP no longer blocks any web font; icon glyphs render instead of literal ligature text
+- Fonts: 21 font files (~1 MB on disk, ~316 KB icon font single-instance), self-hosted from `/fonts`
+- Env audit vs rendered compose config: no unresolved `${...}` placeholders remain; only intentional empties/defaults
+
+### 10.3 Temporary public smoke test (cloudflared quick tunnel, labeled temporary)
+
+- Tunnel: `https://chrome-classifieds-interest-replaced.trycloudflare.com` → Caddy `https://localhost`
+- Verified same-origin SPA over public trusted TLS: landing `/`, job browse `/jobs`, deep link `/jobs/abc123`, API `/api/v1/jobs` (200), health `/actuator/health` (200), protected `/api/v1/applications` (401)
+- HSTS + CSP headers present on public origin
+- Fixed production-only CORS defect: `GATEWAY_CORS_ALLOWED_ORIGINS=https://localhost,https://chrome-classifieds-interest-replaced.trycloudflare.com` in `deploy/.env.prodtest` (gateway rejects non-allow-listed origins with 403)
+- Browser UI smoke tests through tunnel: login (candidate, HttpOnly refresh cookie survives reload), "My applications" empty state, job detail, apply form, application detail with APPLIED status, recruiter sign-in → `/403` RBAC enforcement (correct), recruiter registration → recruiter workspace "No jobs yet", create job "UI Test Engineer" (DRAFT) → publish → OPEN
+- Tunnel is a manual, account-free quick tunnel; not part of the committed deployment; tear down when no longer needed
+
+### 10.4 Remaining production prerequisites (require explicit user action)
+
+| Prerequisite | Status | Notes |
+|---|---|---|
+| Oracle Cloud Always Free account | Not created | Card + phone verification required by Oracle (hard boundary — agent cannot proceed) |
+| SMTP credentials | Not configured | Stack runs `NOTIFICATION_SENDER_TYPE=logging` (notifications recorded, no email sent) |
+| Public hostname | Not selected | `sslip.io` (zero-setup, recommended) vs DuckDNS (named subdomain) |
+| Oracle VM + public IP | Not provisioned | Ampere A1 2 OCPU / 12 GB, 100 GB boot, VCN ingress 22/80/443 |
+| SSH key for VM | Created locally | `C:\Users\HP\.ssh\smarthire_oracle` (ed25519, no passphrase); public key ready for instance creation |
+
+### 10.5 Cost & maintenance posture
+
+- Target: Oracle Cloud Always Free Ampere A1 (2 OCPU / 12 GB / 200 GB / 10 TB egress) — ₹0/month; stack measured at ~4.8 GiB RSS idle, fits with headroom
+- No managed database, load balancer, NAT gateway, reserved IP, or paid DNS required
+- Daily PostgreSQL backup via systemd timer (02:30 UTC, 7-day retention) to `/var/backups/smarthire`; `restore-verify.sh` tests restorability into a disposable container
+- Secrets: `deploy/.env` git-ignored, mode 600, never printed or committed; `AUTH_JWT_PRIVATE_KEY` rotated by editing `deploy/.env` + restarting `auth-service`
+- `AUTH_ADMIN_SIGNUP_CODE` set only while creating the first administrator, then blanked and `auth-service` restarted
