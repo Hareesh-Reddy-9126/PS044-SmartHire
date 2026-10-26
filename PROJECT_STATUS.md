@@ -2,7 +2,7 @@
 
 Current project position. Facts verified from the repository are marked [V]; facts inherited from prior agent reports are marked [R] (reported, pending independent re-verification); anything not verifiable from the current working tree is marked unknown/pending.
 
-> **Current position (2026-10-26):** the public site is role-aware and all three roles register and sign in from one website. See **Role-aware website, authorization hardening, and cleanup [COMPLETE] [V]** at the end of this file. That section supersedes earlier sections that describe public registration as candidate-only or `DevDataSeeder` as the only source of recruiter/administrator accounts. Older sections are retained as history.
+> **Current position (2026-10-26):** the public site is role-aware and all three roles register and sign in from one website. See **Role-aware website, authorization hardening, and cleanup [COMPLETE] [V]** and **Live multi-user verification [V]** at the end of this file. Those sections supersede earlier sections that describe public registration as candidate-only or `DevDataSeeder` as the only source of recruiter/administrator accounts. Older sections are retained as history.
 
 ## Publish state — 2026-10-24 [V]
 
@@ -1857,3 +1857,28 @@ Removed session scratch artifacts: `debug_*.py`, `explore_*.py`, `final_e2e_test
 - Administrator self-registration is deliberately unavailable unless `AUTH_ADMIN_SIGNUP_CODE` is configured.
 - Company management is not exposed in the current frontend; the hardened backend endpoints remain available for a future administrative surface.
 - Recruiter applicant review remains job-scoped; global application lookup is still by application ID.
+
+## Live multi-user verification [V]
+
+**Date:** 2026-10-26
+**Scope:** the running Compose stack behind `http://localhost:5173`, exercised as six simultaneous browser users: an anonymous visitor, two fresh candidates, the seeded recruiter (`SmartHire Demo Org`), a fresh recruiter with its own organization, and the seeded administrator. Playwright drove six independent browser contexts in parallel with phase barriers; registration and login were serialized to respect the gateway's auth rate limit.
+
+**Result:** 79 checks passed, 0 failed, 0 skipped, in two consecutive full runs (`20261026-083950` and `20261026-084135`).
+
+- Public: landing, job board, text filters and empty state, job detail, sign-in-to-apply redirect, `/403`, `/404`, `/error`, `/offline`, `/session-expired`, unknown URL to 404, and `/workspace` to login.
+- Candidate: register, sign in, document upload/download/delete, profile session refresh, empty and populated notifications, apply, own application list and detail, progress for a scheduled interview and the final decision, raw status badges (`APPLIED`, `SCHEDULED`, `HIRED`), withdrawal hidden after hire, sign out.
+- Recruiter: create, edit, publish, close and reopen a job; applicant list; shortlist; schedule; mark interview completed; hire; recruitments list; profile; sign out.
+- Administrator: overview metrics, recruitment list and detail, application lookup (`APPLIED` before shortlist, `HIRED` after hire), profile, `/workspace` redirect, and read-only refusal of the candidate and recruiter areas.
+- Authorization: candidate B cannot read candidate A's application or resume (404); recruiter B can read the public posting but receives no management actions and no applicants; every cross-role route returns 403.
+- Persistence cross-check: the job location edit persisted (`Hybrid A ...`), candidate A's application is `HIRED`, candidate B's remains `APPLIED`, and the recruitment is `COMPLETED`/`HIRED`.
+- Admin self-registration: `POST /api/v1/auth/register` with `role=ADMIN` and a missing or incorrect `adminInviteCode` returns 403 with the generic invitation-code message and creates no user.
+
+The only browser console/HTTP noise was intentional negative-path traffic: 404s for a closed posting read anonymously, candidate B opening candidate A's application, and recruiter B reading another organization's applicants or recruitment, plus the expected anonymous 401 probes on `/auth/me` and `/auth/refresh`.
+
+**Artifacts (outside the repository):** `C:\Users\HP\AppData\Local\Temp\opencode\smarthire_multiuser.py`; structured results and screenshots under `C:\Users\HP\AppData\Local\Temp\opencode\smarthire-multiuser\`.
+
+**Observations, not test failures:**
+- The candidate application detail's "Linked recruitment" card keeps the static kicker `INTERVIEW SCHEDULED` after the recruitment reaches `COMPLETED`/`HIRED`; the adjacent status badges are correct.
+- Recruiter B's read of another organization's job shows "Applications unavailable - Job not found" while the same page renders the job; isolation is correct but the copy is contradictory.
+
+**Limitations:** Testcontainers/integration suites still cannot run locally. Administrator self-registration was not exercised with the real deployment code (deliberately not read), only its rejection paths.

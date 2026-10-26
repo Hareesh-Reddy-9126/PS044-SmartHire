@@ -395,9 +395,6 @@ export function PublicLayout({ children }: { children: ReactNode }) {
             <Link to="/jobs" className="public-link hidden sm:inline">
               Browse jobs
             </Link>
-            <Link to="/#workspaces" className="public-link hidden lg:inline">
-              Portals
-            </Link>
 
             {user ? (
               <Link to="/workspace" className="btn btn-secondary btn-sm px-3.5 py-1.5">
