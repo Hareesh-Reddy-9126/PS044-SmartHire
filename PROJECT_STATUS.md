@@ -1984,6 +1984,7 @@ The only browser console/HTTP noise was intentional negative-path traffic: 404s 
 | Remote deployer | `deploy/scripts/deploy-remote.ps1` | Operator-side: preflight SSH/DNS, tarball upload, bootstrap, env generation, build, health gate, public HTTPS check, optional admin creation |
 | Remote runner | `deploy/scripts/remote-deploy.sh` | VM-side: idempotent extract (keeps `deploy/.env` and the database volume), build, `up -d`, waits for every healthcheck |
 | Admin provisioning | `deploy/scripts/create-admin.sh` | Issues a one-time code if none is set, registers the admin, writes credentials to `/root/smarthire-admin-initial.txt` (mode 600), blanks the code and recreates `auth-service` |
+| Resend email sender | `services/notification-service/.../ResendNotificationSender.java` | Delivers email via Resend HTTPS API (free tier, no mailbox), with retry/backoff and idempotency keys; 5 unit tests |
 | Demo content | `deploy/scripts/seed-demo.sh` | No-op when jobs exist; otherwise registers a demo recruiter and publishes six sample jobs (`/root/smarthire-demo-credentials.txt`, mode 600) |
 | Public verification | `deploy/scripts/verify-public.ps1` | 36 checks: TLS/headers, SPA fallback, fonts, health, JWKS, CORS allow/deny, anonymous 401, full candidate/recruiter workflow, refresh/logout; optional JSON evidence file |
 
@@ -1991,6 +1992,8 @@ The only browser console/HTTP noise was intentional negative-path traffic: 404s 
 - `deploy-remote.ps1` refuses to continue when the hostname does not resolve to the target IP, because
   Let's Encrypt issuance would fail; `-Force` overrides.
 - SMTP credentials can be supplied as a separate `-SmtpEnvFile` so they never appear on a command line.
+- Resend credentials (`RESEND_API_KEY`, `RESEND_FROM`) can be supplied the same way; the sender uses
+  HTTPS so no outbound SMTP port is needed.
 - A fresh database has no postings, so `seed-demo.sh` publishes six demo jobs under a generated
   recruiter account (no-op once jobs exist; `-SkipDemoData` opts out).
 - Caddy now strips its `Server` banner (`header { -Server ... }`), verified by the header check.
