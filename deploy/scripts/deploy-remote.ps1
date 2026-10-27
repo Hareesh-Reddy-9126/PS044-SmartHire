@@ -60,7 +60,6 @@ param(
 $ErrorActionPreference = 'Stop'
 $repoRoot = Split-Path -Parent (Split-Path -Parent $PSScriptRoot)
 $bundle = Join-Path $env:TEMP 'smarthire-src.tar.gz'
-$remoteScript = Join-Path $env:TEMP 'smarthire-remote-deploy.sh'
 
 function Step($message) { Write-Host "`n==> $message" -ForegroundColor Cyan }
 function Fail($message) { Write-Host "ERROR: $message" -ForegroundColor Red; exit 1 }
@@ -145,12 +144,12 @@ $remoteCommand = "sudo env SMTP_HOST='$SmtpHost' SMTP_FROM='$SmtpFrom' bash /tmp
 if ($LASTEXITCODE -ne 0) { Fail 'Remote deployment failed. Inspect the output above, or run docker compose ps on the VM.' }
 
 # ---- Public verification ---------------------------------------------------------------------
-Step "Waiting for https://$Domain/api/v1/health"
+Step "Waiting for https://$Domain/actuator/health"
 $deadline = (Get-Date).AddMinutes(6)
 $healthy = $false
 while ((Get-Date) -lt $deadline) {
     try {
-        $response = Invoke-WebRequest -Uri "https://$Domain/api/v1/health" -UseBasicParsing -TimeoutSec 15
+        $response = Invoke-WebRequest -Uri "https://$Domain/actuator/health" -UseBasicParsing -TimeoutSec 15
         if ($response.StatusCode -eq 200) { $healthy = $true; break }
     } catch {
         Start-Sleep -Seconds 5
@@ -168,6 +167,12 @@ foreach ($header in 'Strict-Transport-Security', 'X-Content-Type-Options', 'Cont
     } else {
         Write-Host "    WARNING: $header missing" -ForegroundColor Yellow
     }
+}
+
+Step 'Running read-only public verification'
+& (Join-Path $PSScriptRoot 'verify-public.ps1') -BaseUrl "https://$Domain" -SkipFlow
+if ($LASTEXITCODE -ne 0) {
+    Write-Host '    WARNING: verification reported failures (see above).' -ForegroundColor Yellow
 }
 
 # ---- Optional demo content -------------------------------------------------------------------

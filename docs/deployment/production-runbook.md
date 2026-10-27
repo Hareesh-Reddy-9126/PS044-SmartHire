@@ -77,6 +77,7 @@ Useful switches:
 
 The script ships the working tree as a tarball, so deployment does not depend on the repository
 being pushed. It is safe to re-run: the existing `deploy/.env` and the database volume are kept.
+When it finishes, it runs the read-only half of `verify-public.ps1` automatically.
 
 ### Manual equivalent
 
