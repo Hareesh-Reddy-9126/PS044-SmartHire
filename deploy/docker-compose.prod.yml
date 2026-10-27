@@ -156,14 +156,17 @@ services:
       SPRING_PROFILES_ACTIVE: prod
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
       # SMTP is the default. `logging` is an explicit opt-out for deployments without a mail
-      # provider: notifications are still recorded, but no email is sent. Selecting `smtp`
-      # without a host/from still fails startup (NotificationSenderConfig).
+      # provider: notifications are still recorded, but no email is sent. `resend` delivers over
+      # the Resend HTTPS API instead of SMTP. Selecting `smtp` or `resend` without its required
+      # settings still fails startup (NotificationSenderConfig).
       NOTIFICATION_SENDER_TYPE: ${NOTIFICATION_SENDER_TYPE:-smtp}
       NOTIFICATION_SMTP_HOST: ${NOTIFICATION_SMTP_HOST:-}
       NOTIFICATION_SMTP_PORT: ${NOTIFICATION_SMTP_PORT:-587}
       NOTIFICATION_SMTP_USERNAME: ${NOTIFICATION_SMTP_USERNAME:-}
       NOTIFICATION_SMTP_PASSWORD: ${NOTIFICATION_SMTP_PASSWORD:-}
       NOTIFICATION_SMTP_FROM: ${NOTIFICATION_SMTP_FROM:-}
+      NOTIFICATION_RESEND_API_KEY: ${NOTIFICATION_RESEND_API_KEY:-}
+      NOTIFICATION_RESEND_FROM: ${NOTIFICATION_RESEND_FROM:-}
       NOTIFICATION_DELIVERY_MAX_ATTEMPTS: ${NOTIFICATION_DELIVERY_MAX_ATTEMPTS:-3}
       NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS: ${NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS:-500}
     mem_limit: 640m

@@ -6,10 +6,12 @@
 #     ./deploy/scripts/init-env.sh
 #
 # Optional environment variables:
-#   NOTIFICATION_SENDER_TYPE   smtp (default) or logging. `logging` records notifications without
-#                              sending mail; use it only until SMTP credentials are available.
+#   NOTIFICATION_SENDER_TYPE   smtp (default), resend, or logging. `logging` records notifications
+#                              without sending mail; use it only until a provider is available.
 #   SMTP_HOST, SMTP_PORT, SMTP_USERNAME, SMTP_PASSWORD, SMTP_FROM
 #                              Required when NOTIFICATION_SENDER_TYPE=smtp.
+#   RESEND_API_KEY, RESEND_FROM
+#                              Required when NOTIFICATION_SENDER_TYPE=resend.
 #   ADMIN_SIGNUP_CODE          One-time invitation code for the first administrator. Leave unset
 #                              to keep admin self-registration disabled.
 #   BACKUP_DIR                 Defaults to /var/backups/smarthire.
@@ -35,9 +37,13 @@ case "$SENDER_TYPE" in
     : "${SMTP_HOST:?SMTP_HOST is required for smtp (set NOTIFICATION_SENDER_TYPE=logging to skip mail)}"
     : "${SMTP_FROM:?SMTP_FROM is required for smtp}"
     ;;
+  resend)
+    : "${RESEND_API_KEY:?RESEND_API_KEY is required for resend (set NOTIFICATION_SENDER_TYPE=logging to skip mail)}"
+    : "${RESEND_FROM:?RESEND_FROM is required for resend}"
+    ;;
   logging) ;;
   *)
-    echo "ERROR: NOTIFICATION_SENDER_TYPE must be 'smtp' or 'logging'." >&2
+    echo "ERROR: NOTIFICATION_SENDER_TYPE must be 'smtp', 'resend' or 'logging'." >&2
     exit 1
     ;;
 esac
@@ -81,6 +87,8 @@ NOTIFICATION_SMTP_PORT=${SMTP_PORT:-587}
 NOTIFICATION_SMTP_USERNAME=${SMTP_USERNAME:-}
 NOTIFICATION_SMTP_PASSWORD=${SMTP_PASSWORD:-}
 NOTIFICATION_SMTP_FROM=${SMTP_FROM:-}
+NOTIFICATION_RESEND_API_KEY=${RESEND_API_KEY:-}
+NOTIFICATION_RESEND_FROM=${RESEND_FROM:-}
 NOTIFICATION_DELIVERY_MAX_ATTEMPTS=3
 NOTIFICATION_DELIVERY_RETRY_BACKOFF_MS=500
 

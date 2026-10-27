@@ -48,6 +48,10 @@ smarthire:
         from: ${NOTIFICATION_SMTP_FROM:}
         starttls: ${NOTIFICATION_SMTP_STARTTLS:true}
         ssl: ${NOTIFICATION_SMTP_SSL:false}
+      resend:
+        api-key: ${NOTIFICATION_RESEND_API_KEY:}
+        from: ${NOTIFICATION_RESEND_FROM:}
+        base-url: ${NOTIFICATION_RESEND_BASE_URL:https://api.resend.com}
 
 eureka:
   client:

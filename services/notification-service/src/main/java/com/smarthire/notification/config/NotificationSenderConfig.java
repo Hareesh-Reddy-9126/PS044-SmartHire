@@ -2,19 +2,24 @@ package com.smarthire.notification.config;
 
 import com.smarthire.notification.service.LoggingNotificationSender;
 import com.smarthire.notification.service.NotificationSender;
+import com.smarthire.notification.service.ResendNotificationSender;
 import com.smarthire.notification.service.SmtpNotificationSender;
+import java.time.Duration;
 import java.util.Properties;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
+import org.springframework.web.client.RestClient;
 
 /**
  * Chooses the {@link NotificationSender} implementation from configuration.
  *
- * <p>Production uses {@code smtp}; local development and tests use {@code logging}. An unknown
- * sender type fails startup instead of silently falling back to logging.
+ * <p>Production uses {@code smtp} or {@code resend}; local development and tests use {@code
+ * logging}. An unknown sender type fails startup instead of silently falling back to logging.
  */
 @Configuration
 @EnableConfigurationProperties(NotificationSenderProperties.class)
@@ -25,12 +30,35 @@ public class NotificationSenderConfig {
     return switch (properties.getType().toLowerCase(java.util.Locale.ROOT)) {
       case "logging" -> new LoggingNotificationSender();
       case "smtp" -> new SmtpNotificationSender(buildMailSender(properties), properties);
+      case "resend" -> new ResendNotificationSender(buildResendClient(properties), properties);
       default ->
           throw new IllegalStateException(
               "Unsupported notification sender type: "
                   + properties.getType()
-                  + " (supported: logging, smtp)");
+                  + " (supported: logging, smtp, resend)");
     };
+  }
+
+  private RestClient buildResendClient(NotificationSenderProperties properties) {
+    NotificationSenderProperties.Resend resend = properties.getResend();
+    if (resend.getApiKey() == null || resend.getApiKey().isBlank()) {
+      throw new IllegalStateException(
+          "NOTIFICATION_RESEND_API_KEY is required when NOTIFICATION_SENDER_TYPE=resend");
+    }
+    if (resend.getFrom() == null || resend.getFrom().isBlank()) {
+      throw new IllegalStateException(
+          "NOTIFICATION_RESEND_FROM is required when NOTIFICATION_SENDER_TYPE=resend");
+    }
+
+    SimpleClientHttpRequestFactory requestFactory = new SimpleClientHttpRequestFactory();
+    requestFactory.setConnectTimeout(Duration.ofMillis(resend.getConnectTimeoutMs()));
+    requestFactory.setReadTimeout(Duration.ofMillis(resend.getReadTimeoutMs()));
+
+    return RestClient.builder()
+        .baseUrl(resend.getBaseUrl())
+        .requestFactory(requestFactory)
+        .defaultHeader(HttpHeaders.AUTHORIZATION, "Bearer " + resend.getApiKey())
+        .build();
   }
 
   private JavaMailSender buildMailSender(NotificationSenderProperties properties) {

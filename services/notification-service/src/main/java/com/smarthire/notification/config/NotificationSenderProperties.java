@@ -11,16 +11,18 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "smarthire.notification.sender")
 public class NotificationSenderProperties {
 
-  /** Delivery channel: {@code logging} or {@code smtp}. */
+  /** Delivery channel: {@code logging}, {@code smtp} or {@code resend}. */
   private String type = "logging";
 
-  /** Retry policy for transient SMTP failures. */
+  /** Retry policy for transient delivery failures. */
   private int maxAttempts = 3;
 
-  /** Backoff between SMTP attempts, in milliseconds. */
+  /** Backoff between delivery attempts, in milliseconds. */
   private long retryBackoffMs = 500;
 
   private Smtp smtp = new Smtp();
+
+  private Resend resend = new Resend();
 
   public String getType() {
     return type;
@@ -52,6 +54,14 @@ public class NotificationSenderProperties {
 
   public void setSmtp(Smtp smtp) {
     this.smtp = smtp;
+  }
+
+  public Resend getResend() {
+    return resend;
+  }
+
+  public void setResend(Resend resend) {
+    this.resend = resend;
   }
 
   /** SMTP transport settings. Values are supplied by the deployment environment. */
@@ -155,6 +165,66 @@ public class NotificationSenderProperties {
 
     public void setWriteTimeoutMs(int writeTimeoutMs) {
       this.writeTimeoutMs = writeTimeoutMs;
+    }
+  }
+
+  /**
+   * Resend HTTP API settings.
+   *
+   * <p>{@code from} must be an address Resend is allowed to send for: the shared
+   * {@code onboarding@resend.dev} sandbox (which only delivers to the account owner) or an address
+   * on a domain verified in the Resend dashboard.
+   */
+  public static class Resend {
+
+    private String apiKey = "";
+
+    private String from = "";
+
+    private String baseUrl = "https://api.resend.com";
+
+    private int connectTimeoutMs = 5_000;
+
+    private int readTimeoutMs = 10_000;
+
+    public String getApiKey() {
+      return apiKey;
+    }
+
+    public void setApiKey(String apiKey) {
+      this.apiKey = apiKey;
+    }
+
+    public String getFrom() {
+      return from;
+    }
+
+    public void setFrom(String from) {
+      this.from = from;
+    }
+
+    public String getBaseUrl() {
+      return baseUrl;
+    }
+
+    public void setBaseUrl(String baseUrl) {
+      this.baseUrl = baseUrl;
+    }
+
+    public int getConnectTimeoutMs() {
+      return connectTimeoutMs;
+    }
+
+    public void setConnectTimeoutMs(int connectTimeoutMs) {
+      this.connectTimeoutMs = connectTimeoutMs;
+    }
+
+    public int getReadTimeoutMs() {
+      return readTimeoutMs;
+    }
+
+    public void setReadTimeoutMs(int readTimeoutMs) {
+      this.readTimeoutMs = readTimeoutMs;
     }
   }
 }
