@@ -1976,3 +1976,28 @@ The only browser console/HTTP noise was intentional negative-path traffic: 404s 
 - Daily PostgreSQL backup via systemd timer (02:30 UTC, 7-day retention) to `/var/backups/smarthire`; `restore-verify.sh` tests restorability into a disposable container
 - Secrets: `deploy/.env` git-ignored, mode 600, never printed or committed; `AUTH_JWT_PRIVATE_KEY` rotated by editing `deploy/.env` + restarting `auth-service`
 - `AUTH_ADMIN_SIGNUP_CODE` set only while creating the first administrator, then blanked and `auth-service` restarted
+
+### 10.6 One-command deployment automation (added 2026-10-27)
+
+| Asset | Path | Purpose |
+|---|---|---|
+| Remote deployer | `deploy/scripts/deploy-remote.ps1` | Operator-side: preflight SSH/DNS, tarball upload, bootstrap, env generation, build, health gate, public HTTPS check, optional admin creation |
+| Remote runner | `deploy/scripts/remote-deploy.sh` | VM-side: idempotent extract (keeps `deploy/.env` and the database volume), build, `up -d`, waits for every healthcheck |
+| Admin provisioning | `deploy/scripts/create-admin.sh` | Issues a one-time code if none is set, registers the admin, writes credentials to `/root/smarthire-admin-initial.txt` (mode 600), blanks the code and recreates `auth-service` |
+| Public verification | `deploy/scripts/verify-public.ps1` | 36 checks: TLS/headers, SPA fallback, fonts, health, JWKS, CORS allow/deny, anonymous 401, full candidate/recruiter workflow, refresh/logout; optional JSON evidence file |
+
+- Deployment no longer depends on the repository being pushed: the working tree is shipped as a tarball.
+- `deploy-remote.ps1` refuses to continue when the hostname does not resolve to the target IP, because
+  Let's Encrypt issuance would fail; `-Force` overrides.
+- SMTP credentials can be supplied as a separate `-SmtpEnvFile` so they never appear on a command line.
+- Caddy now strips its `Server` banner (`header { -Server ... }`), verified by the header check.
+
+Verification performed locally on the production stack (`https://localhost`, Caddy internal CA):
+
+- `verify-public.ps1 -Insecure`: **36/36 PASS** (the first run surfaced two real findings — a leaked
+  `Server: Caddy` header, now removed, and a byte[]/JSON decoding bug in the harness itself).
+- Admin provisioning path exercised against the real stack: registration `201` → login `200` →
+  `/me` role `ADMIN` → candidate-only endpoint `403` → after the code is blanked, admin signup `403`.
+- `create-admin.sh` control flow unit-tested with stubbed `docker`/`curl`: success path issues a code,
+  recreates `auth-service` twice (enable, then close) and leaves `AUTH_ADMIN_SIGNUP_CODE=`; failure path
+  removes the generated code and writes no credential file.

@@ -51,7 +51,41 @@ In the Oracle console: **Compute → Instances → Create instance**.
 4. Paste the **public** SSH key.
 5. Create, then add the VCN ingress rules for 80/443.
 
-On the VM:
+### Deploy from the operator machine (recommended)
+
+One command performs the upload, bootstrap, secret generation, image build, health gate and public
+HTTPS check:
+
+```powershell
+.\deploy\scripts\deploy-remote.ps1 `
+  -Server <public-ip> `
+  -Domain <public-ip>.sslip.io `
+  -AcmeEmail you@example.com `
+  -AdminEmail admin@example.com
+```
+
+Useful switches:
+
+| Switch | Purpose |
+| --- | --- |
+| `-SshUser` | Login user, default `ubuntu` (Oracle images). |
+| `-SshKey` | Private key, default `~/.ssh/smarthire_oracle`. |
+| `-NotificationSenderType smtp` | Send real mail; requires `-SmtpHost` and `-SmtpFrom`. |
+| `-SmtpEnvFile` | File holding `SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_PORT`; uploaded separately so credentials never appear on a command line. |
+| `-Force` | Continue when DNS does not resolve to `-Server` yet. |
+
+The script ships the working tree as a tarball, so deployment does not depend on the repository
+being pushed. It is safe to re-run: the existing `deploy/.env` and the database volume are kept.
+
+### Manual equivalent
+
+Sections 4–6 below are the same steps performed by hand on the VM. They are useful when the
+operator has no direct SSH path from their workstation.
+
+## 4. Generate the environment file
+
+On the VM, first bootstrap the host (Docker Engine + Compose v2, 2 GiB swap, host firewall for
+22/80/443, and the `/opt/smarthire`, `/var/backups/smarthire`, `/etc/smarthire` directories):
 
 ```bash
 sudo install -d -o "$USER" -g "$USER" /opt/smarthire
@@ -60,11 +94,10 @@ cd /opt/smarthire
 sudo ./deploy/scripts/bootstrap-vm.sh
 ```
 
-The script installs Docker Engine + Compose v2, adds swap, opens 22/80/443 in the host firewall and
-creates `/opt/smarthire`, `/var/backups/smarthire` and `/etc/smarthire`. It is idempotent. Log out
-and back in (or `newgrp docker`) before running `docker` without `sudo`.
+The script is idempotent. Log out and back in (or `newgrp docker`) before running `docker` without
+`sudo`.
 
-## 4. Generate the environment file
+Then generate the environment file:
 
 ```bash
 cd /opt/smarthire
@@ -109,8 +142,22 @@ docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.prod.yml \
 
 ## 6. Verify
 
+From the operator machine, run the full verification harness:
+
+```powershell
+.\deploy\scripts\verify-public.ps1 -BaseUrl https://<public-ip>.sslip.io `
+  -OutFile .\verification.json
+```
+
+It performs 36 checks: TLS and security headers, SPA deep-link fallback, self-hosted fonts, API
+health, JWKS, CORS allow/deny, anonymous 401, the complete candidate and recruiter workflow
+(register → apply → publish → recruitment → interview → HIRED), refresh-cookie and logout. It
+creates test accounts and one job posting; use `-SkipFlow` for a read-only check.
+
+Quick manual smoke test on the VM:
+
 ```bash
-DOMAIN=smarthire.<public-ip>.sslip.io
+DOMAIN=<public-ip>.sslip.io
 curl -sSI "https://$DOMAIN/" | head -20          # 200, text/html, HSTS
 curl -sSI "https://$DOMAIN/jobs" | head -5       # 200, SPA fallback (not 404)
 curl -sS  "https://$DOMAIN/actuator/health"      # {"status":"UP"}
@@ -122,26 +169,30 @@ TLS is issued by Let's Encrypt on first request; if the first `curl` fails, watc
 
 ## 7. First administrator
 
-Admin self-registration is disabled unless `AUTH_ADMIN_SIGNUP_CODE` is set. To create the first
-administrator:
+Admin self-registration is disabled unless `AUTH_ADMIN_SIGNUP_CODE` is set. The helper script does
+the whole dance — register, store credentials, close the invitation path, recreate the service:
 
-1. Set a temporary, strong code in `deploy/.env` and restart the auth service:
+```bash
+cd /opt/smarthire
+sudo ./deploy/scripts/create-admin.sh admin@example.com
+```
 
-   ```bash
-   docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.prod.yml \
-     --env-file deploy/.env up -d auth-service
-   ```
+It generates a 24-character password, writes it with the e-mail address to
+`/root/smarthire-admin-initial.txt` (mode 600), blanks `AUTH_ADMIN_SIGNUP_CODE` in `deploy/.env`
+and recreates `auth-service`. The password is never printed to the terminal.
 
-2. Register with `role: "ADMIN"` and the code in `adminInviteCode` (password: 12+ characters):
+Read the credentials, sign in at `/login`, change the password, then delete the file:
 
-   ```bash
-   curl -sS -X POST "https://$DOMAIN/api/v1/auth/register" \
-     -H 'Content-Type: application/json' \
-     -d '{"email":"admin@example.com","password":"<strong-password>","role":"ADMIN","adminInviteCode":"<temporary-code>"}'
-   ```
+```bash
+sudo cat /root/smarthire-admin-initial.txt
+sudo shred -u /root/smarthire-admin-initial.txt
+```
 
-3. Blank `AUTH_ADMIN_SIGNUP_CODE` in `deploy/.env` and restart `auth-service` again. Open admin
-   signup must not stay enabled.
+`deploy-remote.ps1 -AdminEmail ...` runs this automatically after the stack is healthy.
+
+If a different administrator must be added later, set a fresh code in `deploy/.env`, recreate
+`auth-service`, re-run the script, and blank the code again. Never leave the code set: anyone who
+reads it can mint an administrator.
 
 ## 8. Backups
 
