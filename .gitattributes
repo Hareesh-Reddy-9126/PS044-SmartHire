@@ -1,0 +1,7 @@
+# Shell scripts must keep LF line endings: they are executed on Linux VMs and inside containers,
+# where a CRLF shebang fails with "bad interpreter: /usr/bin/env bash^M".
+*.sh text eol=lf
+*.bash text eol=lf
+
+# Windows automation is checked out with CRLF for a natural editing experience.
+*.ps1 text eol=crlf
