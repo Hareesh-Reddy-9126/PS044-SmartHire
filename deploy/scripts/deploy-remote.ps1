@@ -33,6 +33,9 @@
     When set, creates the first administrator after the stack is healthy and closes the
     invitation path. Credentials are written on the VM to /root/smarthire-admin-initial.txt.
 
+.PARAMETER SkipDemoData
+    Do not create the demo recruiter and the six sample job postings on an empty job board.
+
 .EXAMPLE
     .\deploy\scripts\deploy-remote.ps1 -Server 140.238.1.20 `
         -Domain 140.238.1.20.sslip.io -AcmeEmail you@example.com `
@@ -50,6 +53,7 @@ param(
     [string]$SmtpFrom,
     [string]$SmtpEnvFile,
     [string]$AdminEmail,
+    [switch]$SkipDemoData,
     [switch]$Force
 )
 
@@ -163,6 +167,15 @@ foreach ($header in 'Strict-Transport-Security', 'X-Content-Type-Options', 'Cont
         Write-Host "    $header present"
     } else {
         Write-Host "    WARNING: $header missing" -ForegroundColor Yellow
+    }
+}
+
+# ---- Optional demo content -------------------------------------------------------------------
+if (-not $SkipDemoData) {
+    Step 'Seeding the demo job board (no-op when jobs already exist)'
+    & ssh @sshArgs $target 'sudo bash /opt/smarthire/deploy/scripts/seed-demo.sh'
+    if ($LASTEXITCODE -ne 0) {
+        Write-Host '    WARNING: demo seeding failed; the site itself is still live.' -ForegroundColor Yellow
     }
 }
 

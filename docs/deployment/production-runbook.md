@@ -72,6 +72,7 @@ Useful switches:
 | `-SshKey` | Private key, default `~/.ssh/smarthire_oracle`. |
 | `-NotificationSenderType smtp` | Send real mail; requires `-SmtpHost` and `-SmtpFrom`. |
 | `-SmtpEnvFile` | File holding `SMTP_USERNAME`/`SMTP_PASSWORD`/`SMTP_PORT`; uploaded separately so credentials never appear on a command line. |
+| `-SkipDemoData` | Do not seed the demo recruiter and six sample job postings when the job board is empty. |
 | `-Force` | Continue when DNS does not resolve to `-Server` yet. |
 
 The script ships the working tree as a tarball, so deployment does not depend on the repository
@@ -132,6 +133,20 @@ docker compose -f deploy/docker-compose.yml -f deploy/docker-compose.prod.yml \
 
 The eight Java service images share one Maven build stage, so the reactor is compiled once and
 reused by BuildKit; only the AI service and the frontend have separate build stages.
+
+### Demo content
+
+A fresh database has no job postings, so the landing page and job board would look empty. On first
+deploy, `deploy-remote.ps1` runs `deploy/scripts/seed-demo.sh`, which registers a demo recruiter and
+publishes six sample jobs. It is a no-op once any job exists, and can be skipped with
+`-SkipDemoData` or run by hand:
+
+```bash
+sudo ./deploy/scripts/seed-demo.sh
+```
+
+The demo recruiter's generated password is written to `/root/smarthire-demo-credentials.txt`
+(mode 600). Change or delete that account before real use.
 
 Wait for every container to report healthy:
 
