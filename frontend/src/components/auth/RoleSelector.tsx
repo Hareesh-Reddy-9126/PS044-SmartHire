@@ -5,6 +5,8 @@ export interface RoleSelectorProps {
   onChange: (role: AccountRole) => void;
   /** Visible group label. */
   legend?: string;
+  /** Roles offered by this selector. Defaults to every account role. */
+  roles?: readonly AccountRole[];
   disabled?: boolean;
   className?: string;
 }
@@ -12,9 +14,9 @@ export interface RoleSelectorProps {
 /**
  * Shared account-role picker for sign-in and registration.
  *
- * This is a native radio group rather than a custom combobox: all three options
- * are visible at once, arrow-key navigation works without JavaScript, and a
- * screen reader announces the group and the selected portal. The selected role
+ * This is a native radio group rather than a custom combobox: every offered
+ * option is visible at once, arrow-key navigation works without JavaScript, and
+ * a screen reader announces the group and the selected portal. The selected role
  * only chooses the intended workspace; the server-issued token remains the
  * authority on what the account can actually open.
  */
@@ -22,6 +24,7 @@ export function RoleSelector({
   value,
   onChange,
   legend = 'Continue as',
+  roles = ACCOUNT_ROLES,
   disabled = false,
   className = '',
 }: RoleSelectorProps) {
@@ -30,7 +33,7 @@ export function RoleSelector({
       <legend className="role-selector-legend">{legend}</legend>
 
       <div className="role-selector-grid">
-        {ACCOUNT_ROLES.map(role => {
+        {roles.map(role => {
           const meta = ROLE_META[role];
           const selected = value === role;
 

@@ -1,5 +1,5 @@
 import { useCallback, useState, type FormEvent } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { RoleSelector } from '../../components/auth/RoleSelector';
 import { Button } from '../../components/ui/Button';
@@ -12,19 +12,21 @@ import { authPath, normaliseRole, roleLabel, type AccountRole } from '../../util
 const PASSWORD_MIN_LENGTH = 12;
 const PASSWORD_MAX_LENGTH = 128;
 
-const ROLE_EYEBROW: Record<AccountRole, string> = {
+/** Administrator accounts are provisioned by the platform operator, not self-service. */
+type RegistrationRole = Extract<AccountRole, 'CANDIDATE' | 'RECRUITER'>;
+
+const REGISTRATION_ROLES: readonly RegistrationRole[] = ['CANDIDATE', 'RECRUITER'];
+
+const ROLE_EYEBROW: Record<RegistrationRole, string> = {
   CANDIDATE: 'Candidate registration',
   RECRUITER: 'Recruiter registration',
-  ADMIN: 'Administrator registration',
 };
 
-const ROLE_INTRO: Record<AccountRole, string> = {
+const ROLE_INTRO: Record<RegistrationRole, string> = {
   CANDIDATE:
     'Create a candidate account to apply for roles and follow every step of your application.',
   RECRUITER:
     'Create a recruiter account for your organization to publish roles and run hiring decisions.',
-  ADMIN:
-    'Create an administrator account with the invitation code issued by your platform operator.',
 };
 
 export function RegisterPage() {
@@ -32,24 +34,25 @@ export function RegisterPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [organizationName, setOrganizationName] = useState('');
-  const [adminInviteCode, setAdminInviteCode] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { register } = useAuth();
 
-  const selectedRole = normaliseRole(searchParams.get('role'));
+  const requestedRole = normaliseRole(searchParams.get('role'));
   const next = searchParams.get('next');
 
-  const selectRole = (role: AccountRole) => {
+  const selectRole = (role: RegistrationRole) => {
     setError(null);
     setOrganizationName('');
-    setAdminInviteCode('');
     const updated = new URLSearchParams(searchParams);
     updated.set('role', role);
     setSearchParams(updated, { replace: true });
   };
+
+  const selectedRole: RegistrationRole =
+    requestedRole === 'ADMIN' ? 'CANDIDATE' : requestedRole;
 
   const handleSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
@@ -58,7 +61,6 @@ export function RegisterPage() {
 
       const trimmedEmail = email.trim();
       const trimmedOrganization = organizationName.trim();
-      const trimmedInviteCode = adminInviteCode.trim();
 
       if (!trimmedEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmedEmail)) {
         setError('Enter a valid email address.');
@@ -80,11 +82,6 @@ export function RegisterPage() {
         setError('Enter the name of the organization you are hiring for.');
         return;
       }
-      if (selectedRole === 'ADMIN' && !trimmedInviteCode) {
-        setError('Enter the administrator invitation code issued to you.');
-        return;
-      }
-
       setIsSubmitting(true);
       try {
         await register({
@@ -93,7 +90,6 @@ export function RegisterPage() {
           role: selectedRole,
           organizationName:
             selectedRole === 'RECRUITER' ? trimmedOrganization : undefined,
-          adminInviteCode: selectedRole === 'ADMIN' ? trimmedInviteCode : undefined,
         });
         navigate(authPath('/login', selectedRole), {
           replace: true,
@@ -110,13 +106,18 @@ export function RegisterPage() {
       password,
       confirmPassword,
       organizationName,
-      adminInviteCode,
       selectedRole,
       next,
       navigate,
       register,
     ]
   );
+
+  // Old bookmarks to administrator registration must not look like a broken
+  // signup form. Administrators are provisioned by the operator and sign in.
+  if (requestedRole === 'ADMIN') {
+    return <Navigate to={authPath('/login', 'ADMIN', next)} replace />;
+  }
 
   return (
     <>
@@ -128,7 +129,10 @@ export function RegisterPage() {
 
       <RoleSelector
         value={selectedRole}
-        onChange={selectRole}
+        onChange={role => {
+          if (role !== 'ADMIN') selectRole(role);
+        }}
+        roles={REGISTRATION_ROLES}
         legend="Create account as"
         disabled={isSubmitting}
       />
@@ -169,23 +173,6 @@ export function RegisterPage() {
             maxLength={255}
             disabled={isSubmitting}
             helperText="Your roles and job postings belong to this organization."
-          />
-        )}
-
-        {selectedRole === 'ADMIN' && (
-          <Input
-            id="adminInviteCode"
-            label="Administrator invitation code"
-            type="password"
-            placeholder="Invitation code"
-            value={adminInviteCode}
-            onChange={event => setAdminInviteCode(event.target.value)}
-            required
-            autoComplete="off"
-            maxLength={256}
-            disabled={isSubmitting}
-            helperText="Administrator signup is closed unless the deployment has issued you a code."
-            showPasswordToggle
           />
         )}
 
@@ -236,9 +223,8 @@ export function RegisterPage() {
           </Link>
         </div>
         <p className="mt-4 font-caption text-caption leading-relaxed text-c-text-subtle">
-          {selectedRole === 'ADMIN'
-            ? 'Administrator accounts are privileged. The deployment validates the invitation code before the account is created.'
-            : 'By creating an account you agree to use the workspace only for its intended role.'}
+          By creating an account you agree to use the workspace only for its intended role.
+          Administrator accounts are provisioned by the platform operator.
         </p>
       </div>
     </>

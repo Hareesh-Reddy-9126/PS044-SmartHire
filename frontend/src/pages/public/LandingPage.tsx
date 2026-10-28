@@ -8,7 +8,7 @@ interface WorkspacePath {
   copy: string;
   bullets: string[];
   primary: { label: string; to: string };
-  secondary: { label: string; to: string };
+  secondary?: { label: string; to: string };
 }
 
 const WORKSPACE_PATHS: WorkspacePath[] = [
@@ -64,10 +64,7 @@ const WORKSPACE_PATHS: WorkspacePath[] = [
       label: 'Administrator sign in',
       to: authPath('/login', 'ADMIN'),
     },
-    secondary: {
-      label: 'Create with invitation code',
-      to: authPath('/register', 'ADMIN'),
-    },
+    secondary: undefined,
   },
 ];
 
@@ -364,13 +361,15 @@ export function LandingPage() {
                   <Link to={path.primary.to} className="btn btn-primary btn-md">
                     {path.primary.label}
                   </Link>
-                  <Link to={path.secondary.to} className="btn btn-secondary btn-md">
-                    {path.secondary.label}
-                  </Link>
+                  {path.secondary && (
+                    <Link to={path.secondary.to} className="btn btn-secondary btn-md">
+                      {path.secondary.label}
+                    </Link>
+                  )}
                 </div>
                 <p className="path-note">
                   {path.role === 'ADMIN'
-                    ? 'Administrator views are read-only. Account creation requires a deployment-issued invitation code.'
+                    ? 'Administrator views are read-only. Administrator accounts are provisioned by the platform operator.'
                     : path.role === 'RECRUITER'
                     ? 'Recruiter actions are limited to the organization carried in the signed-in identity.'
                     : 'Your application record is visible to you and the recruiter reviewing that role.'}

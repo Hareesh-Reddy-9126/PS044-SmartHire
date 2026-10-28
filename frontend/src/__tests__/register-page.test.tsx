@@ -97,7 +97,6 @@ describe('RegisterPage', () => {
         password: 'correct-horse-battery',
         role: 'RECRUITER',
         organizationName: 'Acme Corp',
-        adminInviteCode: undefined,
       });
     });
 
@@ -108,33 +107,15 @@ describe('RegisterPage', () => {
     expect(screen.getByRole('radio', { name: /recruiter/i })).toBeChecked();
   });
 
-  it('requires the invitation code for administrator registration', async () => {
+  it('sends administrator registration bookmarks to the administrator sign-in', async () => {
     renderRegister('/register?role=ADMIN');
 
-    expect(await screen.findByText('Administrator registration')).toBeInTheDocument();
-    fillAccountFields();
-
-    fireEvent.click(screen.getByRole('button', { name: /create administrator account/i }));
+    expect(await screen.findByRole('heading', { name: /^sign in$/i })).toBeInTheDocument();
+    expect(screen.queryByText('Administrator registration')).not.toBeInTheDocument();
     expect(
-      await screen.findByText('Enter the administrator invitation code issued to you.')
-    ).toBeInTheDocument();
+      screen.queryByLabelText(/administrator invitation code/i)
+    ).not.toBeInTheDocument();
     expect(authApi.register).not.toHaveBeenCalled();
-
-    fireEvent.change(screen.getByLabelText(/administrator invitation code/i), {
-      target: { value: 'deployment-secret' },
-    });
-    vi.mocked(authApi.register).mockResolvedValue({ userId: 'user-admin' });
-    fireEvent.click(screen.getByRole('button', { name: /create administrator account/i }));
-
-    await waitFor(() => {
-      expect(authApi.register).toHaveBeenCalledWith({
-        email: 'new@example.com',
-        password: 'correct-horse-battery',
-        role: 'ADMIN',
-        organizationName: undefined,
-        adminInviteCode: 'deployment-secret',
-      });
-    });
   });
 
   it('rejects mismatched passwords before calling the API', async () => {
