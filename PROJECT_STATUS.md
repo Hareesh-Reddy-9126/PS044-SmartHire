@@ -2189,3 +2189,13 @@ Two changes were prepared after launch: the public administrator registration pa
 Deployment check (2026-10-28): auth-service and api-gateway rebuilt one at a time on the VM. First auth-service build exposed a startup defect — two constructors left Spring without an injection point (`No default constructor found`), so the container restart-looped. The public constructor is now `@Autowired`, and `GoogleTokenVerifierTest.canBeCreatedAsASpringBean` boots the bean in an `AnnotationConfigApplicationContext` to catch a regression. After the rebuild: auth-service `restarts=0`, `healthy`; public health `200`; `POST /api/v1/auth/google` returns the intended `503` Problem Details while unconfigured; `POST /api/v1/auth/login` with a wrong password still returns `401`. auth-service now has **102 tests**.
 
 Pending for Google sign-in: a Google Cloud OAuth **Web application** client id with authorized JavaScript origin `https://172.198.139.59.sslip.io`, then set `GOOGLE_OAUTH_CLIENT_ID` in `/opt/smarthire/deploy/.env`, recreate `auth-service` and rebuild `frontend`. Until then `/api/v1/auth/google` answers `503` and the button is absent. Google may refuse the `sslip.io` hostname during client creation; the fallback is a custom domain, with e-mail/password login unaffected.
+
+### 12.10 Read-only demo access - 2026-10-28 [V]
+
+For showing live data without handing over an application account, the VM now has a SELECT-only Postgres role `smarthire_readonly`. Its generated password is stored only in `/root/smarthire-readonly.txt` (mode 600) and was never printed in chat or committed. The role has `CONNECT` on `smarthire`, `USAGE` plus `SELECT` on every `*_svc` schema, and default SELECT grants for future tables.
+
+Verification: `SELECT count(*) FROM auth_svc.users` returned `13`; `CREATE TABLE auth_svc.should_fail(id int)` was rejected with `permission denied for schema auth_svc`. Postgres remains unpublished; access requires an SSH tunnel to the container IP (currently `172.18.0.4`, re-check after a container recreate).
+
+Live snapshot at the same time (also saved as `/tmp/demo-queries.sql` on the VM and copied into the Postgres container): 2 ADMIN, 6 RECRUITER, 5 CANDIDATE; 6 organizations; 12 `OPEN` jobs; applications 6 APPLIED, 4 SHORTLISTED, 3 HIRED, 2 REJECTED, 2 WITHDRAWN; recruitments 3 HIRED, 4 PENDING, 1 REJECTED/COMPLETED, 1 REJECTED/NO_SHOW; 23 notifications all `SENT`; database 9047 kB.
+
+Public regression after the auth-service and gateway rebuilds: `verify-public.ps1 -SkipFlow` **18/18 PASS**. Temporary candidate `hareeshreddy916+oauthsmoke@gmail.com` registered (`201`), logged in (`200`), then its refresh token and user row were deleted; users are back to 13.
