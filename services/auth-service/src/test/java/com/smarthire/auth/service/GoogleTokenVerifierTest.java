@@ -13,6 +13,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.springframework.context.annotation.AnnotationConfigApplicationContext;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.jwt.JwtException;
@@ -143,5 +144,20 @@ class GoogleTokenVerifierTest {
     assertThatThrownBy(() -> unconfigured.verifiedEmail("id-token"))
         .isInstanceOf(GoogleSignInUnavailableException.class);
     verifyNoInteractions(decoder);
+  }
+
+  /**
+   * Guards the production wiring: the class has a second constructor for tests, so Spring needs an
+   * unambiguous injection point. Without one the whole service fails to start.
+   */
+  @Test
+  void canBeCreatedAsASpringBean() {
+    try (AnnotationConfigApplicationContext context = new AnnotationConfigApplicationContext()) {
+      context.registerBean(GoogleProperties.class, () -> new GoogleProperties(CLIENT_ID));
+      context.register(GoogleTokenVerifier.class);
+      context.refresh();
+
+      assertThat(context.getBean(GoogleTokenVerifier.class)).isNotNull();
+    }
   }
 }

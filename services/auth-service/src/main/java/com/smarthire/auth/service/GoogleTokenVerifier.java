@@ -3,6 +3,7 @@ package com.smarthire.auth.service;
 import com.smarthire.auth.config.GoogleProperties;
 import java.util.Locale;
 import java.util.Set;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.oauth2.jose.jws.SignatureAlgorithm;
 import org.springframework.security.oauth2.jwt.Jwt;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
@@ -31,6 +32,7 @@ public class GoogleTokenVerifier {
   private final GoogleProperties properties;
   private final JwtDecoder decoder;
 
+  @Autowired
   public GoogleTokenVerifier(GoogleProperties properties) {
     this(properties, defaultDecoder());
   }
