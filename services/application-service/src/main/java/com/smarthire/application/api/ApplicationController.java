@@ -159,6 +159,11 @@ public class ApplicationController {
         @ApiResponse(
             responseCode = "403",
             description = "Forbidden - requires CANDIDATE role",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "409",
+            description =
+                "Candidate already has an active application for this job (withdrawn and rejected applications do not block a new one)",
             content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
       })
   @PostMapping

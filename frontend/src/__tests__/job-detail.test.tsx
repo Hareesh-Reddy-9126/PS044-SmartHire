@@ -2,11 +2,15 @@ import { describe, expect, it, vi, beforeEach } from 'vitest';
 import { fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { JobDetailPage } from '../pages/public/JobDetailPage';
-import { ApiErrorResponse, jobsApi } from '../api/client';
+import { ApiErrorResponse, applicationsApi, jobsApi } from '../api/client';
 
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client');
-  return { ...actual, jobsApi: { get: vi.fn() } };
+  return {
+    ...actual,
+    jobsApi: { get: vi.fn() },
+    applicationsApi: { list: vi.fn() },
+  };
 });
 
 vi.mock('../context/AuthContext', () => ({ useAuth: vi.fn() }));
@@ -50,6 +54,10 @@ function apiError(status: number) {
 describe('JobDetailPage', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(applicationsApi.list).mockResolvedValue({
+      content: [],
+      page: { size: 100, number: 0, totalElements: 0, totalPages: 0 },
+    });
   });
 
   it('renders the fields returned by the job API', async () => {
@@ -86,5 +94,51 @@ describe('JobDetailPage', () => {
     renderPage({ user: { sub: 'candidate-1', email: 'candidate@example.com', roles: ['CANDIDATE'], orgId: null }, isLoading: false });
     fireEvent.click((await screen.findAllByRole('button', { name: 'Apply now' }))[0]);
     expect(await screen.findByText('Application form')).toBeInTheDocument();
+  });
+
+  it('shows the existing application instead of Apply now for an active application', async () => {
+    vi.mocked(jobsApi.get).mockResolvedValue(job);
+    vi.mocked(applicationsApi.list).mockResolvedValue({
+      content: [
+        {
+          applicationId: 'application-9',
+          jobId: 'job-123',
+          candidateId: 'candidate-1',
+          resumeLink: 'https://example.com/resume.pdf',
+          status: 'SHORTLISTED',
+        },
+      ],
+      page: { size: 100, number: 0, totalElements: 1, totalPages: 1 },
+    });
+
+    renderPage({ user: { sub: 'candidate-1', email: 'candidate@example.com', roles: ['CANDIDATE'], orgId: null }, isLoading: false });
+
+    expect(await screen.findByText("You've already applied to this role")).toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: 'Apply now' })).not.toBeInTheDocument();
+    expect(screen.getByRole('link', { name: 'View application' })).toHaveAttribute(
+      'href',
+      '/candidate/applications/application-9',
+    );
+  });
+
+  it('allows applying again when the previous application was withdrawn', async () => {
+    vi.mocked(jobsApi.get).mockResolvedValue(job);
+    vi.mocked(applicationsApi.list).mockResolvedValue({
+      content: [
+        {
+          applicationId: 'application-9',
+          jobId: 'job-123',
+          candidateId: 'candidate-1',
+          resumeLink: 'https://example.com/resume.pdf',
+          status: 'WITHDRAWN',
+        },
+      ],
+      page: { size: 100, number: 0, totalElements: 1, totalPages: 1 },
+    });
+
+    renderPage({ user: { sub: 'candidate-1', email: 'candidate@example.com', roles: ['CANDIDATE'], orgId: null }, isLoading: false });
+
+    expect(await screen.findAllByRole('button', { name: 'Apply now' })).not.toHaveLength(0);
+    expect(screen.queryByText("You've already applied to this role")).not.toBeInTheDocument();
   });
 });

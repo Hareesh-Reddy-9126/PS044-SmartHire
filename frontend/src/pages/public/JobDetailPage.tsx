@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { ApiErrorResponse, JobResponse, jobsApi } from '../../api/client';
+import {
+  ApiErrorResponse,
+  ApplicationResponse,
+  JobResponse,
+  applicationsApi,
+  jobsApi,
+} from '../../api/client';
 import { useAuth } from '../../context/AuthContext';
 import { Button } from '../../components/ui/Button';
 import { Card } from '../../components/ui/Card';
@@ -69,6 +75,9 @@ export function JobDetailPage() {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [loadState, setLoadState] = useState<LoadState>('loading');
   const [attempt, setAttempt] = useState(0);
+  const [existingApplication, setExistingApplication] = useState<ApplicationResponse | null>(null);
+  const [applicationsLoaded, setApplicationsLoaded] = useState(false);
+  const isCandidate = user?.roles?.includes('CANDIDATE') ?? false;
 
   useEffect(() => {
     let cancelled = false;
@@ -98,6 +107,40 @@ export function JobDetailPage() {
     };
   }, [jobId, attempt]);
 
+  useEffect(() => {
+    if (isAuthLoading || !isCandidate || !jobId) {
+      setExistingApplication(null);
+      setApplicationsLoaded(false);
+      return;
+    }
+
+    let cancelled = false;
+    setApplicationsLoaded(false);
+
+    applicationsApi
+      .list(0, 100)
+      .then(page => {
+        if (cancelled) return;
+        const active = page.content.find(
+          application =>
+            application.jobId === jobId &&
+            application.status !== 'WITHDRAWN' &&
+            application.status !== 'REJECTED',
+        );
+        setExistingApplication(active ?? null);
+        setApplicationsLoaded(true);
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setExistingApplication(null);
+        setApplicationsLoaded(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAuthLoading, isCandidate, jobId, attempt]);
+
   const retry = useCallback(() => setAttempt(count => count + 1), []);
 
   if (loadState === 'loading') {
@@ -112,13 +155,16 @@ export function JobDetailPage() {
   if (loadState === 'error') return <EmptyJobState notFound={false} onRetry={retry} />;
   if (!job) return null;
 
-  const isCandidate = user?.roles?.includes('CANDIDATE') ?? false;
   const isOwnerRecruiter =
     (user?.roles?.includes('RECRUITER') ?? false) && user?.orgId === job.ownerOrgId;
   const isOpen = job.status === 'OPEN';
-  const canApply = !isAuthLoading && isCandidate && isOpen;
+  const canApply =
+    !isAuthLoading && isCandidate && isOpen && applicationsLoaded && !existingApplication;
   const applyPath = `/jobs/${job.jobId}/apply`;
   const signInPath = `/login?next=${encodeURIComponent(applyPath)}`;
+  const applicationPath = existingApplication
+    ? `/candidate/applications/${existingApplication.applicationId}`
+    : null;
 
   return (
     <div className="space-y-8">
@@ -165,6 +211,12 @@ export function JobDetailPage() {
             >
               Apply now
             </Button>
+          )}
+
+          {!isAuthLoading && isCandidate && applicationPath && (
+            <Link to={applicationPath} className="btn btn-secondary btn-lg">
+              View application
+            </Link>
           )}
         </div>
 
@@ -245,6 +297,20 @@ export function JobDetailPage() {
                 <Button fullWidth size="lg" onClick={() => navigate(applyPath)}>
                   Apply now
                 </Button>
+              )}
+
+              {!isAuthLoading && isCandidate && existingApplication && applicationPath && (
+                <Alert
+                  tone="success"
+                  title="You've already applied to this role"
+                  action={
+                    <Link to={applicationPath} className="btn btn-secondary btn-sm">
+                      View
+                    </Link>
+                  }
+                >
+                  Current status: {humanise(existingApplication.status)}
+                </Alert>
               )}
 
               {!isAuthLoading && !user && isOpen && (

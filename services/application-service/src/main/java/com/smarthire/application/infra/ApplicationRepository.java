@@ -2,6 +2,7 @@ package com.smarthire.application.infra;
 
 import com.smarthire.application.domain.Application;
 import com.smarthire.application.domain.ApplicationStatus;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -31,4 +32,11 @@ public interface ApplicationRepository
   List<Application> findByJobId(UUID jobId);
 
   List<Application> findByStatus(ApplicationStatus status);
+
+  /**
+   * True when the candidate already holds an application for this job in any state other than the
+   * supplied terminal states. Used to reject duplicate active applications before insert.
+   */
+  boolean existsByJobIdAndCandidateIdAndStatusNotIn(
+      UUID jobId, UUID candidateId, Collection<ApplicationStatus> statuses);
 }

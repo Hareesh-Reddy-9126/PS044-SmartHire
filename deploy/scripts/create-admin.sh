@@ -49,6 +49,18 @@ wait_for_auth() {
   return 1
 }
 
+wait_for_gateway() {
+  # A healthy auth-service container is not enough: the gateway needs the new signing key
+  # before it can validate the registration request. Wait for the public JWKS route.
+  local status=""
+  for _ in $(seq 1 90); do
+    status="$(curl -s -o /dev/null -w '%{http_code}' "https://$DOMAIN/oauth2/jwks" 2>/dev/null || echo 000)"
+    [[ "$status" == "200" ]] && return 0
+    sleep 2
+  done
+  return 1
+}
+
 DOMAIN="$(read_env DOMAIN)"
 ADMIN_EMAIL="${1:-${ADMIN_EMAIL:-}}"
 
@@ -75,6 +87,7 @@ if [[ -z "$CODE" ]]; then
   chmod 600 "$ENV_FILE"
   "${COMPOSE[@]}" up -d --no-deps auth-service
   wait_for_auth || die "auth-service did not become healthy after enabling the invitation code."
+  wait_for_gateway || die "gateway JWKS endpoint did not become ready after enabling the invitation code."
 fi
 
 log "Registering administrator $ADMIN_EMAIL against https://$DOMAIN"

@@ -8,9 +8,11 @@ import com.smarthire.application.infra.JobClient;
 import com.smarthire.application.infra.NotificationClient;
 import com.smarthire.common.audit.AuditService;
 import com.smarthire.common.contract.notification.ApplicationStatusChangeRequest;
+import java.util.List;
 import java.util.UUID;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -62,6 +64,7 @@ public class ApplicationService {
    * @return the created application
    * @throws ApplicationNotFoundException if the job does not exist
    * @throws IllegalArgumentException if the job is not OPEN
+   * @throws DuplicateApplicationException if an active application already exists for this job
    */
   @Transactional
   public Application create(UUID jobId, String resumeLink, UUID candidateId) {
@@ -78,9 +81,23 @@ public class ApplicationService {
           "Cannot apply to a job that is not OPEN; current status: " + job.status());
     }
 
+    if (applicationRepository.existsByJobIdAndCandidateIdAndStatusNotIn(
+        jobId, candidateId, List.of(ApplicationStatus.WITHDRAWN, ApplicationStatus.REJECTED))) {
+      throw new DuplicateApplicationException(
+          "You already have an active application for this job.");
+    }
+
     Application application =
         Application.createApplied(UUID.randomUUID(), jobId, candidateId, resumeLink);
-    Application saved = applicationRepository.save(application);
+    Application saved;
+    try {
+      saved = applicationRepository.save(application);
+    } catch (DataIntegrityViolationException race) {
+      // The partial unique index is the backstop for two concurrent submissions that both pass
+      // the existence check. Present it as the same 409 as the service-level guard.
+      throw new DuplicateApplicationException(
+          "You already have an active application for this job.");
+    }
     AuditService.application(
         AuditService.ApplicationEvent.CREATE,
         candidateId,

@@ -4,6 +4,8 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
 import com.smarthire.application.domain.Application;
@@ -12,12 +14,14 @@ import com.smarthire.application.domain.IllegalApplicationStateException;
 import com.smarthire.application.infra.ApplicationRepository;
 import com.smarthire.application.infra.JobClient;
 import com.smarthire.application.infra.NotificationClient;
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.springframework.dao.DataIntegrityViolationException;
 
 /** Unit tests for {@link ApplicationService}. */
 class ApplicationServiceTest {
@@ -81,6 +85,68 @@ class ApplicationServiceTest {
       assertThatThrownBy(() -> applicationService.create(JOB_ID, RESUME_LINK, CANDIDATE_ID))
           .isInstanceOf(IllegalArgumentException.class)
           .hasMessageContaining("not OPEN");
+    }
+
+    @Test
+    @DisplayName("Throws when candidate already has an active application for the job")
+    void throwsWhenActiveApplicationExists() {
+      JobClient.JobResponse jobResponse =
+          new JobClient.JobResponse(
+              JOB_ID, "Acme Corp", "Backend Engineer", "Remote", "OPEN", ORG_ID);
+      when(jobClient.getJob(JOB_ID)).thenReturn(jobResponse);
+      when(applicationRepository.existsByJobIdAndCandidateIdAndStatusNotIn(
+              JOB_ID,
+              CANDIDATE_ID,
+              List.of(ApplicationStatus.WITHDRAWN, ApplicationStatus.REJECTED)))
+          .thenReturn(true);
+
+      assertThatThrownBy(() -> applicationService.create(JOB_ID, RESUME_LINK, CANDIDATE_ID))
+          .isInstanceOf(DuplicateApplicationException.class)
+          .hasMessageContaining("already have an active application");
+
+      verify(applicationRepository, never()).save(any(Application.class));
+    }
+
+    @Test
+    @DisplayName("Allows a new application after the previous one was withdrawn or rejected")
+    void allowsReapplyAfterTerminalStatus() {
+      JobClient.JobResponse jobResponse =
+          new JobClient.JobResponse(
+              JOB_ID, "Acme Corp", "Backend Engineer", "Remote", "OPEN", ORG_ID);
+      when(jobClient.getJob(JOB_ID)).thenReturn(jobResponse);
+      when(applicationRepository.existsByJobIdAndCandidateIdAndStatusNotIn(
+              JOB_ID,
+              CANDIDATE_ID,
+              List.of(ApplicationStatus.WITHDRAWN, ApplicationStatus.REJECTED)))
+          .thenReturn(false);
+      when(applicationRepository.save(any(Application.class)))
+          .thenAnswer(inv -> inv.getArgument(0));
+
+      Application created = applicationService.create(JOB_ID, RESUME_LINK, CANDIDATE_ID);
+
+      assertThat(created.getStatus()).isEqualTo(ApplicationStatus.APPLIED);
+      verify(applicationRepository)
+          .existsByJobIdAndCandidateIdAndStatusNotIn(
+              JOB_ID,
+              CANDIDATE_ID,
+              List.of(ApplicationStatus.WITHDRAWN, ApplicationStatus.REJECTED));
+    }
+
+    @Test
+    @DisplayName("Translates a concurrent unique-index violation into the duplicate conflict")
+    void translatesUniqueViolation() {
+      JobClient.JobResponse jobResponse =
+          new JobClient.JobResponse(
+              JOB_ID, "Acme Corp", "Backend Engineer", "Remote", "OPEN", ORG_ID);
+      when(jobClient.getJob(JOB_ID)).thenReturn(jobResponse);
+      when(applicationRepository.save(any(Application.class)))
+          .thenThrow(
+              new DataIntegrityViolationException(
+                  "duplicate key value violates unique constraint"));
+
+      assertThatThrownBy(() -> applicationService.create(JOB_ID, RESUME_LINK, CANDIDATE_ID))
+          .isInstanceOf(DuplicateApplicationException.class)
+          .hasMessageContaining("already have an active application");
     }
   }
 

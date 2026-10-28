@@ -1,6 +1,6 @@
 import { useEffect, useState, FormEvent } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { applicationsApi, jobsApi } from '../../api/client';
+import { ApiErrorResponse, applicationsApi, jobsApi } from '../../api/client';
 import type { JobResponse } from '../../api/client';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
@@ -15,6 +15,7 @@ export function ApplicationSubmitPage() {
   const [job, setJob] = useState<JobResponse | null>(null);
   const [resumeLink, setResumeLink] = useState('');
   const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
     if (!jobId) return;
@@ -46,6 +47,8 @@ export function ApplicationSubmitPage() {
       return;
     }
 
+    setSubmitting(true);
+
     applicationsApi
       .create({
         jobId: jobId!,
@@ -54,7 +57,32 @@ export function ApplicationSubmitPage() {
       .then(result => {
         navigate(`/candidate/applications/${result.applicationId}`);
       })
-      .catch(err => {
+      .catch(async err => {
+        setSubmitting(false);
+        if (err instanceof ApiErrorResponse && err.error.status === 409) {
+          // The backend rejects duplicate active applications; send the candidate to the
+          // application they already hold instead of showing a dead-end error.
+          try {
+            const page = await applicationsApi.list(0, 100);
+            const existing = page.content.find(
+              application =>
+                application.jobId === jobId &&
+                application.status !== 'WITHDRAWN' &&
+                application.status !== 'REJECTED',
+            );
+            if (existing) {
+              navigate(`/candidate/applications/${existing.applicationId}`, { replace: true });
+              return;
+            }
+          } catch {
+            // Fall through to the inline message if the lookup fails.
+          }
+          setError(
+            'You already have an active application for this job. Open My applications to view it.',
+          );
+          return;
+        }
+
         setError(errorMessage(err, 'Application submission failed. Please try again.'));
       });
   };
@@ -99,8 +127,8 @@ export function ApplicationSubmitPage() {
             helperText="A public link to your résumé or CV"
           />
 
-          <Button type="submit" fullWidth size="lg">
-            Submit application
+          <Button type="submit" fullWidth size="lg" isLoading={submitting}>
+            {submitting ? 'Submitting…' : 'Submit application'}
           </Button>
         </form>
       </Card>

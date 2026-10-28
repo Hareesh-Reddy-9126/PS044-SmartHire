@@ -6,7 +6,11 @@ import { ApiErrorResponse, applicationsApi, jobsApi } from '../api/client';
 
 vi.mock('../api/client', async () => {
   const actual = await vi.importActual<typeof import('../api/client')>('../api/client');
-  return { ...actual, jobsApi: { get: vi.fn() }, applicationsApi: { create: vi.fn() } };
+  return {
+    ...actual,
+    jobsApi: { get: vi.fn() },
+    applicationsApi: { create: vi.fn(), list: vi.fn() },
+  };
 });
 
 const job = { jobId: 'job-123', companyName: 'Acme Corp', role: 'Backend Engineer', location: 'London', status: 'OPEN' as const, ownerOrgId: 'org-1' };
@@ -20,7 +24,14 @@ function apiError(status: number, detail = 'Server rejected the application') {
 }
 
 describe('ApplicationSubmitPage', () => {
-  beforeEach(() => { vi.clearAllMocks(); vi.mocked(jobsApi.get).mockResolvedValue(job); });
+  beforeEach(() => {
+    vi.clearAllMocks();
+    vi.mocked(jobsApi.get).mockResolvedValue(job);
+    vi.mocked(applicationsApi.list).mockResolvedValue({
+      content: [],
+      page: { size: 100, number: 0, totalElements: 0, totalPages: 0 },
+    });
+  });
 
   it('loads the job and submits a résumé link', async () => {
     vi.mocked(applicationsApi.create).mockResolvedValue({ ...job, applicationId: 'application-1', candidateId: 'candidate-1', resumeLink: 'https://example.com/resume.pdf', status: 'APPLIED' });
@@ -44,12 +55,46 @@ describe('ApplicationSubmitPage', () => {
   });
 
   it('shows the server error without claiming success', async () => {
-    vi.mocked(applicationsApi.create).mockRejectedValue(apiError(409));
+    vi.mocked(applicationsApi.create).mockRejectedValue(apiError(500));
     renderPage();
     expect(await screen.findByRole('heading', { name: 'Apply for a job' })).toBeInTheDocument();
     fireEvent.change(screen.getByLabelText(/Resume link/), { target: { value: 'https://example.com/resume.pdf' } });
     fireEvent.click(screen.getByRole('button', { name: 'Submit application' }));
     expect(await screen.findByRole('alert')).toHaveTextContent('Server rejected the application');
     expect(screen.queryByText('Application submitted')).not.toBeInTheDocument();
+  });
+
+  it('redirects a duplicate application to the existing application record', async () => {
+    vi.mocked(applicationsApi.create).mockRejectedValue(apiError(409, 'You already have an active application for this job.'));
+    vi.mocked(applicationsApi.list).mockResolvedValue({
+      content: [
+        {
+          applicationId: 'application-7',
+          jobId: 'job-123',
+          candidateId: 'candidate-1',
+          resumeLink: 'https://example.com/resume.pdf',
+          status: 'APPLIED',
+        },
+      ],
+      page: { size: 100, number: 0, totalElements: 1, totalPages: 1 },
+    });
+
+    renderPage();
+    expect(await screen.findByRole('heading', { name: 'Apply for a job' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Resume link/), { target: { value: 'https://example.com/resume.pdf' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit application' }));
+
+    expect(await screen.findByText('Application destination')).toBeInTheDocument();
+  });
+
+  it('explains a duplicate application when no active record can be found', async () => {
+    vi.mocked(applicationsApi.create).mockRejectedValue(apiError(409, 'You already have an active application for this job.'));
+
+    renderPage();
+    expect(await screen.findByRole('heading', { name: 'Apply for a job' })).toBeInTheDocument();
+    fireEvent.change(screen.getByLabelText(/Resume link/), { target: { value: 'https://example.com/resume.pdf' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Submit application' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('You already have an active application for this job');
   });
 });

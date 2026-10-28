@@ -113,15 +113,28 @@ Record 'Self-hosted icon font served' ($font.Code -eq 200) "HTTP $($font.Code), 
 
 if ($BaseUrl -notmatch 'localhost') {
     $httpUrl = $BaseUrl -replace '^https:', 'http:'
-    $redirect = $null
-    try {
-        $null = Invoke-WebRequest -Uri "$httpUrl/" -UseBasicParsing -MaximumRedirection 0 -TimeoutSec 15
-        Record 'HTTP redirects to HTTPS' $false 'no redirect'
-    } catch {
+    # Windows PowerShell 5.1's Invoke-WebRequest with -MaximumRedirection 0 surfaces the
+    # redirect as a terminating error without the Location header. curl.exe reports the
+    # status and target directly, so use it when available.
+    $curl = Get-Command curl.exe -ErrorAction SilentlyContinue
+    if ($curl) {
+        $raw = & $curl.Source -s -o NUL -w '%{http_code} %{redirect_url}' "$httpUrl/" 2>$null
+        $parts = ([string]$raw).Trim() -split '\s+', 2
         $code = 0
-        if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode }
-        $location = [string]$_.Exception.Response.Headers['Location']
+        if ($parts.Count -ge 1) { [void][int]::TryParse($parts[0], [ref]$code) }
+        $location = if ($parts.Count -ge 2) { $parts[1] } else { '' }
         Record 'HTTP redirects to HTTPS' (($code -in 301, 302, 307, 308) -and $location -like 'https://*') "HTTP $code -> $location"
+    } else {
+        $redirect = $null
+        try {
+            $null = Invoke-WebRequest -Uri "$httpUrl/" -UseBasicParsing -MaximumRedirection 0 -TimeoutSec 15
+            Record 'HTTP redirects to HTTPS' $false 'no redirect'
+        } catch {
+            $code = 0
+            if ($_.Exception.Response) { $code = [int]$_.Exception.Response.StatusCode }
+            $location = [string]$_.Exception.Response.Headers['Location']
+            Record 'HTTP redirects to HTTPS' (($code -in 301, 302, 307, 308) -and $location -like 'https://*') "HTTP $code -> $location"
+        }
     }
 }
 

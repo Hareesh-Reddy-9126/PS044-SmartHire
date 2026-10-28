@@ -1986,7 +1986,7 @@ The only browser console/HTTP noise was intentional negative-path traffic: 404s 
 | Admin provisioning | `deploy/scripts/create-admin.sh` | Issues a one-time code if none is set, registers the admin, writes credentials to `/root/smarthire-admin-initial.txt` (mode 600), blanks the code and recreates `auth-service` |
 | Resend email sender | `services/notification-service/.../ResendNotificationSender.java` | Delivers email via Resend HTTPS API (free tier, no mailbox), with retry/backoff and idempotency keys; 5 unit tests |
 | Demo content | `deploy/scripts/seed-demo.sh` | No-op when jobs exist; otherwise registers a demo recruiter and publishes six sample jobs (`/root/smarthire-demo-credentials.txt`, mode 600) |
-| Public verification | `deploy/scripts/verify-public.ps1` | 36 checks: TLS/headers, SPA fallback, fonts, health, JWKS, CORS allow/deny, anonymous 401, full candidate/recruiter workflow, refresh/logout; optional JSON evidence file |
+| Public verification | `deploy/scripts/verify-public.ps1` | 37 checks: TLS/headers, SPA fallback, fonts, health, JWKS, CORS allow/deny, anonymous 401, full candidate/recruiter workflow, refresh/logout; optional JSON evidence file |
 
 - Deployment no longer depends on the repository being pushed: the working tree is shipped as a tarball.
 - `deploy-remote.ps1` refuses to continue when the hostname does not resolve to the target IP, because
@@ -2007,3 +2007,62 @@ Verification performed locally on the production stack (`https://localhost`, Cad
 - `create-admin.sh` control flow unit-tested with stubbed `docker`/`curl`: success path issues a code,
   recreates `auth-service` twice (enable, then close) and leaves `AUTH_ADMIN_SIGNUP_CODE=`; failure path
   removes the generated code and writes no credential file.
+
+## 11. Live Azure deployment and multi-user verification — 2026-10-28 [V]
+
+### 11.1 Live environment
+
+| Item | Value |
+|---|---|
+| Public URL | `https://172.198.139.59.sslip.io` |
+| Host | Azure for Students `Standard_B2s` (2 vCPU / 4 GB), Ubuntu 24.04, `indiasouthcentral` |
+| Resource group / VM | `smarthire-rg` / `smarthire-vm` (`azureuser`) |
+| DNS | `sslip.io` A record for `172.198.139.59` |
+| TLS | Let's Encrypt certificate issued by Caddy |
+| Runtime | 11 containers healthy; Postgres and Redis internal-only; SPA and API same origin |
+| Admin | `hareeshreddy916@gmail.com`; initial password in `/root/smarthire-admin-initial.txt` (mode 600) |
+
+### 11.2 Public verification — 37/37 PASS
+
+`deploy/scripts/verify-public.ps1 -BaseUrl https://172.198.139.59.sslip.io` passed all 37 checks:
+
+- TLS/headers: HSTS, CSP self-only, nosniff, `X-Frame-Options: DENY`, referrer policy, no `Server` banner.
+- HTTP → HTTPS: `308` to `https://172.198.139.59.sslip.io/` (verified with `curl.exe`; the previous PowerShell 5.1 check was a false negative and is fixed).
+- SPA root and deep-link fallback, self-hosted icon font.
+- Health `UP`, JWKS published, public job list shape.
+- Anonymous 401, CORS allow-list and unknown-origin 403.
+- Candidate registration/login/identity/apply/list/RBAC.
+- Recruiter registration/login/create/publish/recruitment/schedule/complete/hire.
+- Candidate sees own recruitment, refresh via HttpOnly cookie, logout 204.
+
+### 11.3 Multi-user lifecycle and RBAC — 29 PASS / 0 FAIL / 1 WARN
+
+`deploy/scripts/live-multiuser-test.ps1` (credentials supplied via `SMARTHIRE_TEST_PASSWORD` and `SMARTHIRE_ADMIN_PASSWORD`; never committed):
+
+- 3 candidates and 2 recruiters registered/logged in through the public edge.
+- Candidates applied; recruiter listed 11 applicants, shortlisted, scheduled, marked COMPLETED/NO_SHOW, and recorded HIRED/REJECTED.
+- RBAC: anonymous 401; candidate blocked from jobs/admin/by-job (403); recruiter blocked from candidate list/admin (403); cross-org recruiter gets 404.
+- Admin login, admin endpoint, and all-recruitments read verified.
+- Job close/reopen: closed job hidden from public (404); application to closed job rejected.
+- WARN: duplicate applications are allowed — one candidate holds 4 applications for the same job (1 HIRED, 3 APPLIED). This is a product gap, not a crash.
+
+### 11.4 Browser UI flows [V]
+
+- Candidate: register → login → browse/filter jobs → apply → view applications → withdraw.
+- Recruiter: register organization "Nova Labs" → create/publish job → view applicants → shortlist → schedule interview → mark COMPLETED → hire candidate.
+- Admin: overview totals and recent activity, recruitments list, application lookup.
+- Public: search "Data" → 1 role; location "Remote" → 3 roles; unknown URL → 404 page.
+
+### 11.5 Test accounts (disposable)
+
+Shared password is supplied through `SMARTHIRE_TEST_PASSWORD`, not stored in the repository.
+
+- Candidates: `hareeshreddy916+candidate.ananya@gmail.com`, `+candidate.kiran`, `+candidate.meera`, `+candidate.vikram`.
+- Recruiters: `hareeshreddy916+recruiter.rahul@gmail.com` (Nova Labs), `+recruiter.sneha` (Orbit Systems), `+recruiter.arjun` (Pulse Analytics).
+
+### 11.6 Known gaps / follow-ups
+
+1. **Duplicate applications.** `ApplicationService.create()` has no active-application check; the frontend always shows "Apply now" on a job the candidate already applied to, and the recruiter list shows duplicate rows. Fix: service-level `existsByJobIdAndCandidateIdAndStatusNotIn(WITHDRAWN, REJECTED)` → 409, plus frontend applied-state and cleanup of test duplicates.
+2. **Recruiter UI shows candidate UUIDs, not names/e-mails.** auth-service exposes no admin directory endpoint; intentional for this release.
+3. **Some UI mutations need a page reload** to reflect new state (withdraw, schedule, mark completed, hire).
+4. **Test data remains on the public board.** 11 open jobs, including duplicate QA postings (Pulse Analytics ×3, Orbit Systems ×3, Verify Org ×2), and duplicate applications. Clean before a public demo.

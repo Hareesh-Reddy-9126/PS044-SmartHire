@@ -3,6 +3,7 @@ package com.smarthire.application.api;
 import com.smarthire.application.infra.JobClient;
 import com.smarthire.application.service.ApplicationForbiddenException;
 import com.smarthire.application.service.ApplicationNotFoundException;
+import com.smarthire.application.service.DuplicateApplicationException;
 import com.smarthire.common.web.CorrelationId;
 import jakarta.servlet.http.HttpServletRequest;
 import java.net.URI;
@@ -48,6 +49,12 @@ public class ApplicationExceptionHandler {
   public ProblemDetail handleForbidden(
       ApplicationForbiddenException ex, HttpServletRequest request) {
     return problem(HttpStatus.FORBIDDEN, "Forbidden", ex.getMessage(), request);
+  }
+
+  @ExceptionHandler(DuplicateApplicationException.class)
+  public ProblemDetail handleDuplicateApplication(
+      DuplicateApplicationException ex, HttpServletRequest request) {
+    return problem(HttpStatus.CONFLICT, "Conflict", ex.getMessage(), request);
   }
 
   /** Role denial from method security ({@code @PreAuthorize}), raised inside the dispatcher. */
