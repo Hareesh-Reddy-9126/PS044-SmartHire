@@ -2133,7 +2133,7 @@ The earlier "needs a page reload" gap did not reproduce: withdraw, shortlist, sc
 
 ### 12.6 Known gaps at launch
 
-1. E-mail delivery is disabled (`NOTIFICATION_SENDER_TYPE=logging`); in-app notifications are persisted and shown, but no external e-mail is sent. The VM has a 36-character Resend key and a sender, but Resend rejects the key: `GET https://api.resend.com/domains` returns HTTP 400 `{"message":"API key is invalid","name":"validation_error"}`, and `POST https://api.resend.com/emails` returns HTTP 401 with the same message, so the key cannot send either. The sender uses `resend.dev` (Resend's test domain), which only delivers to the account owner, so a verified domain is also required for candidate mail. SMTP host/username/password/from are empty. A valid Resend key plus a verified sender domain, or SMTP credentials, are required.
+1. **Resolved 2026-10-28 via Brevo SMTP — see 12.8.** Before that fix, e-mail delivery was disabled (`NOTIFICATION_SENDER_TYPE=logging`): in-app notifications were persisted and shown, but no external e-mail was sent. The Resend key was rejected (`GET /domains` 400, `POST /emails` 401, both `API key is invalid`), and the `resend.dev` sender is test-only.
 2. The disposable demo accounts share a test password supplied out-of-band; rotate or remove them before a real public demo.
 3. The admin bootstrap credential files were deleted after the final verification login; passwords were never printed. There is no self-service password reset. To recover access, run `sudo ./deploy/scripts/create-admin.sh <email>` on the VM, which writes a new credential file to `/root/smarthire-admin-initial.txt`.
 
@@ -2142,8 +2142,32 @@ The earlier "needs a page reload" gap did not reproduce: withdraw, shortlist, sc
 | Area | Change | Verification |
 |---|---|---|
 | Candidate identity | New `POST /api/v1/users/candidates/emails` in auth-service. `@PreAuthorize("hasAnyRole('RECRUITER','ADMIN')")`; only `CANDIDATE` accounts are returned; unknown, recruiter and admin ids are omitted; batches are capped at 100. Gateway route `/api/v1/users/**` added to the default and local profiles. Frontend `candidateDirectoryApi.emails()` is used on recruiter application lookup, recruiter job applicant list, recruiter recruitment detail, and admin application lookup. Candidate id remains as secondary context on detail screens. | auth-service **85 tests**, frontend **73 tests**, typecheck/lint/build pass. Live recruiter call `200` with exactly one candidate email and non-candidates omitted; candidate caller `403`; anonymous `401`. Live admin call `200` with the expected candidate. Browser checks as recruiter.nova1: application lookup, job applicant list (3 applicants, all e-mails, no raw `Candidate <uuid>` prefix), and recruitment detail all show `hareeshreddy916+candidate.meera@gmail.com`. Admin lookup was checked in the browser with a temporary admin account, which showed the same candidate email and was removed afterward; the dataset is back to 13 users. |
-| External e-mail | No code change. Delivery remains on the logging sender because the configured Resend key is invalid and SMTP is unset. | Resend probe HTTP 400 `API key is invalid`; sender domain `resend.dev` (test-only); `NOTIFICATION_SENDER_TYPE=logging`. |
+| External e-mail | Switched to Brevo SMTP on the VM (`.env` only, no code change): `NOTIFICATION_SENDER_TYPE=smtp`, `smtp-relay.brevo.com:587`, STARTTLS, sender = the deployment Gmail address in `ACME_EMAIL`. | Direct SMTP test from the VM: EHLO/STARTTLS/login/send all OK. A real app notification through the internal status endpoint returned HTTP `202` with `deliveryStatus=SENT` ("Your application is under review"). The temporary candidate, notification and refresh rows were deleted afterwards; users are back to 13 and notifications to 23. Inbox/spam receipt is pending confirmation by the account owner. |
 | Scratch scripts | `check_users.sh` and `deploy/scripts/create-admin-fixed.sh` moved out of the repository to `C:\Users\HP\AppData\Local\Temp\opencode\smarthire-scratch\`. | `git status` no longer lists them. |
 | Admin credentials | Final admin verification login completed; local `smarthire-admin-one.txt`/`smarthire-admin-two.txt`, VM `/root/smarthire-admin-initial.txt`, and admin probe scripts containing literal credentials were deleted. Passwords were never printed. | Files absent; repository has no credential files. |
 
 Read-only public regression after the rebuild: `deploy/scripts/verify-public.ps1 -BaseUrl https://172.198.139.59.sslip.io -SkipFlow` **18/18 PASS** (TLS/headers, SPA fallback, fonts, health, JWKS, public jobs, anonymous `401`, CORS allow/deny).
+
+### 12.8 External e-mail enabled - Brevo SMTP - 2026-10-28 [V]
+
+The notification service now sends real e-mail through Brevo's free SMTP relay. Configuration lives only in `/opt/smarthire/deploy/.env` on the VM (mode 600); no secret is committed.
+
+| Item | Value |
+|---|---|
+| Sender type | `smtp` |
+| Relay | `smtp-relay.brevo.com:587`, STARTTLS |
+| From | deployment Gmail address in `ACME_EMAIL` (accepted by Brevo via "Add this sender anyway") |
+| Notification service | Recreated after the env change; health `healthy` |
+
+Verification:
+
+- Direct Python `smtplib` test from the VM: EHLO `250`, STARTTLS EHLO `250`, login OK, send OK.
+- End-to-end app path: a temporary candidate was registered through the public API, then `POST http://notification-service:8086/internal/v1/notifications/application-status` was called from inside the Docker network with that candidate's access token. Response `202`, `deliveryStatus=SENT`, recipient resolved by auth-service from the candidate id, subject "Your application is under review".
+- Cleanup: the smoke notification, refresh token and user were deleted; `auth_svc.users` = 13, `notification_svc.notifications` = 23; no `+smoke-` users remain.
+- The earlier 23 notifications were produced while the sender was `logging`; they remain `SENT` in-app records and were not retroactively e-mailed.
+
+Operational notes:
+
+- Brevo free plan: 300 e-mails/day. Gmail sender addresses are accepted only after the "Add this sender anyway" acknowledgement and are more likely to land in spam than a verified domain.
+- The SMTP key used for this setup was shared in chat and should be rotated in Brevo once delivery is confirmed; update `NOTIFICATION_SMTP_PASSWORD` in `.env` and recreate `notification-service`.
+- Resend remains configured but unused; its key is invalid.
