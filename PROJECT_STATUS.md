@@ -2066,3 +2066,72 @@ Shared password is supplied through `SMARTHIRE_TEST_PASSWORD`, not stored in the
 2. **Recruiter UI shows candidate UUIDs, not names/e-mails.** auth-service exposes no admin directory endpoint; intentional for this release.
 3. **Some UI mutations need a page reload** to reflect new state (withdraw, schedule, mark completed, hire).
 4. **Test data remains on the public board.** 11 open jobs, including duplicate QA postings (Pulse Analytics ×3, Orbit Systems ×3, Verify Org ×2), and duplicate applications. Clean before a public demo.
+
+## 12. Final launch - fresh 13-user dataset and full re-verification - 2026-10-28 [V]
+
+### 12.1 Launch state
+
+| Item | Value |
+|---|---|
+| Public URL | `https://172.198.139.59.sslip.io` |
+| Host | Azure for Students `Standard_B2s`, Ubuntu 24.04 |
+| TLS | Let's Encrypt via Caddy; HSTS, CSP self-only, nosniff, `X-Frame-Options: DENY` |
+| Runtime | 11 containers healthy; Postgres/Redis internal-only; SPA and API same origin |
+| Git | `origin/main` at `aa0a33e` before this status update |
+
+### 12.2 Fixes shipped for launch
+
+| Commit | Fix |
+|---|---|
+| `bd3741f` | Duplicate active applications blocked in `ApplicationService.create()`, translated to HTTP 409, plus Postgres partial unique index `uq_applications_active_job_candidate` (Flyway `V2`). `WITHDRAWN`/`REJECTED` remain re-applicable. |
+| `aa0a33e` | Resume links must be `http(s)://` URLs; invalid links return HTTP 400 (`ApplicationCreateRequest` validation). |
+| this commit | Final launch evidence in this section. |
+
+Live confirmation after rebuild: health `200`, SPA `200`, invalid resume link `400`, partial unique index present.
+
+### 12.3 Final dataset (fresh, disposable)
+
+Business tables were truncated while preserving the 13 auth accounts and 6 organizations; a pre-reset database dump was taken first.
+
+| Entity | Count | Detail |
+|---|---|---|
+| Users | 13 | 2 ADMIN, 6 RECRUITER, 5 CANDIDATE |
+| Organizations | 6 | Nova Labs, Nova Health, Nova AI, Orbit Systems, Orbit Cloud, Orbit Data |
+| Jobs | 12 | All `OPEN`; 2 per recruiter |
+| Applications | 17 | 6 `APPLIED`, 4 `SHORTLISTED`, 3 `HIRED`, 2 `REJECTED`, 2 `WITHDRAWN` |
+| Recruitments | 9 | 3 `HIRED`/`COMPLETED`, 4 `PENDING`/`NOT_SCHEDULED`, 1 `REJECTED`/`COMPLETED`, 1 `REJECTED`/`NO_SHOW` |
+| Notifications | 23 | All `SENT` via `NOTIFICATION_SENDER_TYPE=logging` |
+
+Admin-to-recruiter grouping is logical only: the backend has no admin-recruiter assignment, and both admins can see every recruitment.
+
+### 12.4 Automated verification
+
+| Suite | Result | Evidence |
+|---|---|---|
+| Seed + full API/RBAC workflow (`launch-seed-and-test.ps1`) | **84/84 PASS**, run twice | `C:\Users\HP\AppData\Local\Temp\opencode\seed-final.log` |
+| Public edge/workflow (`deploy/scripts/verify-public.ps1`) | **37/37 PASS** | `C:\Users\HP\AppData\Local\Temp\opencode\verify-public-final.json` |
+
+The 84 checks cover all 13 logins, 12 job publications, applications, duplicate-application `409`, resume `400`, shortlist/schedule/complete/hire/reject, candidate progress, notifications, RBAC denials, close/reopen visibility, and logout. The 37 public checks cover TLS/headers, SPA fallback, fonts, health, JWKS, CORS allow/deny, anonymous `401`, and the complete candidate/recruiter journey through the public URL.
+
+### 12.5 Browser UI pass - all 13 accounts, two tabs each
+
+| Role | Verified |
+|---|---|
+| Admin One | Overview 9 recruitments / 3 hired / 4 pending, recruitment list (9), HIRED detail, application lookup |
+| Admin Two | Overview and all-organization recruitment list |
+| 6 recruiters | 2 jobs each; organization-scoped job and recruitment counts (Nova Labs 2, Nova Health 1, Nova AI 1, Orbit Systems 2, Orbit Cloud 1, Orbit Data 1) |
+| 5 candidates | Application lists and progress (Ananya 3 apps incl. HIRED+PENDING; Kiran 3; Meera 4 incl. withdrawn and the new HIRED recruitment; Vikram 3 incl. HIRED; Zoya 3 incl. `WITHDRAWN` and `REJECTED`) |
+
+Write workflows exercised through the UI, not just the API:
+
+- Candidate Zoya applied to Platform Engineer via the job page, then withdrew; status became `WITHDRAWN` and the toast confirmed it.
+- Recruiter Nova Labs opened Meera's application, shortlisted it (recruitment `75a83d93-5b18-40aa-a7f3-f3d682dfc497`, application `SHORTLISTED`), scheduled an interview (Nov 5, 2026 10:30, Priya Nair), marked it `COMPLETED`, and hired the candidate.
+- Result reflected immediately in the recruiter detail, the candidate's applications/progress, the candidate notification inbox (`UNDER_REVIEW`, `SHORTLISTED`, `HIRED` all `SENT`), and the admin overview (9 / 3 / 4).
+
+The earlier "needs a page reload" gap did not reproduce: withdraw, shortlist, schedule, complete, and hire all updated the current view without a manual reload.
+
+### 12.6 Known gaps at launch
+
+1. Recruiter screens show candidate UUIDs, not names or e-mails; auth-service exposes no directory endpoint by design.
+2. E-mail delivery is disabled (`NOTIFICATION_SENDER_TYPE=logging`); in-app notifications are persisted and shown, but no external e-mail is sent until Resend credentials are configured.
+3. The disposable demo accounts share a test password supplied out-of-band; rotate or remove them before a real public demo.
