@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
-import { applicationsApi, jobsApi, recruitmentsApi } from '../../api/client';
+import { applicationsApi, candidateDirectoryApi, jobsApi, recruitmentsApi } from '../../api/client';
 import type { ApplicationResponse, JobResponse, RecruitmentResponse } from '../../api/client';
 import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
@@ -29,6 +29,7 @@ export function RecruiterApplicationLookupPage() {
 
   const [applicationId, setApplicationId] = useState(routeApplicationId ?? '');
   const [application, setApplication] = useState<ApplicationResponse | null>(null);
+  const [candidateEmail, setCandidateEmail] = useState<string | null>(null);
   const [job, setJob] = useState<JobResponse | null>(null);
   const [recruitment, setRecruitment] = useState<RecruitmentResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -38,16 +39,21 @@ export function RecruiterApplicationLookupPage() {
   const load = useCallback(async (id: string) => {
     setError(null);
     setLookupError(null);
+    setCandidateEmail(null);
     setIsLoading(true);
 
     try {
       const found = await applicationsApi.get(id);
       setApplication(found);
 
-      const [jobResult, recruitmentResult] = await Promise.allSettled([
+      const [emailResult, jobResult, recruitmentResult] = await Promise.allSettled([
+        candidateDirectoryApi.emails([found.candidateId]),
         jobsApi.get(found.jobId),
         recruitmentsApi.list(0, 100),
       ]);
+      setCandidateEmail(
+        emailResult.status === 'fulfilled' ? emailResult.value[found.candidateId] ?? null : null
+      );
       setJob(jobResult.status === 'fulfilled' ? jobResult.value : null);
 
       const existing =
@@ -59,6 +65,7 @@ export function RecruiterApplicationLookupPage() {
       setRecruitment(existing);
     } catch (caught) {
       setApplication(null);
+      setCandidateEmail(null);
       setJob(null);
       setRecruitment(null);
       setError(errorMessage(caught, "We couldn't find that application."));
@@ -158,6 +165,10 @@ export function RecruiterApplicationLookupPage() {
                   {
                     label: 'Application ID',
                     value: <CopyableId value={application.applicationId} />,
+                  },
+                  {
+                    label: 'Candidate email',
+                    value: candidateEmail ?? (isLoading ? 'Loading…' : 'Unavailable'),
                   },
                   { label: 'Candidate ID', value: <CopyableId value={application.candidateId} /> },
                   {

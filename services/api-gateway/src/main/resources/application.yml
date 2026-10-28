@@ -79,6 +79,20 @@ spring:
                 redis-rate-limiter.replenishRate: ${smarthire.gateway.rate-limits.auth.replenish:10}
                 redis-rate-limiter.burstCapacity: ${smarthire.gateway.rate-limits.auth.burst:20}
                 redis-rate-limiter.requestedTokens: 1
+        # Candidate directory route. Recruiters and administrators resolve candidate emails here;
+        # auth-service enforces the role and CANDIDATE-only filtering.
+        - id: auth-service-candidate-directory
+          uri: lb://AUTH-SERVICE
+          predicates:
+            - Path=/api/v1/users/**
+          filters:
+            - name: RequestRateLimiter
+              args:
+                rate-limiter: "#{@redisRateLimiter}"
+                key-resolver: "#{@userKeyResolver}"
+                redis-rate-limiter.replenishRate: 10
+                redis-rate-limiter.burstCapacity: 20
+                redis-rate-limiter.requestedTokens: 1
         # Application-service route. All application endpoints require authentication (enforced by
         # GatewaySecurityConfig deny-by-default). Rate limiting applied to mutating operations.
         # Uses standard RedisRateLimiter (redisRateLimiter bean).

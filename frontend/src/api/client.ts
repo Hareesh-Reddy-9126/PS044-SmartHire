@@ -629,6 +629,39 @@ export const applicationsApi = {
     }),
 };
 
+/* ============================================ Candidate directory API */
+
+export interface CandidateEmailResponse {
+  candidateId: string;
+  email: string;
+}
+
+export const candidateDirectoryApi = {
+  /**
+   * Recruiter/ADMIN only. Resolves candidate emails in one batch.
+   *
+   * The endpoint deliberately omits unknown ids and non-candidate accounts, so
+   * callers must treat a missing key as "not available" rather than an error.
+   */
+  emails: async (candidateIds: string[]): Promise<Record<string, string>> => {
+    const uniqueIds = [...new Set(candidateIds.filter(Boolean))];
+    if (uniqueIds.length === 0) {
+      return {};
+    }
+
+    const resolved = await request<CandidateEmailResponse[]>(
+      '/api/v1/users/candidates/emails',
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ candidateIds: uniqueIds }),
+      }
+    );
+
+    return Object.fromEntries(resolved.map(item => [item.candidateId, item.email]));
+  },
+};
+
 /* ======================================================== Documents API */
 
 export type DocumentType = 'RESUME' | 'COVER_LETTER' | 'PORTFOLIO' | 'CERTIFICATE' | 'OTHER';

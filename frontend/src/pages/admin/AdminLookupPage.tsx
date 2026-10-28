@@ -1,6 +1,6 @@
 import { useCallback, useState, type FormEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { apiErrorStatus, applicationsApi, jobsApi } from '../../api/client';
+import { apiErrorStatus, applicationsApi, candidateDirectoryApi, jobsApi } from '../../api/client';
 import type { ApplicationResponse, JobResponse } from '../../api/client';
 import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
@@ -15,14 +15,14 @@ import { errorMessage } from '../../utils/errors';
 /**
  * Administrative lookup by application identifier.
  *
- * The application contract exposes identifiers and a résumé link, not candidate
- * names or e-mail addresses — those live in auth-service, which has no admin
- * directory endpoint. The screen therefore shows only what the contract can
- * actually return and links to the job for context.
+ * Applications expose identifiers and a résumé link, not candidate names or
+ * e-mail addresses. The candidate directory endpoint resolves the applicant's
+ * email for administrators so the screen does not stop at an opaque UUID.
  */
 export function AdminLookupPage() {
   const [applicationId, setApplicationId] = useState('');
   const [application, setApplication] = useState<ApplicationResponse | null>(null);
+  const [candidateEmail, setCandidateEmail] = useState<string | null>(null);
   const [job, setJob] = useState<JobResponse | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -34,6 +34,7 @@ export function AdminLookupPage() {
 
       setError(null);
       setApplication(null);
+      setCandidateEmail(null);
       setJob(null);
 
       if (!id) {
@@ -46,8 +47,14 @@ export function AdminLookupPage() {
         const found = await applicationsApi.get(id);
         setApplication(found);
 
-        const jobResult = await Promise.allSettled([jobsApi.get(found.jobId)]);
-        setJob(jobResult[0].status === 'fulfilled' ? jobResult[0].value : null);
+        const [emailResult, jobResult] = await Promise.allSettled([
+          candidateDirectoryApi.emails([found.candidateId]),
+          jobsApi.get(found.jobId),
+        ]);
+        setCandidateEmail(
+          emailResult.status === 'fulfilled' ? emailResult.value[found.candidateId] ?? null : null
+        );
+        setJob(jobResult.status === 'fulfilled' ? jobResult.value : null);
       } catch (caught) {
         const status = apiErrorStatus(caught);
         setError(
@@ -105,6 +112,7 @@ export function AdminLookupPage() {
               items={[
                 { label: 'Application ID', value: <CopyableId value={application.applicationId} /> },
                 { label: 'Status', value: <StatusBadge status={application.status} size="sm" /> },
+                { label: 'Candidate email', value: candidateEmail ?? 'Unavailable' },
                 { label: 'Candidate ID', value: <CopyableId value={application.candidateId} /> },
                 { label: 'Job ID', value: <CopyableId value={application.jobId} /> },
               ]}
@@ -144,11 +152,6 @@ export function AdminLookupPage() {
                 identify it.
               </p>
             )}
-
-            <p className="mt-6 font-caption text-caption text-c-text-subtle">
-              Candidate names and e-mail addresses are held by auth-service, which exposes no
-              administrative directory endpoint, so they are not shown here.
-            </p>
           </Card>
         </div>
       )}

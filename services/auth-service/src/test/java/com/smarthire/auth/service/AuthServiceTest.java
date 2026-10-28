@@ -18,6 +18,7 @@ import java.time.Clock;
 import java.time.Instant;
 import java.time.ZoneOffset;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
@@ -282,6 +283,29 @@ class AuthServiceTest {
     assertThatThrownBy(() -> service.emailOf(userId))
         .isInstanceOf(UserNotFoundException.class)
         .hasMessage("User not found: " + userId);
+  }
+
+  @Test
+  void candidateEmailsReturnsOnlyCandidateAccounts() {
+    UUID candidateId = UUID.randomUUID();
+    UUID recruiterId = UUID.randomUUID();
+    UUID adminId = UUID.randomUUID();
+    when(userRepository.findAllById(List.of(candidateId, recruiterId, adminId)))
+        .thenReturn(
+            List.of(
+                new User(candidateId, "ada@example.com", "HASHED", Role.CANDIDATE, null, NOW),
+                new User(recruiterId, "recruiter@example.com", "HASHED", Role.RECRUITER, null, NOW),
+                new User(adminId, "admin@example.com", "HASHED", Role.ADMIN, null, NOW)));
+
+    Map<UUID, String> emails = service.candidateEmails(List.of(candidateId, recruiterId, adminId));
+
+    assertThat(emails).containsExactly(Map.entry(candidateId, "ada@example.com"));
+  }
+
+  @Test
+  void candidateEmailsReturnsEmptyForAnEmptyRequest() {
+    assertThat(service.candidateEmails(List.of())).isEmpty();
+    verifyNoInteractions(userRepository);
   }
 
   @Test

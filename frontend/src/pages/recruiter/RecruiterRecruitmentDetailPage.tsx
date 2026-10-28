@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState, type FormEvent } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { applicationsApi, jobsApi, recruitmentsApi } from '../../api/client';
+import { applicationsApi, candidateDirectoryApi, jobsApi, recruitmentsApi } from '../../api/client';
 import type {
   ApplicationResponse,
   JobResponse,
@@ -37,6 +37,7 @@ export function RecruiterRecruitmentDetailPage() {
 
   const [recruitment, setRecruitment] = useState<RecruitmentResponse | null>(null);
   const [application, setApplication] = useState<ApplicationResponse | null>(null);
+  const [candidateEmail, setCandidateEmail] = useState<string | null>(null);
   const [job, setJob] = useState<JobResponse | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -57,16 +58,21 @@ export function RecruiterRecruitmentDetailPage() {
 
     setIsLoading(true);
     setError(null);
+    setCandidateEmail(null);
     try {
       const found = await recruitmentsApi.get(recruitmentId);
       setRecruitment(found);
 
-      const [applicationResult, jobResult] = await Promise.allSettled([
+      const [applicationResult, jobResult, emailResult] = await Promise.allSettled([
         applicationsApi.get(found.applicationId),
         jobsApi.get(found.jobId),
+        candidateDirectoryApi.emails([found.candidateId]),
       ]);
       setApplication(applicationResult.status === 'fulfilled' ? applicationResult.value : null);
       setJob(jobResult.status === 'fulfilled' ? jobResult.value : null);
+      setCandidateEmail(
+        emailResult.status === 'fulfilled' ? emailResult.value[found.candidateId] ?? null : null
+      );
     } catch (caught) {
       setError(errorMessage(caught, "We couldn't load this recruitment."));
     } finally {
@@ -311,6 +317,7 @@ export function RecruiterRecruitmentDetailPage() {
             <DefinitionList
               columns={2}
               items={[
+                { label: 'Candidate email', value: candidateEmail ?? 'Unavailable' },
                 { label: 'Candidate ID', value: <CopyableId value={recruitment.candidateId} /> },
                 {
                   label: 'Application status',

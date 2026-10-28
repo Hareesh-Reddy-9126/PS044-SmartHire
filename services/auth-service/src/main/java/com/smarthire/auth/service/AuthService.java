@@ -8,9 +8,12 @@ import com.smarthire.auth.infra.UserRepository;
 import com.smarthire.common.audit.AuditService;
 import java.time.Clock;
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.UUID;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -244,6 +247,23 @@ public class AuthService {
         .findById(userId)
         .map(User::getEmail)
         .orElseThrow(() -> new UserNotFoundException("User not found: " + userId));
+  }
+
+  /**
+   * Resolves email addresses for the requested candidate ids.
+   *
+   * <p>Backs the recruiter-facing candidate directory. Only {@link Role#CANDIDATE} accounts are
+   * returned; unknown ids, recruiters and administrators are omitted so this cannot be used as a
+   * general user directory.
+   */
+  @Transactional(readOnly = true)
+  public Map<UUID, String> candidateEmails(Collection<UUID> candidateIds) {
+    if (candidateIds == null || candidateIds.isEmpty()) {
+      return Map.of();
+    }
+    return userRepository.findAllById(candidateIds).stream()
+        .filter(user -> user.getRole() == Role.CANDIDATE)
+        .collect(Collectors.toMap(User::getId, User::getEmail));
   }
 
   /**

@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { applicationsApi, jobsApi } from '../../api/client';
+import { applicationsApi, candidateDirectoryApi, jobsApi } from '../../api/client';
 import type { ApplicationResponse, JobResponse } from '../../api/client';
 import { Alert } from '../../components/ui/Alert';
 import { Button } from '../../components/ui/Button';
@@ -32,6 +32,7 @@ export function RecruiterJobDetailPage() {
 
   const [job, setJob] = useState<JobResponse | null>(null);
   const [applications, setApplications] = useState<ApplicationResponse[]>([]);
+  const [candidateEmails, setCandidateEmails] = useState<Record<string, string>>({});
   const [applicationsError, setApplicationsError] = useState<string | null>(null);
   const [page, setPage] = useState(0);
   const [totalPages, setTotalPages] = useState(0);
@@ -63,11 +64,20 @@ export function RecruiterJobDetailPage() {
     setApplicationsError(null);
     try {
       const result = await applicationsApi.listByJob(jobId, page, PAGE_SIZE);
-      setApplications(result.content ?? []);
+      const content = result.content ?? [];
+      setApplications(content);
       setTotalPages(result.page?.totalPages ?? 0);
       setTotalElements(result.page?.totalElements ?? 0);
+
+      try {
+        setCandidateEmails(await candidateDirectoryApi.emails(content.map(item => item.candidateId)));
+      } catch {
+        // The applications themselves are still useful if the directory is unavailable.
+        setCandidateEmails({});
+      }
     } catch (caught) {
       setApplications([]);
+      setCandidateEmails({});
       // A 404 here means the job is outside the caller's organization: the job
       // itself loaded from the public catalogue, so it is not actually missing.
       setApplicationsError(
@@ -240,7 +250,7 @@ export function RecruiterJobDetailPage() {
                     Application {application.applicationId.slice(0, 8)}
                   </p>
                   <p className="font-caption text-caption text-c-text-subtle break-all">
-                    Candidate {application.candidateId}
+                    {candidateEmails[application.candidateId] ?? 'Candidate email unavailable'}
                   </p>
                 </div>
 

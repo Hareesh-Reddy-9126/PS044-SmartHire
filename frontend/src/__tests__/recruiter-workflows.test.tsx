@@ -1,7 +1,7 @@
 import { fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { applicationsApi, jobsApi, recruitmentsApi } from '../api/client';
+import { applicationsApi, candidateDirectoryApi, jobsApi, recruitmentsApi } from '../api/client';
 import { RecruiterApplicationLookupPage } from '../pages/recruiter/RecruiterApplicationLookupPage';
 import { RecruiterRecruitmentDetailPage } from '../pages/recruiter/RecruiterRecruitmentDetailPage';
 import { ToastProvider } from '../context/ToastContext';
@@ -19,6 +19,7 @@ vi.mock('../api/client', async () => {
   return {
     ...actual,
     applicationsApi: { get: vi.fn() },
+    candidateDirectoryApi: { emails: vi.fn() },
     jobsApi: { get: vi.fn() },
     recruitmentsApi: {
       list: vi.fn(),
@@ -99,6 +100,9 @@ function renderWithRoutes(
 describe('recruiter interview workflow', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.mocked(candidateDirectoryApi.emails).mockResolvedValue({
+      [awaitingShortlist.candidateId]: 'candidate@example.com',
+    });
     vi.mocked(recruitmentsApi.list).mockResolvedValue({
       content: [],
       page: { size: 100, number: 0, totalElements: 0, totalPages: 0 },
@@ -126,6 +130,8 @@ describe('recruiter interview workflow', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Look up application' }));
 
     expect(await screen.findByRole('heading', { name: 'Application' })).toBeInTheDocument();
+    expect(await screen.findByText('candidate@example.com')).toBeInTheDocument();
+    expect(candidateDirectoryApi.emails).toHaveBeenCalledWith([awaitingShortlist.candidateId]);
     fireEvent.click(screen.getByRole('button', { name: 'Shortlist application' }));
 
     await waitFor(() =>
@@ -175,6 +181,7 @@ describe('recruiter interview workflow', () => {
     expect(
       await screen.findByRole('heading', { name: 'Schedule the interview' })
     ).toBeInTheDocument();
+    expect(await screen.findByText('candidate@example.com')).toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText('Date'), { target: { value: '2099-04-15' } });
     fireEvent.change(screen.getByLabelText('Start time'), { target: { value: '10:30' } });
