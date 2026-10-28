@@ -2196,6 +2196,8 @@ For showing live data without handing over an application account, the VM now ha
 
 Verification: `SELECT role, count(*) FROM auth_svc.users` returned the 2/6/5 split; `SELECT password_hash` failed with `permission denied for table users`; `SELECT count(*) FROM auth_svc.refresh_tokens` failed the same way; `CREATE TABLE auth_svc.should_fail(id int)` was rejected with `permission denied for schema auth_svc`. Postgres remains unpublished; access requires an SSH tunnel to the container IP (currently `172.18.0.4`, re-check after a container recreate).
 
+For pgAdmin-style browsing, the `demo` schema holds friendly read-only views: `summary`, `accounts`, `jobs`, `applications`, `recruitments`, `notifications`, `documents`, `organizations`. They resolve candidate UUIDs to e-mail addresses and omit credential columns, so `SELECT *` works without exposing `password_hash`. `SELECT * FROM demo.summary` returns 14 live rows covering accounts, jobs, applications, recruitments and notifications.
+
 Live snapshot at the same time (reproducible with `bash /opt/smarthire/demo-data.sh`, which runs `/opt/smarthire/demo-queries.sql` as `smarthire_readonly`): 2 ADMIN, 6 RECRUITER, 5 CANDIDATE; 6 organizations; 12 `OPEN` jobs; applications 6 APPLIED, 4 SHORTLISTED, 3 HIRED, 2 REJECTED, 2 WITHDRAWN; recruitments 3 HIRED, 4 PENDING, 1 REJECTED/COMPLETED, 1 REJECTED/NO_SHOW; 23 notifications all `SENT`; database 9047 kB.
 
 Public regression after the auth-service and gateway rebuilds: `verify-public.ps1 -SkipFlow` **18/18 PASS**. Temporary candidate `hareeshreddy916+oauthsmoke@gmail.com` registered (`201`), logged in (`200`), then its refresh token and user row were deleted; users are back to 13.
