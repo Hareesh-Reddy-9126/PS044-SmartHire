@@ -2077,7 +2077,7 @@ Shared password is supplied through `SMARTHIRE_TEST_PASSWORD`, not stored in the
 | Host | Azure for Students `Standard_B2s`, Ubuntu 24.04 |
 | TLS | Let's Encrypt via Caddy; HSTS, CSP self-only, nosniff, `X-Frame-Options: DENY` |
 | Runtime | 11 containers healthy; Postgres/Redis internal-only; SPA and API same origin |
-| Git | `origin/main` at `aa0a33e` before this status update |
+| Git | `origin/main` at `1325e6d` before this status update |
 
 ### 12.2 Fixes shipped for launch
 
@@ -2085,6 +2085,7 @@ Shared password is supplied through `SMARTHIRE_TEST_PASSWORD`, not stored in the
 |---|---|
 | `bd3741f` | Duplicate active applications blocked in `ApplicationService.create()`, translated to HTTP 409, plus Postgres partial unique index `uq_applications_active_job_candidate` (Flyway `V2`). `WITHDRAWN`/`REJECTED` remain re-applicable. |
 | `aa0a33e` | Resume links must be `http(s)://` URLs; invalid links return HTTP 400 (`ApplicationCreateRequest` validation). |
+| `1325e6d` | Recruiter/admin candidate-email lookup replaces raw candidate UUIDs on applicant and lookup screens (section 12.7). |
 | this commit | Final launch evidence in this section. |
 
 Live confirmation after rebuild: health `200`, SPA `200`, invalid resume link `400`, partial unique index present.
@@ -2132,6 +2133,17 @@ The earlier "needs a page reload" gap did not reproduce: withdraw, shortlist, sc
 
 ### 12.6 Known gaps at launch
 
-1. Recruiter screens show candidate UUIDs, not names or e-mails; auth-service exposes no directory endpoint by design.
-2. E-mail delivery is disabled (`NOTIFICATION_SENDER_TYPE=logging`); in-app notifications are persisted and shown, but no external e-mail is sent until Resend credentials are configured.
-3. The disposable demo accounts share a test password supplied out-of-band; rotate or remove them before a real public demo.
+1. E-mail delivery is disabled (`NOTIFICATION_SENDER_TYPE=logging`); in-app notifications are persisted and shown, but no external e-mail is sent. The VM has a 36-character Resend key and a sender, but Resend rejects the key: `GET https://api.resend.com/domains` returns HTTP 400 `{"message":"API key is invalid","name":"validation_error"}`. SMTP host/username/password/from are empty. A valid Resend key or SMTP credentials are required.
+2. The disposable demo accounts share a test password supplied out-of-band; rotate or remove them before a real public demo.
+3. The admin bootstrap credential files were deleted after the final verification login; passwords were never printed. There is no self-service password reset. To recover access, run `sudo ./deploy/scripts/create-admin.sh <email>` on the VM, which writes a new credential file to `/root/smarthire-admin-initial.txt`.
+
+### 12.7 Post-launch corrections - 2026-10-28 [V]
+
+| Area | Change | Verification |
+|---|---|---|
+| Candidate identity | New `POST /api/v1/users/candidates/emails` in auth-service. `@PreAuthorize("hasAnyRole('RECRUITER','ADMIN')")`; only `CANDIDATE` accounts are returned; unknown, recruiter and admin ids are omitted; batches are capped at 100. Gateway route `/api/v1/users/**` added to the default and local profiles. Frontend `candidateDirectoryApi.emails()` is used on recruiter application lookup, recruiter job applicant list, recruiter recruitment detail, and admin application lookup. Candidate id remains as secondary context on detail screens. | auth-service **85 tests**, frontend **73 tests**, typecheck/lint/build pass. Live recruiter call `200` with exactly one candidate email and non-candidates omitted; candidate caller `403`; anonymous `401`. Live admin call `200` with the expected candidate. Browser checks as recruiter.nova1: application lookup, job applicant list (3 applicants, all e-mails, no raw `Candidate <uuid>` prefix), and recruitment detail all show `hareeshreddy916+candidate.meera@gmail.com`. |
+| External e-mail | No code change. Delivery remains on the logging sender because the configured Resend key is invalid and SMTP is unset. | Resend probe HTTP 400 `API key is invalid`; `NOTIFICATION_SENDER_TYPE=logging`. |
+| Scratch scripts | `check_users.sh` and `deploy/scripts/create-admin-fixed.sh` moved out of the repository to `C:\Users\HP\AppData\Local\Temp\opencode\smarthire-scratch\`. | `git status` no longer lists them. |
+| Admin credentials | Final admin verification login completed; local `smarthire-admin-one.txt`/`smarthire-admin-two.txt`, VM `/root/smarthire-admin-initial.txt`, and admin probe scripts containing literal credentials were deleted. Passwords were never printed. | Files absent; repository has no credential files. |
+
+Read-only public regression after the rebuild: `deploy/scripts/verify-public.ps1 -BaseUrl https://172.198.139.59.sslip.io -SkipFlow` **18/18 PASS** (TLS/headers, SPA fallback, fonts, health, JWKS, public jobs, anonymous `401`, CORS allow/deny).
