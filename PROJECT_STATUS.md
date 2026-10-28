@@ -2192,9 +2192,9 @@ Pending for Google sign-in: a Google Cloud OAuth **Web application** client id w
 
 ### 12.10 Read-only demo access - 2026-10-28 [V]
 
-For showing live data without handing over an application account, the VM now has a SELECT-only Postgres role `smarthire_readonly`. Its generated password is stored only in `/root/smarthire-readonly.txt` (mode 600) and was never printed in chat or committed. The role has `CONNECT` on `smarthire`, `USAGE` plus `SELECT` on every `*_svc` schema, and default SELECT grants for future tables.
+For showing live data without handing over an application account, the VM now has a SELECT-only Postgres role `smarthire_readonly`. Its generated password is stored only in `/root/smarthire-readonly.txt` (mode 600) and was never printed in chat or committed. The role has `CONNECT` on `smarthire`, `USAGE` plus `SELECT` on every `*_svc` schema, and default SELECT grants for future tables. Two exceptions keep credentials out of reach: `auth_svc.users` is column-limited to `id, email, role, org_id, created_at`, and `auth_svc.refresh_tokens` has no grant at all.
 
-Verification: `SELECT count(*) FROM auth_svc.users` returned `13`; `CREATE TABLE auth_svc.should_fail(id int)` was rejected with `permission denied for schema auth_svc`. Postgres remains unpublished; access requires an SSH tunnel to the container IP (currently `172.18.0.4`, re-check after a container recreate).
+Verification: `SELECT role, count(*) FROM auth_svc.users` returned the 2/6/5 split; `SELECT password_hash` failed with `permission denied for table users`; `SELECT count(*) FROM auth_svc.refresh_tokens` failed the same way; `CREATE TABLE auth_svc.should_fail(id int)` was rejected with `permission denied for schema auth_svc`. Postgres remains unpublished; access requires an SSH tunnel to the container IP (currently `172.18.0.4`, re-check after a container recreate).
 
 Live snapshot at the same time (also saved as `/tmp/demo-queries.sql` on the VM and copied into the Postgres container): 2 ADMIN, 6 RECRUITER, 5 CANDIDATE; 6 organizations; 12 `OPEN` jobs; applications 6 APPLIED, 4 SHORTLISTED, 3 HIRED, 2 REJECTED, 2 WITHDRAWN; recruitments 3 HIRED, 4 PENDING, 1 REJECTED/COMPLETED, 1 REJECTED/NO_SHOW; 23 notifications all `SENT`; database 9047 kB.
 
