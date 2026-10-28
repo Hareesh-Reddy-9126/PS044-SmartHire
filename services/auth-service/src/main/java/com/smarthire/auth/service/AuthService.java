@@ -146,6 +146,59 @@ public class AuthService {
     }
   }
 
+  /**
+   * Sign-in with an email already verified by Google.
+   *
+   * <p>Existing accounts keep their current role, so a recruiter or administrator who signs in with
+   * Google lands in the same workspace as with a password. A previously unseen email creates a
+   * CANDIDATE account: recruiter registration still requires an organization name, and
+   * administrator accounts remain operator-provisioned. The stored password hash is a random value
+   * the user never learns, so a Google-created account cannot also be opened with a password.
+   *
+   * @param verifiedEmail email from a token whose signature, audience and verified-email claim have
+   *     already been checked by {@link GoogleTokenVerifier}
+   */
+  @Transactional
+  public AuthTokens loginWithGoogle(String verifiedEmail) {
+    String normalizedEmail = verifiedEmail.trim().toLowerCase(Locale.ROOT);
+    User user = userRepository.findByEmail(normalizedEmail).orElse(null);
+    if (user == null) {
+      user = createGoogleCandidate(normalizedEmail);
+    }
+    AuditService.auth(
+        AuditService.AuthEvent.LOGIN_SUCCESS,
+        user.getId(),
+        normalizedEmail,
+        AuditService.Outcome.SUCCESS,
+        "google");
+    return issueFor(user);
+  }
+
+  private User createGoogleCandidate(String normalizedEmail) {
+    User candidate =
+        new User(
+            UUID.randomUUID(),
+            normalizedEmail,
+            passwordEncoder.encode(UUID.randomUUID().toString()),
+            Role.CANDIDATE,
+            null,
+            Instant.now(clock));
+    try {
+      User saved = userRepository.saveAndFlush(candidate);
+      AuditService.auth(
+          AuditService.AuthEvent.REGISTER,
+          saved.getId(),
+          normalizedEmail,
+          AuditService.Outcome.SUCCESS,
+          "google");
+      log.info("Registered CANDIDATE account {} from Google sign-in", saved.getId());
+      return saved;
+    } catch (DataIntegrityViolationException ex) {
+      // A concurrent first sign-in won the unique-email race; use that account.
+      return userRepository.findByEmail(normalizedEmail).orElseThrow(() -> ex);
+    }
+  }
+
   @Transactional
   public AuthTokens login(String email, String rawPassword) {
     User user = userRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT)).orElse(null);

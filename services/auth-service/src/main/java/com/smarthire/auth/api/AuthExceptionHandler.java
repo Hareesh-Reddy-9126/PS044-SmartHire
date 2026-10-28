@@ -3,7 +3,9 @@ package com.smarthire.auth.api;
 import com.smarthire.auth.service.AdminRegistrationDeniedException;
 import com.smarthire.auth.service.CompanyNotFoundException;
 import com.smarthire.auth.service.EmailAlreadyExistsException;
+import com.smarthire.auth.service.GoogleSignInUnavailableException;
 import com.smarthire.auth.service.InvalidCredentialsException;
+import com.smarthire.auth.service.InvalidGoogleCredentialException;
 import com.smarthire.auth.service.InvalidRegistrationException;
 import com.smarthire.auth.service.InvalidTokenException;
 import com.smarthire.auth.service.UserNotFoundException;
@@ -42,6 +44,19 @@ public class AuthExceptionHandler {
   @ExceptionHandler(InvalidCredentialsException.class)
   public ProblemDetail handleInvalidCredentials(InvalidCredentialsException ex) {
     return problem(HttpStatus.UNAUTHORIZED, "Invalid credentials", ex.getMessage());
+  }
+
+  @ExceptionHandler(InvalidGoogleCredentialException.class)
+  public ProblemDetail handleInvalidGoogleCredential(InvalidGoogleCredentialException ex) {
+    return problem(
+        HttpStatus.UNAUTHORIZED,
+        "Google sign-in failed",
+        "The Google credential could not be verified. Please try again.");
+  }
+
+  @ExceptionHandler(GoogleSignInUnavailableException.class)
+  public ProblemDetail handleGoogleUnavailable(GoogleSignInUnavailableException ex) {
+    return problem(HttpStatus.SERVICE_UNAVAILABLE, "Google sign-in unavailable", ex.getMessage());
   }
 
   @ExceptionHandler(InvalidTokenException.class)

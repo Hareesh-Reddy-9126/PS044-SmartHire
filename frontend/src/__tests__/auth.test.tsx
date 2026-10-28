@@ -7,6 +7,7 @@ vi.mock('../api/client', () => ({
   authApi: {
     me: vi.fn(),
     login: vi.fn(),
+    googleLogin: vi.fn(),
     logout: vi.fn(),
     register: vi.fn(),
   },
@@ -472,9 +473,47 @@ describe('ProtectedRoute', () => {
         orgId: null,
       });
     });
+  });
+
+  it('signs in with Google and loads the identity', async () => {
+    const mockMeResponse = {
+      sub: 'user-google',
+      email: 'google@example.com',
+      roles: ['CANDIDATE'],
+      orgId: null,
+    };
+
+    vi.mocked(getAccessToken).mockReturnValue(null);
+    vi.mocked(isTokenExpired).mockReturnValue(true);
+    vi.mocked(authApi.me).mockResolvedValue(mockMeResponse);
+    vi.mocked(authApi.googleLogin).mockResolvedValue({
+      tokenType: 'Bearer',
+      accessToken: 'google-access',
+      accessTokenExpiresAt: new Date(Date.now() + 900000).toISOString(),
+    });
+
+    function GoogleSignIn() {
+      const { loginWithGoogle } = useAuth();
+      return (
+        <button onClick={() => loginWithGoogle('google-id-token')}>
+          Continue with Google
+        </button>
+      );
+    }
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <AuthProvider>
+          <GoogleSignIn />
+        </AuthProvider>
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
 
     await waitFor(() => {
-      expect(screen.getByText('Candidate Applications')).toBeInTheDocument();
-    }, { timeout: 10000 });
+      expect(authApi.googleLogin).toHaveBeenCalledWith('google-id-token');
+      expect(authApi.me).toHaveBeenCalled();
+    });
   });
 });

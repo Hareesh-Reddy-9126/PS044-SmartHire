@@ -213,6 +213,63 @@ class AuthServiceTest {
   }
 
   @Test
+  void googleLoginKeepsTheExistingRoleAndIssuesTokens() {
+    UUID userId = UUID.randomUUID();
+    UUID orgId = UUID.randomUUID();
+    User user = new User(userId, "ada@example.com", "HASHED", Role.RECRUITER, orgId, NOW);
+    when(userRepository.findByEmail("ada@example.com")).thenReturn(Optional.of(user));
+    Instant exp = NOW.plusSeconds(900);
+    when(jwtIssuer.issue(userId, List.of("RECRUITER"), orgId))
+        .thenReturn(new IssuedToken("access-jwt", "jti", exp));
+    when(refreshTokenService.issue(userId)).thenReturn("refresh-token");
+
+    AuthTokens tokens = service.loginWithGoogle("  Ada@Example.com ");
+
+    assertThat(tokens.accessToken()).isEqualTo("access-jwt");
+    assertThat(tokens.refreshToken()).isEqualTo("refresh-token");
+    verify(userRepository, never()).saveAndFlush(any(User.class));
+  }
+
+  @Test
+  void googleLoginCreatesACandidateForAPreviouslyUnseenEmail() {
+    when(userRepository.findByEmail("new@example.com")).thenReturn(Optional.empty());
+    when(passwordEncoder.encode(anyString())).thenReturn("RANDOM-HASH");
+    when(userRepository.saveAndFlush(any(User.class)))
+        .thenAnswer(invocation -> invocation.getArgument(0));
+    when(jwtIssuer.issue(any(UUID.class), any(), any()))
+        .thenReturn(new IssuedToken("access-jwt", "jti", NOW.plusSeconds(900)));
+    when(refreshTokenService.issue(any(UUID.class))).thenReturn("refresh-token");
+
+    service.loginWithGoogle("New@Example.com");
+
+    ArgumentCaptor<User> saved = ArgumentCaptor.forClass(User.class);
+    verify(userRepository).saveAndFlush(saved.capture());
+    assertThat(saved.getValue().getEmail()).isEqualTo("new@example.com");
+    assertThat(saved.getValue().getRole()).isEqualTo(Role.CANDIDATE);
+    assertThat(saved.getValue().getOrgId()).isNull();
+    assertThat(saved.getValue().getPasswordHash()).isEqualTo("RANDOM-HASH");
+  }
+
+  @Test
+  void googleLoginUsesTheAccountThatWonAConcurrentCreationRace() {
+    UUID userId = UUID.randomUUID();
+    User existing = new User(userId, "new@example.com", "HASHED", Role.CANDIDATE, null, NOW);
+    when(userRepository.findByEmail("new@example.com"))
+        .thenReturn(Optional.empty())
+        .thenReturn(Optional.of(existing));
+    when(passwordEncoder.encode(anyString())).thenReturn("RANDOM-HASH");
+    when(userRepository.saveAndFlush(any(User.class)))
+        .thenThrow(new DataIntegrityViolationException("duplicate email"));
+    when(jwtIssuer.issue(userId, List.of("CANDIDATE"), null))
+        .thenReturn(new IssuedToken("access-jwt", "jti", NOW.plusSeconds(900)));
+    when(refreshTokenService.issue(userId)).thenReturn("refresh-token");
+
+    AuthTokens tokens = service.loginWithGoogle("new@example.com");
+
+    assertThat(tokens.accessToken()).isEqualTo("access-jwt");
+  }
+
+  @Test
   void loginIssuesAccessAndRefreshTokensForValidCredentials() {
     UUID userId = UUID.randomUUID();
     User user = new User(userId, "ada@example.com", "HASHED", Role.CANDIDATE, null, NOW);

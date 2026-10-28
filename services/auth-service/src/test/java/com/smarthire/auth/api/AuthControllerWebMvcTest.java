@@ -13,6 +13,9 @@ import com.smarthire.auth.domain.Role;
 import com.smarthire.auth.service.AdminRegistrationDeniedException;
 import com.smarthire.auth.service.AuthService;
 import com.smarthire.auth.service.AuthTokens;
+import com.smarthire.auth.service.GoogleSignInUnavailableException;
+import com.smarthire.auth.service.GoogleTokenVerifier;
+import com.smarthire.auth.service.InvalidGoogleCredentialException;
 import com.smarthire.auth.service.InvalidRegistrationException;
 import java.time.Instant;
 import java.util.List;
@@ -48,6 +51,7 @@ class AuthControllerWebMvcTest {
 
   @MockitoBean private JwtDecoder jwtDecoder;
   @MockitoBean private AuthService authService;
+  @MockitoBean private GoogleTokenVerifier googleTokenVerifier;
 
   private static Jwt jwt(String subject, List<String> roles) {
     return Jwt.withTokenValue("token-" + subject)
@@ -123,6 +127,67 @@ class AuthControllerWebMvcTest {
                 org.assertj.core.api.Assertions.assertThat(
                         result.getResponse().getHeader(HttpHeaders.SET_COOKIE))
                     .contains("HttpOnly", "Secure", "SameSite=Strict"));
+  }
+
+  @Test
+  void googleLoginReturnsAccessTokenAndSecureRefreshCookie() throws Exception {
+    when(googleTokenVerifier.verifiedEmail("google-credential")).thenReturn("ada@example.com");
+    when(authService.loginWithGoogle("ada@example.com"))
+        .thenReturn(new AuthTokens("access", Instant.now().plusSeconds(900), "refresh"));
+
+    mvc.perform(
+            post("/api/v1/auth/google")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"credential\":\"google-credential\"}"))
+        .andExpect(status().isOk())
+        .andExpect(jsonPath("$.accessToken").value("access"))
+        .andExpect(jsonPath("$.refreshToken").doesNotExist())
+        .andExpect(
+            result ->
+                org.assertj.core.api.Assertions.assertThat(
+                        result.getResponse().getHeader(HttpHeaders.SET_COOKIE))
+                    .contains("HttpOnly", "Secure", "SameSite=Strict"));
+
+    verify(googleTokenVerifier).verifiedEmail("google-credential");
+  }
+
+  @Test
+  void googleLoginRejectsAnInvalidCredentialWithProblem401() throws Exception {
+    when(googleTokenVerifier.verifiedEmail("bad-credential"))
+        .thenThrow(new InvalidGoogleCredentialException("rejected"));
+
+    mvc.perform(
+            post("/api/v1/auth/google")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"credential\":\"bad-credential\"}"))
+        .andExpect(status().isUnauthorized())
+        .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_PROBLEM_JSON))
+        .andExpect(jsonPath("$.title").value("Google sign-in failed"));
+
+    verify(authService, org.mockito.Mockito.never())
+        .loginWithGoogle(org.mockito.ArgumentMatchers.anyString());
+  }
+
+  @Test
+  void googleLoginReportsAnUnconfiguredDeploymentAs503() throws Exception {
+    when(googleTokenVerifier.verifiedEmail("google-credential"))
+        .thenThrow(new GoogleSignInUnavailableException());
+
+    mvc.perform(
+            post("/api/v1/auth/google")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"credential\":\"google-credential\"}"))
+        .andExpect(status().isServiceUnavailable())
+        .andExpect(jsonPath("$.title").value("Google sign-in unavailable"));
+  }
+
+  @Test
+  void googleLoginRejectsAnEmptyCredential() throws Exception {
+    mvc.perform(
+            post("/api/v1/auth/google")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{\"credential\":\"\"}"))
+        .andExpect(status().isBadRequest());
   }
 
   @Test

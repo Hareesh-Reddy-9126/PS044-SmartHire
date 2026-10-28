@@ -90,6 +90,9 @@ services:
       JAVA_TOOL_OPTIONS: "-XX:MaxRAMPercentage=70 -XX:+ExitOnOutOfMemoryError"
       AUTH_JWT_PRIVATE_KEY: ${AUTH_JWT_PRIVATE_KEY:?AUTH_JWT_PRIVATE_KEY must be set in deploy/.env}
       AUTH_ADMIN_SIGNUP_CODE: ${AUTH_ADMIN_SIGNUP_CODE:-}
+      # Public Google OAuth client id. Blank disables "Continue with Google" without affecting
+      # email/password login.
+      GOOGLE_OAUTH_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
       REDIS_PORT: 6379
     mem_limit: 768m
     cpus: "1.0"
@@ -225,6 +228,9 @@ services:
     build:
       context: ..
       dockerfile: frontend/Dockerfile
+      args:
+        # Baked into the SPA bundle at build time; blank hides the Google button.
+        VITE_GOOGLE_CLIENT_ID: ${GOOGLE_OAUTH_CLIENT_ID:-}
     restart: unless-stopped
     environment:
       DOMAIN: ${DOMAIN:?DOMAIN must be set in deploy/.env}

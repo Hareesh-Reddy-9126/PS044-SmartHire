@@ -438,6 +438,31 @@ export const authApi = {
     return data;
   },
 
+  /**
+   * Exchanges a Google Identity Services ID token for a SmartHire session.
+   *
+   * The token is verified server-side (signature, issuer, audience, verified
+   * email); the browser never sees a client secret.
+   */
+  googleLogin: async (credential: string): Promise<TokenResponse> => {
+    const response = await fetch(`${API_BASE_URL}/api/v1/auth/google`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ credential }),
+      credentials: 'include',
+    });
+
+    if (!response.ok) {
+      throw new ApiErrorResponse(
+        await toApiError(response, 'Google sign-in failed. Please try again.')
+      );
+    }
+
+    const data = (await response.json()) as TokenResponse;
+    setAccessToken(data.accessToken, data.accessTokenExpiresAt);
+    return data;
+  },
+
   register: async (payload: RegisterPayload): Promise<RegisterResponse> => {
     const response = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
       method: 'POST',

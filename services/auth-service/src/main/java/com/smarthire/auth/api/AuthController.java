@@ -1,5 +1,6 @@
 package com.smarthire.auth.api;
 
+import com.smarthire.auth.api.dto.GoogleLoginRequest;
 import com.smarthire.auth.api.dto.LoginRequest;
 import com.smarthire.auth.api.dto.MeResponse;
 import com.smarthire.auth.api.dto.RegisterRequest;
@@ -8,6 +9,7 @@ import com.smarthire.auth.api.dto.TokenResponse;
 import com.smarthire.auth.domain.Role;
 import com.smarthire.auth.service.AuthService;
 import com.smarthire.auth.service.AuthTokens;
+import com.smarthire.auth.service.GoogleTokenVerifier;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
@@ -55,10 +57,13 @@ public class AuthController {
   private static final Duration REFRESH_COOKIE_TTL = Duration.ofDays(7);
 
   private final AuthService authService;
+  private final GoogleTokenVerifier googleTokenVerifier;
   private final Environment environment;
 
-  public AuthController(AuthService authService, Environment environment) {
+  public AuthController(
+      AuthService authService, GoogleTokenVerifier googleTokenVerifier, Environment environment) {
     this.authService = authService;
+    this.googleTokenVerifier = googleTokenVerifier;
     this.environment = environment;
   }
 
@@ -136,6 +141,45 @@ public class AuthController {
   public TokenResponse login(
       @Valid @RequestBody LoginRequest request, jakarta.servlet.http.HttpServletResponse response) {
     AuthTokens tokens = authService.login(request.email(), request.password());
+    addRefreshCookie(response, tokens.refreshToken());
+    return toTokenResponse(tokens);
+  }
+
+  @Operation(
+      summary = "Sign in with Google",
+      description =
+          "Verifies a Google Identity Services ID token and returns an access token with the"
+              + " refresh token in an HttpOnly cookie. New Google accounts are created as"
+              + " candidates; existing accounts keep their current role. Public endpoint.")
+  @ApiResponses(
+      value = {
+        @ApiResponse(
+            responseCode = "200",
+            description = "Google sign-in successful",
+            content =
+                @Content(
+                    mediaType = MediaType.APPLICATION_JSON_VALUE,
+                    schema = @Schema(implementation = TokenResponse.class))),
+        @ApiResponse(
+            responseCode = "400",
+            description = "Validation failed",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "401",
+            description = "The Google credential could not be verified",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE)),
+        @ApiResponse(
+            responseCode = "503",
+            description = "Google sign-in is not configured for this deployment",
+            content = @Content(mediaType = MediaType.APPLICATION_PROBLEM_JSON_VALUE))
+      })
+  @SecurityRequirement(name = "")
+  @PostMapping("/google")
+  public TokenResponse google(
+      @Valid @RequestBody GoogleLoginRequest request,
+      jakarta.servlet.http.HttpServletResponse response) {
+    String email = googleTokenVerifier.verifiedEmail(request.credential());
+    AuthTokens tokens = authService.loginWithGoogle(email);
     addRefreshCookie(response, tokens.refreshToken());
     return toTokenResponse(tokens);
   }

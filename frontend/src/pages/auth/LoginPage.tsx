@@ -2,10 +2,12 @@ import { useCallback, useState, type FormEvent } from 'react';
 import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import { RoleSelector } from '../../components/auth/RoleSelector';
+import { GoogleSignInButton } from '../../components/auth/GoogleSignInButton';
 import { Button } from '../../components/ui/Button';
 import { Input } from '../../components/ui/Input';
 import { Alert } from '../../components/ui/Alert';
 import { errorMessage } from '../../utils/errors';
+import type { MeResponse } from '../../api/client';
 import {
   authPath,
   normaliseRole,
@@ -40,9 +42,10 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isGoogleSubmitting, setIsGoogleSubmitting] = useState(false);
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
-  const { login } = useAuth();
+  const { login, loginWithGoogle } = useAuth();
 
   const roleParam = searchParams.get('role');
   const selectedRole = normaliseRole(roleParam);
@@ -59,6 +62,35 @@ export function LoginPage() {
     setSearchParams(updated, { replace: true });
   };
 
+  const completeSignIn = useCallback(
+    (me: MeResponse) => {
+      const roles = me.roles ?? [];
+
+      if (roleWasExplicit && !roles.includes(selectedRole)) {
+        // The token is authoritative: never tear the session down because the
+        // visitor picked the wrong tab. Open the account's real workspace and
+        // explain the switch instead.
+        const actualRole = roleLabel(primaryRole(roles));
+        navigate(roleHome(roles), {
+          replace: true,
+          state: {
+            notice: {
+              tone: 'info',
+              title: `Signed in to the ${actualRole} workspace`,
+              message: `This account is registered as ${actualRole}, so we opened that portal instead of the ${roleLabel(
+                selectedRole
+              )} portal.`,
+            },
+          },
+        });
+        return;
+      }
+
+      navigate(safeNextPath(next, roles), { replace: true });
+    },
+    [navigate, next, roleWasExplicit, selectedRole]
+  );
+
   const handleSubmit = useCallback(
     async (event: FormEvent<HTMLFormElement>) => {
       event.preventDefault();
@@ -66,37 +98,35 @@ export function LoginPage() {
       setIsSubmitting(true);
 
       try {
-        const me = await login(email, password);
-        const roles = me.roles ?? [];
-
-        if (roleWasExplicit && !roles.includes(selectedRole)) {
-          // The token is authoritative: never tear the session down because the
-          // visitor picked the wrong tab. Open the account's real workspace and
-          // explain the switch instead.
-          const actualRole = roleLabel(primaryRole(roles));
-          navigate(roleHome(roles), {
-            replace: true,
-            state: {
-              notice: {
-                tone: 'info',
-                title: `Signed in to the ${actualRole} workspace`,
-                message: `This account is registered as ${actualRole}, so we opened that portal instead of the ${roleLabel(
-                  selectedRole
-                )} portal.`,
-              },
-            },
-          });
-          return;
-        }
-
-        navigate(safeNextPath(next, roles), { replace: true });
+        completeSignIn(await login(email, password));
       } catch (caught) {
         setError(errorMessage(caught, 'Login failed. Please check your credentials and try again.'));
       } finally {
         setIsSubmitting(false);
       }
     },
-    [email, password, navigate, login, next, roleWasExplicit, selectedRole]
+    [email, password, login, completeSignIn]
+  );
+
+  const handleGoogleCredential = useCallback(
+    async (credential: string) => {
+      setError('');
+      setIsGoogleSubmitting(true);
+
+      try {
+        completeSignIn(await loginWithGoogle(credential));
+      } catch (caught) {
+        setError(
+          errorMessage(
+            caught,
+            'Google sign-in failed. Please try again or use your email and password.'
+          )
+        );
+      } finally {
+        setIsGoogleSubmitting(false);
+      }
+    },
+    [loginWithGoogle, completeSignIn]
   );
 
   return (
@@ -158,6 +188,17 @@ export function LoginPage() {
           Sign in
         </Button>
       </form>
+
+      <GoogleSignInButton
+        onCredential={handleGoogleCredential}
+        disabled={isSubmitting || isGoogleSubmitting}
+      />
+
+      {isGoogleSubmitting && (
+        <p className="mt-3 text-center font-body-sm text-body-sm text-c-text-muted">
+          Signing in with Google…
+        </p>
+      )}
 
       <div className="mt-6 flex flex-wrap items-center justify-between gap-3 border-t border-c-border pt-5">
         <p className="font-body-sm text-body-sm text-c-text-muted">New to SmartHire?</p>

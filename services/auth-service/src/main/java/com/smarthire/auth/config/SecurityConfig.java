@@ -76,6 +76,7 @@ public class SecurityConfig {
                         HttpMethod.POST,
                         "/api/v1/auth/register",
                         "/api/v1/auth/login",
+                        "/api/v1/auth/google",
                         "/api/v1/auth/refresh",
                         // Logout is deliberately public so an expired access token cannot leave a
                         // live HttpOnly refresh cookie behind. The cookie itself is

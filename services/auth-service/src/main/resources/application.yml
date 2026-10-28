@@ -50,6 +50,10 @@ smarthire:
   # entirely (decision 8: no default secret in git).
   registration:
     admin-invite-code: ${AUTH_ADMIN_SIGNUP_CODE:}
+  # Google Identity Services. The client id is public (the browser uses it too); blank disables the
+  # Google button and endpoint without affecting email/password login.
+  google:
+    client-id: ${GOOGLE_OAUTH_CLIENT_ID:}
   # Development seeding of demo RECRUITER and ADMIN accounts. Both roles can also self-register;
   # seeding remains useful for repeatable demos and tests. Active only under the "seed" profile AND
   # when the credentials are supplied via the environment (decision 8: no known/reusable demo

@@ -26,6 +26,7 @@ export interface AuthContextValue {
   isLoading: boolean;
   isAuthenticated: boolean;
   login: (email: string, password: string) => Promise<MeResponse>;
+  loginWithGoogle: (credential: string) => Promise<MeResponse>;
   register: (payload: RegisterPayload) => Promise<void>;
   logout: () => Promise<void>;
   refreshUser: () => Promise<void>;
@@ -166,6 +167,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [loadIdentity, clearIdentity]
   );
 
+  const loginWithGoogle = useCallback(
+    async (credential: string) => {
+      await authApi.googleLogin(credential);
+      try {
+        return await loadIdentity();
+      } catch (error) {
+        clearIdentity();
+        throw error;
+      } finally {
+        setIsLoading(false);
+      }
+    },
+    [loadIdentity, clearIdentity]
+  );
+
   const register = useCallback(async (payload: RegisterPayload) => {
     // Registration returns only a user id; the caller must sign in afterwards.
     await authApi.register(payload);
@@ -188,13 +204,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isLoading,
       isAuthenticated: Boolean(user),
       login,
+      loginWithGoogle,
       register,
       logout,
       refreshUser,
       hasRole,
       tokenExpiresAt,
     }),
-    [user, isLoading, login, register, logout, refreshUser, hasRole, tokenExpiresAt]
+    [user, isLoading, login, loginWithGoogle, register, logout, refreshUser, hasRole, tokenExpiresAt]
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

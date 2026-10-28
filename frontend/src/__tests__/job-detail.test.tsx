@@ -34,7 +34,7 @@ function renderPage(auth: {
     ...auth,
     isAuthenticated: Boolean(auth.user),
     tokenExpiresAt: 0,
-    login: vi.fn(), register: vi.fn(), logout: vi.fn(), refreshUser: vi.fn(), hasRole: vi.fn(),
+    login: vi.fn(), loginWithGoogle: vi.fn(), register: vi.fn(), logout: vi.fn(), refreshUser: vi.fn(), hasRole: vi.fn(),
   });
   return render(
     <MemoryRouter initialEntries={['/jobs/job-123']}>
