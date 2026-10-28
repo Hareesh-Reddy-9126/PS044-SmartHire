@@ -4,6 +4,7 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
@@ -184,6 +185,21 @@ class ApplicationControllerWebMvcTest {
                   .contentType(MediaType.APPLICATION_JSON)
                   .content(invalidJson))
           .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void nonHttpResumeLinkReturns400() throws Exception {
+      givenToken(CANDIDATE);
+      ApplicationCreateRequest request = new ApplicationCreateRequest(JOB_ID, "not-a-url");
+
+      mvc.perform(
+              post("/api/v1/applications")
+                  .header("Authorization", "Bearer " + CANDIDATE)
+                  .contentType(MediaType.APPLICATION_JSON)
+                  .content(objectMapper.writeValueAsString(request)))
+          .andExpect(status().isBadRequest());
+
+      verifyNoInteractions(applicationService);
     }
   }
 

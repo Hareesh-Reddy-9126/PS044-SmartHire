@@ -3,6 +3,7 @@ package com.smarthire.application.api.dto;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Pattern;
 import jakarta.validation.constraints.Size;
 import java.util.UUID;
 
@@ -25,4 +26,5 @@ public record ApplicationCreateRequest(
             required = true)
         @NotBlank
         @Size(max = 2048)
+        @Pattern(regexp = "^https?://\\S+$", message = "resumeLink must be an http or https URL")
         String resumeLink) {}
