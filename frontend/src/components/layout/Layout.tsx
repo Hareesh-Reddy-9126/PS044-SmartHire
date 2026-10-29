@@ -61,14 +61,25 @@ function BrandMark({ className = '' }: { className?: string }) {
         className="brand-mark-tile h-8 w-8 shrink-0 rounded-lg"
         aria-hidden="true"
       >
-        <rect width="64" height="64" rx="12" fill="#B78E4F" />
-        <path
-          d="M17 20h30M17 32h21M17 44h30"
-          stroke="#0F271F"
-          strokeWidth="4"
-          strokeLinecap="square"
+        <rect width="64" height="64" rx="15" fill="#7C5CFF" />
+        <rect
+          x="1"
+          y="1"
+          width="62"
+          height="62"
+          rx="14"
+          fill="none"
+          stroke="#C4B5FD"
+          strokeOpacity="0.55"
         />
-        <circle cx="45" cy="32" r="4.5" fill="#F7F5ED" />
+        <path
+          d="M45 19H28a8 8 0 0 0 0 16h9a8 8 0 0 1 0 16H19"
+          stroke="#070A18"
+          strokeWidth="5"
+          strokeLinecap="round"
+          fill="none"
+        />
+        <circle cx="45" cy="45" r="3.5" fill="#3EE8D0" />
       </svg>
       <span className="brand-word">SmartHire</span>
     </Link>
@@ -181,7 +192,7 @@ export function Layout({ children }: { children: ReactNode }) {
                   type="button"
                   onClick={() => setDrawerOpen(false)}
                   aria-label="Close navigation"
-                  className="flex h-9 w-9 items-center justify-center rounded-md text-c-primary-100 transition-colors duration-fast hover:bg-white/10 hover:text-white focus-ring"
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-c-text-muted transition-colors duration-fast hover:bg-white/10 hover:text-white focus-ring"
                 >
                   <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
                     close
@@ -214,7 +225,9 @@ export function Layout({ children }: { children: ReactNode }) {
               </Alert>
             </div>
           )}
-          {children}
+          <div key={location.pathname} className="page-enter">
+            {children}
+          </div>
         </div>
       </main>
     </div>

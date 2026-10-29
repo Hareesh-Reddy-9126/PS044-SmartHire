@@ -90,7 +90,7 @@ export function AdminOverviewPage() {
                   <p className="metric-label">Total recruitments</p>
                 </div>
                 <span
-                  className="material-symbols-outlined text-[38px] text-c-primary-100"
+                  className="material-symbols-outlined text-[38px] text-c-primary-300"
                   aria-hidden="true"
                 >
                   work
@@ -108,7 +108,7 @@ export function AdminOverviewPage() {
                   </p>
                 </div>
                 <span
-                  className="material-symbols-outlined text-[38px] text-success-100"
+                  className="material-symbols-outlined text-[38px] text-success-700"
                   aria-hidden="true"
                 >
                   verified_user
@@ -126,7 +126,7 @@ export function AdminOverviewPage() {
                   </p>
                 </div>
                 <span
-                  className="material-symbols-outlined text-[38px] text-c-accent-100"
+                  className="material-symbols-outlined text-[38px] text-c-accent-300"
                   aria-hidden="true"
                 >
                   pending

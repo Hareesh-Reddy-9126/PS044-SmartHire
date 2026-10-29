@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import { Reveal } from '../../components/ui/Reveal';
 import { authPath, type AccountRole } from '../../utils/roles';
 
 interface WorkspacePath {
@@ -83,10 +84,19 @@ export function LandingPage() {
     <div className="landing">
       {/* Hero */}
       <section className="hero">
+        <div className="hero-ambient" aria-hidden="true">
+          <span className="hero-blob hero-blob-violet" />
+          <span className="hero-blob hero-blob-mint" />
+          <span className="hero-blob hero-blob-rose" />
+        </div>
+
         <div className="hero-inner">
           <div className="hero-copy">
             <p className="hero-kicker">Employment decision architecture</p>
-            <h1 className="hero-title">Every hiring decision should leave a record.</h1>
+            <h1 className="hero-title">
+              Every hiring decision should{' '}
+              <span className="hero-title-accent">leave a record.</span>
+            </h1>
             <p className="hero-lede">
               SmartHire keeps the role, the application, the interview and the
               outcome on one accountable trail — for the people applying and the
@@ -125,49 +135,72 @@ export function LandingPage() {
             </div>
           </div>
 
-          <aside aria-label="Illustration of the application lifecycle">
-            <div className="decision-card">
-              <span className="decision-tab">Decision record</span>
-              <div className="decision-card-inner">
-                <div className="decision-head">
-                  <div>
-                    <p className="decision-kicker">Application record</p>
-                    <p className="decision-title">One role. One trail.</p>
-                  </div>
-                  <span className="decision-stamp">Role scoped</span>
-                </div>
+          <aside className="hero-stage" aria-label="Illustration of the application lifecycle">
+            <div className="hero-stage-glow" aria-hidden="true" />
+            <div className="hero-ring" aria-hidden="true" />
+            <div className="hero-ring hero-ring-b" aria-hidden="true" />
 
-                <div className="decision-meta">
-                  <span>Candidate owned</span>
-                  <span>Recruiter reviewed</span>
-                  <span>Live status</span>
-                </div>
+            <div className="hero-float hero-float-applied" aria-hidden="true">
+              <span>APPLIED</span>
+              <strong>Application received</strong>
+            </div>
+            <div className="hero-float hero-float-review" aria-hidden="true">
+              <span>UNDER REVIEW</span>
+              <strong>Evidence in one place</strong>
+            </div>
+            <div className="hero-float hero-float-hired" aria-hidden="true">
+              <span>HIRED</span>
+              <strong>Decision recorded</strong>
+            </div>
 
-                <div className="trail">
-                  {[
-                    { code: 'APPLIED', label: 'Application received', state: 'done' },
-                    { code: 'UNDER_REVIEW', label: 'Under review', state: 'done' },
-                    { code: 'SHORTLISTED', label: 'Shortlisted', state: 'current' },
-                    { code: 'SCHEDULED', label: 'Interview scheduled', state: 'pending' },
-                    { code: 'HIRED', label: 'Final decision', state: 'pending' },
-                  ].map(step => (
-                    <div key={step.code} className={`trail-step is-${step.state}`}>
-                      <span className="trail-dot" aria-hidden="true" />
-                      <span className="trail-label">{step.label}</span>
-                      <span className="trail-code">{step.code}</span>
+            <div className="hero-stack">
+              <div className="hero-stack-layer layer-1" aria-hidden="true" />
+              <div className="hero-stack-layer layer-2" aria-hidden="true" />
+
+              <div className="decision-card">
+                <span className="decision-tab">Decision record</span>
+                <div className="decision-card-inner">
+                  <div className="decision-head">
+                    <div>
+                      <p className="decision-kicker">Application record</p>
+                      <p className="decision-title">One role. One trail.</p>
                     </div>
-                  ))}
-                </div>
+                    <span className="decision-stamp">Role scoped</span>
+                  </div>
 
-                <div className="decision-foot">
-                  <span>
-                    Visible to <strong>one candidate</strong> and{' '}
-                    <strong>their recruiter</strong>.
-                  </span>
-                  <span className="tabular">05 stages</span>
+                  <div className="decision-meta">
+                    <span>Candidate owned</span>
+                    <span>Recruiter reviewed</span>
+                    <span>Live status</span>
+                  </div>
+
+                  <div className="trail">
+                    {[
+                      { code: 'APPLIED', label: 'Application received', state: 'done' },
+                      { code: 'UNDER_REVIEW', label: 'Under review', state: 'done' },
+                      { code: 'SHORTLISTED', label: 'Shortlisted', state: 'current' },
+                      { code: 'SCHEDULED', label: 'Interview scheduled', state: 'pending' },
+                      { code: 'HIRED', label: 'Final decision', state: 'pending' },
+                    ].map(step => (
+                      <div key={step.code} className={`trail-step is-${step.state}`}>
+                        <span className="trail-dot" aria-hidden="true" />
+                        <span className="trail-label">{step.label}</span>
+                        <span className="trail-code">{step.code}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="decision-foot">
+                    <span>
+                      Visible to <strong>one candidate</strong> and{' '}
+                      <strong>their recruiter</strong>.
+                    </span>
+                    <span className="tabular">05 stages</span>
+                  </div>
                 </div>
               </div>
             </div>
+
             <p className="hero-note">
               An illustration of the implemented application lifecycle. No
               candidate data is shown.
@@ -179,13 +212,16 @@ export function LandingPage() {
       {/* Lifecycle */}
       <section className="landing-section" id="lifecycle">
         <div className="landing-inner">
-          <p className="section-label">The lifecycle</p>
-          <h2 className="section-title">A role moves through one accountable path.</h2>
-          <p className="section-copy">
-            The interface exposes the same states the services enforce. Nothing is
-            skipped, collapsed or invented for display.
-          </p>
+          <Reveal>
+            <p className="section-label">The lifecycle</p>
+            <h2 className="section-title">A role moves through one accountable path.</h2>
+            <p className="section-copy">
+              The interface exposes the same states the services enforce. Nothing is
+              skipped, collapsed or invented for display.
+            </p>
+          </Reveal>
 
+          <Reveal delay={90}>
           <div className="process-grid" role="list" aria-label="Application lifecycle">
             {[
               {
@@ -227,19 +263,23 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Capabilities */}
       <section className="landing-section border-y border-c-border bg-c-surface">
         <div className="landing-inner">
-          <p className="section-label">Platform capability</p>
-          <h2 className="section-title">Run the decision, not just the posting.</h2>
-          <p className="section-copy">
-            Candidate, recruiter and administrator workspaces are shaped around
-            what each role is actually allowed to do.
-          </p>
+          <Reveal>
+            <p className="section-label">Platform capability</p>
+            <h2 className="section-title">Run the decision, not just the posting.</h2>
+            <p className="section-copy">
+              Candidate, recruiter and administrator workspaces are shaped around
+              what each role is actually allowed to do.
+            </p>
+          </Reveal>
 
+          <Reveal delay={90}>
           <div className="capability-layout">
             <div className="capability-lede">
               <p className="font-display text-[2.6rem] leading-[1.02] text-c-text">
@@ -332,21 +372,25 @@ export function LandingPage() {
               ))}
             </div>
           </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Three workspaces */}
       <section className="landing-section paths-section" id="workspaces">
         <div className="landing-inner">
-          <p className="section-label">Three workspaces, one record</p>
-          <h2 className="section-title">The same record, seen from the right side.</h2>
-          <p className="section-copy">
-            Candidates see their own progress. Recruiters see the applications and
-            interviews they own. Administrators get a read-only operating view. Every
-            account enters through the same front door and lands in the workspace its
-            role is allowed to open.
-          </p>
+          <Reveal>
+            <p className="section-label">Three workspaces, one record</p>
+            <h2 className="section-title">The same record, seen from the right side.</h2>
+            <p className="section-copy">
+              Candidates see their own progress. Recruiters see the applications and
+              interviews they own. Administrators get a read-only operating view. Every
+              account enters through the same front door and lands in the workspace its
+              role is allowed to open.
+            </p>
+          </Reveal>
 
+          <Reveal delay={90}>
           <div className="paths-grid">
             {WORKSPACE_PATHS.map(path => (
               <div className="path-column" key={path.role}>
@@ -377,15 +421,19 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Trust / architecture */}
       <section className="landing-section">
         <div className="landing-inner">
-          <p className="section-label">Built on the record</p>
-          <h2 className="section-title">Trust is a property of the system, not a promise.</h2>
+          <Reveal>
+            <p className="section-label">Built on the record</p>
+            <h2 className="section-title">Trust is a property of the system, not a promise.</h2>
+          </Reveal>
 
+          <Reveal delay={90}>
           <div className="trust-grid">
             {[
               {
@@ -408,11 +456,13 @@ export function LandingPage() {
               </div>
             ))}
           </div>
+          </Reveal>
         </div>
       </section>
 
       {/* Closing */}
       <section className="closing-section">
+        <Reveal>
         <div className="closing-inner">
           <div>
             <h2 className="closing-title">Start with the role. Keep the record.</h2>
@@ -433,6 +483,7 @@ export function LandingPage() {
             )}
           </div>
         </div>
+        </Reveal>
       </section>
 
       <footer className="landing-footer">

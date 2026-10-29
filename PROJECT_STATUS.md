@@ -2201,3 +2201,27 @@ For pgAdmin-style browsing, the `demo` schema holds friendly read-only views: `s
 Live snapshot at the same time (reproducible with `bash /opt/smarthire/demo-data.sh`, which runs `/opt/smarthire/demo-queries.sql` as `smarthire_readonly`): 2 ADMIN, 6 RECRUITER, 5 CANDIDATE; 6 organizations; 12 `OPEN` jobs; applications 6 APPLIED, 4 SHORTLISTED, 3 HIRED, 2 REJECTED, 2 WITHDRAWN; recruitments 3 HIRED, 4 PENDING, 1 REJECTED/COMPLETED, 1 REJECTED/NO_SHOW; 23 notifications all `SENT`; database 9047 kB.
 
 Public regression after the auth-service and gateway rebuilds: `verify-public.ps1 -SkipFlow` **18/18 PASS**. Temporary candidate `hareeshreddy916+oauthsmoke@gmail.com` registered (`201`), logged in (`200`), then its refresh token and user row were deleted; users are back to 13.
+
+### 12.11 Frontend redesign - Midnight Spectrum - 2026-10-29 [V]
+
+The whole SPA was reskinned without changing any backend contract, route, permission or workflow. The direction is a dark "midnight spectrum" system: deep-space indigo surfaces, aurora violet `#7C5CFF`, signal mint `#3EE8D0`, rose and amber accents, glass panels, gradient borders, CSS-only 3D depth, and restrained entrance motion. Fonts stay self-hosted (Newsreader display, Instrument Sans UI, IBM Plex Mono); no 3D/WebGL dependency was added and the bundle stayed at roughly 325 kB JS / 131 kB CSS.
+
+**Implementation.** The redesign is token-first: `frontend/tailwind.config.js` remaps the existing `c-*`, primary, accent and semantic scales to the dark palette and adds glass shadows plus aurora/float/reveal keyframes, so every screen inherits the theme. `frontend/src/styles/index.css` keeps the original component layer and appends one "Midnight Spectrum" override block covering the app shell, sidebar/topbar, public header, auth shell, landing page, buttons, inputs, cards, page headers, tables, badges, modals, toasts, empty states, pagination, timeline, browse/record pages, responsive rules and `prefers-reduced-motion`. `LandingPage.tsx` was rewritten with aurora blobs, a layered 3D hero stack, floating status chips and scroll reveals; `frontend/src/components/ui/Reveal.tsx` is a new dependency-free IntersectionObserver wrapper with an immediate fallback. `Layout.tsx` gained the violet/mint "S" mark and a keyed page-enter transition. `index.html` now declares `theme-color #070A18` and `color-scheme: dark`.
+
+**Fixes found during visual QA.**
+
+| Issue | Fix |
+|---|---|
+| `StatusBadge` builds `status-${status.toLowerCase()}` at runtime, so Tailwind purged the component classes and HIRED/COMPLETED/etc. rendered as transparent text | Plain CSS tones for every job, application, recruitment and notification status in `index.css` |
+| Native file inputs rendered light-on-light | `input[type='file'].input` and `::file-selector-button` themed with a violet/mint gradient button |
+| Admin metric-card icons and the drawer close button were dark-on-dark | Switched to `text-c-primary-300`, `text-success-700`, `text-c-accent-300` and `text-c-text-muted` |
+
+**Visual QA.** Playwright runs at 1440x1000, 768x1024 and 390x844 covered landing, login, register, public jobs, job detail, admin overview/recruitments, recruiter jobs/recruitments/new job/job detail, candidate applications/application detail/progress/notifications/documents, the delete confirmation modal and the mobile drawer. No horizontal overflow at any width; the only live console errors were the expected signed-out `401`s from session refresh. Full-page landing screenshots need programmatic scrolling because `scroll-behavior: smooth` and `.reveal` start at opacity 0. Evidence: `C:\Users\HP\AppData\Local\Temp\opencode\qa\` and `...\live\` (local only, not committed).
+
+**Quality gates (all exit 0).** `npm run typecheck`, `npm run lint`, `npm run test:run` **74/74**, `npm run build`.
+
+**Deployment.** Frontend only, using the combined compose files (`deploy/docker-compose.yml` + `deploy/docker-compose.prod.yml`). The previous frontend sources were backed up on the VM to `/opt/smarthire/backups/frontend-pre-redesign-20261029.tgz`; the changed files were synced, the `frontend` image rebuilt and the container recreated. No backend service, database row or compose/Caddy configuration was changed.
+
+**Live verification.** `/`, `/login`, `/jobs` and `/actuator/health` all return `200`; the served HTML carries `theme-color #070A18` and the new assets `index-Ua9-0yNb.js` / `index-zUR9oDVF.css`. The landing page and all 12 published roles render with the new theme. A wrong password returns the redesigned `Invalid email or password` alert, and the Google button is absent as intended. A temporary candidate (`redesign.qa.1793245947302@example.com`) completed live register -> login -> candidate workspace -> empty applications state -> logout; its refresh tokens and user row were then deleted, returning the dataset to **2 ADMIN / 6 RECRUITER / 6 CANDIDATE**. The 13 demo accounts themselves were not re-swept with their shared password because that value is out-of-band (`SMARTHIRE_TEST_PASSWORD` unset, `/root/smarthire-demo-credentials.txt` absent); their rows and roles are intact.
+
+**Data after deploy.** 12 `OPEN` jobs, 17 applications, 9 recruitments, 23 notifications, 6 organizations; `demo.summary` unchanged apart from the removed temporary account.

@@ -5,104 +5,106 @@ export default {
   theme: {
     extend: {
       /* ========================================================================
-         SmartHire visual system — "The decision record".
-         Deep evergreen ink, cool chalk paper, restrained brass.
+         SmartHire visual system — "Midnight spectrum".
+         A deep-space glass interface: indigo ink, aurora violet, signal mint.
+         Every legacy token name is preserved so existing screens inherit the
+         new identity without a single behavioural change.
          ======================================================================== */
       colors: {
         /* ---------- Neutral surfaces ---------- */
-        'c-bg': '#F2F4EF',
-        'c-surface': '#FFFFFF',
-        'c-surface-sunken': '#E9EDE6',
-        'c-surface-raised': '#FFFFFF',
-        'c-border': '#DAE1D8',
-        'c-border-strong': '#C0CBC1',
-        'c-text': '#15231E',
-        'c-text-muted': '#5A6A62',
-        'c-text-subtle': '#5F6E65',
-        'c-overlay': 'rgba(9, 28, 23, 0.58)',
-        'c-scrim': 'rgba(9, 28, 23, 0.38)',
+        'c-bg': '#070A18',
+        'c-surface': '#0D1326',
+        'c-surface-sunken': '#090E1E',
+        'c-surface-raised': '#121A33',
+        'c-border': '#1E2745',
+        'c-border-strong': '#2C3860',
+        'c-text': '#EDF1FF',
+        'c-text-muted': '#9AA6C7',
+        'c-text-subtle': '#7C89AC',
+        'c-overlay': '#04060F',
+        'c-scrim': '#04060F',
 
         /* on-surface aliases */
-        'on-surface': '#15231E',
-        'on-surface-variant': '#5A6A62',
+        'on-surface': '#EDF1FF',
+        'on-surface-variant': '#9AA6C7',
 
-        /* ---------- Primary (evergreen ink) ---------- */
-        'c-primary-50': '#EDF3EF',
-        'c-primary-100': '#D7E5DD',
-        'c-primary-200': '#B7D0C4',
-        'c-primary-300': '#8FAFA0',
-        'c-primary-400': '#668C7B',
-        'c-primary-500': '#456F5D',
-        'c-primary-600': '#305947',
-        'c-primary-700': '#244737',
-        'c-primary-800': '#19372B',
-        'c-primary-900': '#0F271F',
-        'c-primary-950': '#091B15',
+        /* ---------- Primary (aurora violet) ---------- */
+        'c-primary-50': '#171233',
+        'c-primary-100': '#211A4D',
+        'c-primary-200': '#3B2E7A',
+        'c-primary-300': '#A78BFA',
+        'c-primary-400': '#B9A7FF',
+        'c-primary-500': '#8B5CF6',
+        'c-primary-600': '#7C5CFF',
+        'c-primary-700': '#C4B5FD',
+        'c-primary-800': '#DDD6FE',
+        'c-primary-900': '#EDE9FE',
+        'c-primary-950': '#F5F3FF',
 
         'on-primary': '#FFFFFF',
 
-        /* ---------- Accent (restrained brass) ---------- */
-        'c-accent-50': '#F8F2E5',
-        'c-accent-100': '#EFE1C6',
-        'c-accent-200': '#E1CBA4',
-        'c-accent-300': '#D5B782',
-        'c-accent-400': '#C9A367',
-        'c-accent-500': '#B78E4F',
-        'c-accent-600': '#9A733D',
-        'c-accent-700': '#7A582E',
-        'c-accent-800': '#5B4122',
+        /* ---------- Accent (signal mint) ---------- */
+        'c-accent-50': '#0A2429',
+        'c-accent-100': '#0F3438',
+        'c-accent-200': '#155E5A',
+        'c-accent-300': '#5EEAD4',
+        'c-accent-400': '#2DD4BF',
+        'c-accent-500': '#3EE8D0',
+        'c-accent-600': '#2DD4BF',
+        'c-accent-700': '#99F6E4',
+        'c-accent-800': '#CCFBF1',
 
         /* ---------- Semantic: success ---------- */
-        'success-50': '#EEF5EF',
-        'success-100': '#D7E9DB',
-        'success-200': '#B3D4BC',
-        'success-500': '#3C7755',
-        'success-600': '#2E6043',
-        'success-700': '#234B34',
-        'success-800': '#193826',
+        'success-50': '#0A201B',
+        'success-100': '#0E2E26',
+        'success-200': '#1F5C4A',
+        'success-500': '#34D399',
+        'success-600': '#10B981',
+        'success-700': '#6EE7B7',
+        'success-800': '#A7F3D0',
 
-        'on-success': '#FFFFFF',
+        'on-success': '#04120D',
 
         /* ---------- Semantic: warning ---------- */
-        'warning-50': '#FAF3E5',
-        'warning-100': '#F2E4C8',
-        'warning-200': '#E7CF9F',
-        'warning-500': '#AD7A21',
-        'warning-600': '#8C6118',
-        'warning-700': '#6E4C13',
-        'warning-800': '#52390F',
+        'warning-50': '#231A08',
+        'warning-100': '#33260B',
+        'warning-200': '#6B4E12',
+        'warning-500': '#FBBF24',
+        'warning-600': '#F59E0B',
+        'warning-700': '#FCD34D',
+        'warning-800': '#FDE68A',
 
-        'on-warning': '#FFFFFF',
+        'on-warning': '#1A1203',
 
         /* ---------- Semantic: danger ---------- */
-        'danger-50': '#FAEDEB',
-        'danger-100': '#F2D9D6',
-        'danger-200': '#E5BDB7',
-        'danger-500': '#B14B3D',
-        'danger-600': '#923A2F',
-        'danger-700': '#742E25',
-        'danger-800': '#58231C',
+        'danger-50': '#25101A',
+        'danger-100': '#351522',
+        'danger-200': '#6E2438',
+        'danger-500': '#FB7185',
+        'danger-600': '#F43F5E',
+        'danger-700': '#FDA4AF',
+        'danger-800': '#FECDD3',
 
         'on-danger': '#FFFFFF',
 
         /* ---------- Semantic: info ---------- */
-        'info-50': '#EDF3F7',
-        'info-100': '#D8E7EF',
-        'info-200': '#B9D2E0',
-        'info-500': '#497A97',
-        'info-600': '#38627A',
-        'info-700': '#2B4C5F',
-        'info-800': '#203A48',
+        'info-50': '#08202E',
+        'info-100': '#0B2B3D',
+        'info-200': '#155A78',
+        'info-500': '#38BDF8',
+        'info-600': '#0EA5E9',
+        'info-700': '#7DD3FC',
+        'info-800': '#BAE6FD',
 
-        'on-info': '#FFFFFF',
+        'on-info': '#04121A',
 
         /* ---------- Natural aliases ---------- */
-        surface: '#FFFFFF',
-        'surface-sunken': '#E9EDE6',
-        background: '#F2F4EF',
-        border: '#DAE1D8',
-        primary: '#244737',
-        secondary: '#B78E4F',
+        surface: '#0D1326',
+        'surface-sunken': '#090E1E',
+        background: '#070A18',
+        border: '#1E2745',
+        primary: '#7C5CFF',
+        secondary: '#3EE8D0',
       },
 
       /* ---------- Typography ---------- */
@@ -163,11 +165,17 @@ export default {
       },
 
       boxShadow: {
-        resting: '0 1px 2px rgba(16, 39, 31, 0.05), 0 8px 24px -20px rgba(16, 39, 31, 0.22)',
-        hover: '0 2px 4px rgba(16, 39, 31, 0.06), 0 18px 34px -24px rgba(16, 39, 31, 0.28)',
-        raised: '0 12px 28px -18px rgba(16, 39, 31, 0.32)',
-        modal: '0 28px 70px -18px rgba(9, 28, 23, 0.42)',
+        resting:
+          'inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 22px 55px -36px rgba(0, 0, 0, 0.92)',
+        hover:
+          'inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 32px 70px -38px rgba(0, 0, 0, 0.96), 0 0 0 1px rgba(124, 92, 255, 0.16)',
+        raised:
+          'inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 30px 80px -30px rgba(0, 0, 0, 0.9)',
+        modal:
+          'inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 50px 120px -30px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(124, 92, 255, 0.2)',
         inset: 'inset 0 1px 0 rgba(255, 255, 255, 0.16)',
+        glow: '0 0 0 1px rgba(124, 92, 255, 0.28), 0 18px 55px -18px rgba(124, 92, 255, 0.55)',
+        mint: '0 0 0 1px rgba(62, 232, 208, 0.24), 0 18px 55px -18px rgba(62, 232, 208, 0.4)',
       },
 
       transitionDuration: {
@@ -213,6 +221,38 @@ export default {
         shimmer: {
           '100%': { transform: 'translateX(100%)' },
         },
+        aurora: {
+          '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)', opacity: '0.75' },
+          '33%': { transform: 'translate3d(4%, -3%, 0) scale(1.08)', opacity: '0.95' },
+          '66%': { transform: 'translate3d(-3%, 4%, 0) scale(0.96)', opacity: '0.65' },
+        },
+        float: {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-12px)' },
+        },
+        'float-soft': {
+          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
+          '50%': { transform: 'translateY(-7px) rotate(0.6deg)' },
+        },
+        'spin-slow': {
+          to: { transform: 'rotate(360deg)' },
+        },
+        'pulse-soft': {
+          '0%, 100%': { opacity: '0.45', transform: 'scale(1)' },
+          '50%': { opacity: '1', transform: 'scale(1.35)' },
+        },
+        'gradient-pan': {
+          '0%, 100%': { backgroundPosition: '0% 50%' },
+          '50%': { backgroundPosition: '100% 50%' },
+        },
+        'reveal-up': {
+          from: { opacity: '0', transform: 'translateY(26px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
+        'page-enter': {
+          from: { opacity: '0', transform: 'translateY(10px)' },
+          to: { opacity: '1', transform: 'translateY(0)' },
+        },
       },
       animation: {
         'fade-in': 'fade-in 220ms cubic-bezier(.2,0,.2,1) forwards',
@@ -221,6 +261,15 @@ export default {
         'slide-in-left': 'slide-in-left 280ms cubic-bezier(.2,0,.2,1) forwards',
         'slide-in-up': 'slide-in-up 280ms cubic-bezier(.2,0,.2,1) forwards',
         rise: 'rise 620ms cubic-bezier(.16,1,.3,1) both',
+        aurora: 'aurora 18s ease-in-out infinite',
+        'aurora-slow': 'aurora 26s ease-in-out infinite reverse',
+        float: 'float 7s ease-in-out infinite',
+        'float-soft': 'float-soft 6s ease-in-out infinite',
+        'spin-slow': 'spin-slow 26s linear infinite',
+        'pulse-soft': 'pulse-soft 2.8s ease-in-out infinite',
+        'gradient-pan': 'gradient-pan 8s ease infinite',
+        'reveal-up': 'reveal-up 760ms cubic-bezier(.16,1,.3,1) both',
+        'page-enter': 'page-enter 480ms cubic-bezier(.16,1,.3,1) both',
       },
     },
   },
