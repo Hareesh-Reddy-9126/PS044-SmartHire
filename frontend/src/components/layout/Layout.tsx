@@ -69,15 +69,15 @@ function BrandMark({ className = '' }: { className?: string }) {
         className="brand-mark-tile h-8 w-8 shrink-0 rounded-lg"
         aria-hidden="true"
       >
-        <rect width="64" height="64" rx="16" fill="#0B0D12" />
+        <rect width="64" height="64" rx="16" fill="#F05A28" />
         <path
           d="M45 19H28a8 8 0 0 0 0 16h9a8 8 0 0 1 0 16H19"
-          stroke="#FFFFFF"
+          stroke="#191512"
           strokeWidth="5"
           strokeLinecap="round"
           fill="none"
         />
-        <circle cx="45" cy="45" r="3.5" fill="#D8FF4F" />
+        <circle cx="45" cy="45" r="4" fill="#D7F55F" stroke="#191512" strokeWidth="1.5" />
       </svg>
       <span className="brand-word">SmartHire</span>
     </Link>
@@ -317,7 +317,7 @@ function SidebarContent({
           <BrandMark />
           {closeButton}
         </div>
-        <p className="app-sidebar-kicker">Employment decisions</p>
+        <p className="app-sidebar-kicker">The hiring record</p>
       </div>
 
       <nav className="app-sidebar-nav">
@@ -424,7 +424,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
         </div>
       </header>
 
-      <main id="main-content" className={isLanding ? '' : 'pt-topbar'}>
+      <main id="main-content" className={isLanding ? '' : 'pt-topbar public-main'}>
         {isLanding ? (
           children
         ) : (
@@ -449,8 +449,12 @@ export function AuthLayout({ children }: { children: ReactNode }) {
         </div>
 
         <div className="auth-brand-main">
-          <p className="auth-brand-kicker">Employment decision architecture</p>
-          <p className="auth-brand-title">Every decision, on the record.</p>
+          <p className="auth-brand-kicker">The hiring record</p>
+          <p className="auth-brand-title">
+            Every decision,
+            <br />
+            <span className="auth-mark">on the record.</span>
+          </p>
           <p className="auth-brand-copy">
             One accountable trail from the first application to the final hire.
             Candidates see their progress, recruiters see the evidence, and

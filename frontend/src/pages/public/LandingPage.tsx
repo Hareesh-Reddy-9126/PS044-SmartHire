@@ -70,13 +70,13 @@ const WORKSPACE_PATHS: WorkspacePath[] = [
 const LIFECYCLE = [
   {
     code: 'APPLIED',
-    tone: 'blue',
+    tone: 'sky',
     title: 'Application received',
     copy: 'A candidate submits a résumé link against a published role.',
   },
   {
     code: 'UNDER_REVIEW',
-    tone: 'amber',
+    tone: 'butter',
     title: 'Recruiter review',
     copy: 'The application enters a review state owned by the hiring team.',
   },
@@ -88,13 +88,13 @@ const LIFECYCLE = [
   },
   {
     code: 'SCHEDULED',
-    tone: 'amber',
+    tone: 'blush',
     title: 'Interview scheduled',
     copy: 'Date, start time, interviewer and location are recorded.',
   },
   {
     code: 'HIRED',
-    tone: 'green',
+    tone: 'lime',
     title: 'Decision recorded',
     copy: 'A hire or rejection closes the recruitment’s final status.',
   },
@@ -142,12 +142,11 @@ export function LandingPage() {
     <div className="landing-page">
       {/* Hero */}
       <section className="lp-hero">
-        <div className="lp-hero-glow" aria-hidden="true" />
         <div className="lp-shell lp-hero-grid">
           <div className="lp-hero-copy">
             <p className="lp-eyebrow">
               <span className="lp-eyebrow-dot" aria-hidden="true" />
-              Employment decision architecture
+              Hiring, with a memory
             </p>
             <h1 className="lp-hero-title">
               Hire with a <span className="lp-mark">memory.</span>
@@ -159,18 +158,18 @@ export function LandingPage() {
             </p>
 
             <div className="lp-actions">
-              <Link to="/jobs" className="lp-btn lp-btn-ink">
+              <Link to="/jobs" className="lp-btn lp-btn-primary">
                 Browse open roles
                 <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                   arrow_forward
                 </span>
               </Link>
               {user ? (
-                <Link to="/workspace" className="lp-btn lp-btn-light">
+                <Link to="/workspace" className="lp-btn lp-btn-outline">
                   Open my workspace
                 </Link>
               ) : (
-                <Link to="/register" className="lp-btn lp-btn-light">
+                <Link to="/register" className="lp-btn lp-btn-outline">
                   Create an account
                 </Link>
               )}
@@ -191,6 +190,11 @@ export function LandingPage() {
           </div>
 
           <div className="lp-hero-visual">
+            <div className="lp-visual-field" aria-hidden="true" />
+            <span className="lp-sticker" aria-hidden="true">
+              HIRED
+            </span>
+
             <div className="lp-window">
               <div className="lp-window-top">
                 <span className="lp-window-dots" aria-hidden="true">
@@ -242,7 +246,7 @@ export function LandingPage() {
                     <span className="lp-foot-dot" aria-hidden="true" />
                     Every change is recorded
                   </span>
-                  <span className="lp-foot-link">View record →</span>
+                  <span className="lp-foot-link">Open record</span>
                 </div>
               </div>
             </div>
@@ -386,7 +390,7 @@ export function LandingPage() {
               </div>
             </article>
 
-            <article className="lp-bento-card lp-tone-lavender">
+            <article className="lp-bento-card lp-tone-sky">
               <div className="lp-bento-head">
                 <span className="lp-bento-icon" aria-hidden="true">
                   <span className="material-symbols-outlined text-[20px]">calendar_month</span>
@@ -416,7 +420,7 @@ export function LandingPage() {
               </div>
             </article>
 
-            <article className="lp-bento-card lp-tone-peach">
+            <article className="lp-bento-card lp-tone-blush">
               <div className="lp-bento-head">
                 <span className="lp-bento-icon" aria-hidden="true">
                   <span className="material-symbols-outlined text-[20px]">folder</span>
@@ -498,7 +502,7 @@ export function LandingPage() {
           <div className="lp-roles">
             {WORKSPACE_PATHS.map(path => (
               <article
-                className={`lp-role-card ${path.role === 'RECRUITER' ? 'is-featured' : ''}`}
+                className={`lp-role-card is-${path.role.toLowerCase()}`}
                 key={path.role}
               >
                 <div className="lp-role-head">
@@ -521,12 +525,7 @@ export function LandingPage() {
                   ))}
                 </ul>
                 <div className="lp-role-actions">
-                  <Link
-                    to={path.primary.to}
-                    className={`lp-btn lp-btn-sm ${
-                      path.role === 'RECRUITER' ? 'lp-btn-light' : 'lp-btn-ink'
-                    }`}
-                  >
+                  <Link to={path.primary.to} className="lp-btn lp-btn-sm lp-btn-primary">
                     {path.primary.label}
                   </Link>
                   {path.secondary && (
@@ -577,6 +576,9 @@ export function LandingPage() {
       <section className="lp-cta-section">
         <div className="lp-shell">
           <div className="lp-cta-card">
+            <span className="lp-cta-star" aria-hidden="true">
+              *
+            </span>
             <div>
               <p className="lp-eyebrow">Start here</p>
               <h2>Start with the role. Keep the record.</h2>
@@ -591,7 +593,7 @@ export function LandingPage() {
                 Browse open roles
               </Link>
               {!user && (
-                <Link to="/register" className="lp-btn lp-btn-light">
+                <Link to="/register" className="lp-btn lp-btn-outline">
                   Create an account
                 </Link>
               )}

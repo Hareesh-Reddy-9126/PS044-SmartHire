@@ -2259,3 +2259,39 @@ The whole SPA was reskinned without changing any backend contract, route, permis
 **Live verification.** `https://172.198.139.59.sslip.io` serves `index-BIelnf4e.js` / `index--mT9W_4g.css` with `theme-color #F7F8FA`; `/`, `/login`, `/jobs` and `/actuator/health` return `200`; the served CSS contains the cobalt/lime tokens, every status tone and the landing classes, and no dark-theme token. `verify-public.ps1 -SkipFlow` passed **18/18**. Live Playwright runs at 1440/768/390 showed zero overflow, Bricolage on headings and the paper background. A temporary candidate registered and signed in through the real UI, reached `/candidate/applications`, and rendered the sidebar, navigation and empty state correctly at desktop and mobile; its 3 refresh tokens and user row were deleted afterwards.
 
 **Data after deploy.** Back to **2 ADMIN / 6 RECRUITER / 6 CANDIDATE**; 12 `OPEN` jobs, 17 applications, 9 recruitments, 23 notifications, 6 organizations. The 13 demo accounts were not re-swept with their shared password because that value is out-of-band (`SMARTHIRE_TEST_PASSWORD` unset, `/root/smarthire-demo-credentials.txt` absent); their rows and roles are intact.
+
+### 12.13 Frontend redesign - The Hiring Record, in Colour - 2026-10-29 [V]
+
+**This section supersedes 12.12.** The cool-grey "Paper & signal" system was rejected on review. The SPA now uses **The Hiring Record, in Colour**: warm cream paper `#FBF6EC`, white surfaces, warm ink `#191512`, a tangerine action colour `#F05A28`, violet `#6A4CFF` for the auth panel and recruiter emphasis, and five stage colours (sky `#BFE4FF`, butter `#FFD466`, violet, blush `#FFD7DF`, lime `#D7F55F`).
+
+**Direction.** The same self-hosted **Bricolage Grotesque** display face, **Instrument Sans** UI face and **IBM Plex Mono** data face, but a warmer, more editorial composition. The public landing is built as a hiring record: floating pill nav, oversized marker-highlighted hero with a live record mockup on a rotated violet stage, tangerine trust band, five lifecycle cards, a bento workspace grid, three outlined role cards with a violet recruiter card, a violet quote band, a lime CTA with an oversized asterisk, and a cream footer. The app shell uses a cream canvas, warm-white sidebar, ink active-nav pill, 20px white cards, tangerine pill buttons and sentence-case kicker chips. Auth pairs a violet brand panel with lime geometry and a cream form side; role options are outlined cards with a tangerine selected state.
+
+**Implementation.**
+
+- `frontend/tailwind.config.js` replaces the cool palette with the cream/tangerine/violet scale and adds display, radius, warm-shadow and pop-shadow tokens.
+- `frontend/src/styles/index.css` is now only the base and structural component contract (747 lines, down from 5057). The old theme block is gone rather than stacked over.
+- `frontend/src/styles/theme.css` (new) is the app-wide design system: tokens, buttons, inputs, cards, page headers, status tones, role chips, tables, empty states, pagination, modals, toasts, metrics, timeline, public header, auth and app shell.
+- `frontend/src/styles/landing.css` (new) is the landing system: hero, stickers/floats, trust band, lifecycle, bento, roles, quote, CTA, footer, responsive rules and motion.
+- `LandingPage.tsx` was rewritten to the new structure without changing claims, links or role routing. `Layout.tsx` gained the tangerine/ink/lime brand mark, "The hiring record" kickers, the public header and the cream app shell.
+- `main.tsx` imports `theme.css` and `landing.css` after `index.css`; `index.html` declares `theme-color #FBF6EC`; `favicon.svg` was redrawn.
+
+**Defects fixed during QA.**
+
+| Issue | Fix |
+|---|---|
+| The role selector lost its layout when the old theme block was removed | Restored the `.role-selector*` / `.role-option*` structure in `theme.css`, restyled as outlined cards with a tangerine selected state |
+| The auth brand's lime circle covered the wordmark on mobile | Moved the geometry to the top-right and added the missing `content` on both pseudo-elements |
+| Public header text links stayed visible at 390px because unlayered CSS beat the Tailwind utility | Explicit `@media (max-width: 639px)` hide rule for `.public-link` |
+| Native file inputs showed an unstyled browser button | Pill `::file-selector-button` styling |
+| The hero's lime highlight sat too high behind the headline | Moved the highlight band from 62% to 34% |
+| An unused `is-featured` class remained on the recruiter card | Removed |
+
+**Visual QA.** Playwright at 1440x1000, 768x1024 and 390x844 covered 17 desktop scenarios (landing, login, register, public jobs/detail, admin overview/recruitments, recruiter jobs/recruitments/new/detail, candidate workspace/applications/detail/progress/notifications/documents) and 9 mobile/tablet scenarios including the navigation drawer. Zero horizontal overflow; no console or page errors after mocking the API surface. Evidence: `C:\Users\HP\AppData\Local\Temp\opencode\qa2\` (local only, not committed).
+
+**Quality gates (all exit 0).** `npm run typecheck`, `npm run lint`, `npm run test:run` **74/74**, `npm run build` (328.28 kB JS / 116.84 kB CSS).
+
+**Deployment.** Frontend only, using the combined compose files. The previous sources were backed up on the VM to `/opt/smarthire/backups/frontend-pre-hiring-record-20261029.tgz`; the changed sources were synced, and only the `frontend` image was rebuilt and recreated. No backend service, database row, compose file or Caddy configuration changed. Google OAuth remains implemented but inert (no client ID in the bundle).
+
+**Live verification.** `https://172.198.139.59.sslip.io` serves `index-CqYq1bnt.js` / `index-D2bbAs3F.css` with `theme-color #FBF6EC`; `/`, `/login`, `/register`, `/jobs` and `/actuator/health` return `200`; the served CSS contains the cream/tangerine/violet/lime tokens, the status tones and the landing classes. `verify-public.ps1 -SkipFlow` passed **18/18**. Live Playwright at 1440/390 showed body `rgb(251, 246, 236)`, Bricolage on the `h1`, zero horizontal overflow and zero page errors. A temporary candidate registered and signed in through the real UI, reached `/candidate/applications`, and rendered the sidebar, ink active pill, empty state and mobile header correctly; its 3 refresh tokens and user row were deleted afterwards.
+
+**Data after deploy.** Back to **2 ADMIN / 6 RECRUITER / 6 CANDIDATE** (14 accounts, including the owner's real candidate); 12 `OPEN` jobs, 17 applications, 9 recruitments, 23 notifications, 6 organizations. Demo credentials were not re-swept because `SMARTHIRE_TEST_PASSWORD` is unset and `/root/smarthire-demo-credentials.txt` is absent; their rows and roles are intact.

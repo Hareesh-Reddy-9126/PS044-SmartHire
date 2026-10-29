@@ -5,105 +5,105 @@ export default {
   theme: {
     extend: {
       /* ========================================================================
-         SmartHire visual system — "Paper & signal".
-         Cool paper surfaces, ink typography, cobalt actions, a lime highlight.
+         SmartHire visual system — "The hiring record, in colour".
+         Warm paper, ink type, tangerine action, and five stage colours.
          Legacy token names stay intact so every screen inherits the system.
          ======================================================================== */
       colors: {
         /* ---------- Neutral surfaces ---------- */
-        'c-bg': '#F7F8FA',
+        'c-bg': '#FBF6EC',
         'c-surface': '#FFFFFF',
-        'c-surface-sunken': '#F2F4F7',
+        'c-surface-sunken': '#F6EFE3',
         'c-surface-raised': '#FFFFFF',
-        'c-border': '#E4E7EC',
-        'c-border-strong': '#D0D5DD',
-        'c-text': '#0B0D12',
-        'c-text-muted': '#5B6472',
-        'c-text-subtle': '#667085',
-        'c-overlay': 'rgba(11, 13, 18, 0.46)',
-        'c-scrim': 'rgba(11, 13, 18, 0.28)',
+        'c-border': '#E8DDCB',
+        'c-border-strong': '#D6C5AD',
+        'c-text': '#191512',
+        'c-text-muted': '#6B5F55',
+        'c-text-subtle': '#94867A',
+        'c-overlay': 'rgba(25, 21, 18, 0.50)',
+        'c-scrim': 'rgba(25, 21, 18, 0.30)',
 
         /* on-surface aliases */
-        'on-surface': '#0B0D12',
-        'on-surface-variant': '#5B6472',
+        'on-surface': '#191512',
+        'on-surface-variant': '#6B5F55',
 
-        /* ---------- Primary (cobalt) ---------- */
-        'c-primary-50': '#EFF4FF',
-        'c-primary-100': '#DBE6FF',
-        'c-primary-200': '#C7D7FE',
-        'c-primary-300': '#A4BDFF',
-        'c-primary-400': '#7A9BFF',
-        'c-primary-500': '#4D77FF',
-        'c-primary-600': '#2457FF',
-        'c-primary-700': '#1B45D6',
-        'c-primary-800': '#1738A8',
-        'c-primary-900': '#122B7A',
-        'c-primary-950': '#0B1B4D',
+        /* ---------- Primary (tangerine) ---------- */
+        'c-primary-50': '#FFF3EE',
+        'c-primary-100': '#FFE2D6',
+        'c-primary-200': '#FFC7B0',
+        'c-primary-300': '#FFA184',
+        'c-primary-400': '#FB7A52',
+        'c-primary-500': '#F05A28',
+        'c-primary-600': '#D94615',
+        'c-primary-700': '#B4360D',
+        'c-primary-800': '#8F2C0B',
+        'c-primary-900': '#74250C',
+        'c-primary-950': '#3F1104',
 
         'on-primary': '#FFFFFF',
 
-        /* ---------- Accent (signal lime) ---------- */
-        'c-accent-50': '#F7FFE1',
-        'c-accent-100': '#EEFFC2',
-        'c-accent-200': '#E2FF9A',
-        'c-accent-300': '#D8FF4F',
-        'c-accent-400': '#C6F53A',
-        'c-accent-500': '#B2E62A',
-        'c-accent-600': '#93C51E',
-        'c-accent-700': '#6F9A16',
-        'c-accent-800': '#4E6D10',
+        /* ---------- Accent (stage lime) ---------- */
+        'c-accent-50': '#FAFFE8',
+        'c-accent-100': '#F2FFC2',
+        'c-accent-200': '#E7FF8A',
+        'c-accent-300': '#D7F55F',
+        'c-accent-400': '#C4E83E',
+        'c-accent-500': '#A8CC26',
+        'c-accent-600': '#86A61A',
+        'c-accent-700': '#667F16',
+        'c-accent-800': '#4E6115',
 
         /* ---------- Semantic: success ---------- */
-        'success-50': '#ECFDF3',
-        'success-100': '#D1FADF',
-        'success-200': '#A6F4C5',
-        'success-500': '#12B76A',
-        'success-600': '#039855',
-        'success-700': '#027A48',
-        'success-800': '#05603A',
+        'success-50': '#E9F8EF',
+        'success-100': '#D3F1E0',
+        'success-200': '#A9E5C3',
+        'success-500': '#2E9E64',
+        'success-600': '#1E7A4C',
+        'success-700': '#17613C',
+        'success-800': '#124D30',
 
         'on-success': '#FFFFFF',
 
         /* ---------- Semantic: warning ---------- */
-        'warning-50': '#FFFAEB',
-        'warning-100': '#FEF0C7',
-        'warning-200': '#FEDF89',
-        'warning-500': '#F79009',
-        'warning-600': '#DC6803',
-        'warning-700': '#B54708',
-        'warning-800': '#93370D',
+        'warning-50': '#FFF8E3',
+        'warning-100': '#FFEFC2',
+        'warning-200': '#FFE08A',
+        'warning-500': '#D99A16',
+        'warning-600': '#B37A0A',
+        'warning-700': '#8A5A00',
+        'warning-800': '#6B4600',
 
         'on-warning': '#FFFFFF',
 
         /* ---------- Semantic: danger ---------- */
-        'danger-50': '#FEF3F2',
-        'danger-100': '#FEE4E2',
-        'danger-200': '#FECDCA',
-        'danger-500': '#F04438',
-        'danger-600': '#D92D20',
-        'danger-700': '#B42318',
-        'danger-800': '#912018',
+        'danger-50': '#FDECEA',
+        'danger-100': '#FBD9D5',
+        'danger-200': '#F5B5AE',
+        'danger-500': '#D6453A',
+        'danger-600': '#B3261E',
+        'danger-700': '#8F1D17',
+        'danger-800': '#6E1712',
 
         'on-danger': '#FFFFFF',
 
         /* ---------- Semantic: info ---------- */
-        'info-50': '#EFF8FF',
-        'info-100': '#D1E9FF',
-        'info-200': '#B2DDFF',
-        'info-500': '#2E90FA',
-        'info-600': '#1570EF',
-        'info-700': '#175CD3',
-        'info-800': '#1849A9',
+        'info-50': '#EAF4FF',
+        'info-100': '#D6E9FF',
+        'info-200': '#ADD3FF',
+        'info-500': '#3A82C9',
+        'info-600': '#1F5FA8',
+        'info-700': '#174A85',
+        'info-800': '#123A69',
 
         'on-info': '#FFFFFF',
 
         /* ---------- Natural aliases ---------- */
         surface: '#FFFFFF',
-        'surface-sunken': '#F2F4F7',
-        background: '#F7F8FA',
-        border: '#E4E7EC',
-        primary: '#0B0D12',
-        secondary: '#2457FF',
+        'surface-sunken': '#F6EFE3',
+        background: '#FBF6EC',
+        border: '#E8DDCB',
+        primary: '#191512',
+        secondary: '#F05A28',
       },
 
       /* ---------- Typography ---------- */
@@ -114,11 +114,11 @@ export default {
         mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       fontSize: {
-        'display-xl': ['76px', { lineHeight: '0.96', fontWeight: '600', letterSpacing: '-0.05em' }],
-        display: ['48px', { lineHeight: '1.02', fontWeight: '600', letterSpacing: '-0.04em' }],
-        'headline-lg': ['32px', { lineHeight: '1.18', fontWeight: '600', letterSpacing: '-0.03em' }],
-        'headline-md': ['24px', { lineHeight: '1.28', fontWeight: '600', letterSpacing: '-0.02em' }],
-        'headline-sm': ['20px', { lineHeight: '1.35', fontWeight: '600', letterSpacing: '-0.015em' }],
+        'display-xl': ['80px', { lineHeight: '0.94', fontWeight: '600', letterSpacing: '-0.05em' }],
+        display: ['54px', { lineHeight: '0.98', fontWeight: '600', letterSpacing: '-0.045em' }],
+        'headline-lg': ['34px', { lineHeight: '1.12', fontWeight: '600', letterSpacing: '-0.035em' }],
+        'headline-md': ['25px', { lineHeight: '1.2', fontWeight: '600', letterSpacing: '-0.025em' }],
+        'headline-sm': ['20px', { lineHeight: '1.3', fontWeight: '600', letterSpacing: '-0.015em' }],
         'body-lg': ['18px', { lineHeight: '30px', fontWeight: '400' }],
         'body-md': ['15px', { lineHeight: '24px', fontWeight: '400' }],
         'body-sm': ['14px', { lineHeight: '21px', fontWeight: '400' }],
@@ -143,8 +143,8 @@ export default {
         'space-3xl': '3rem',
         gutter: '1.75rem',
         'gutter-mobile': '1rem',
-        topbar: '4.5rem',
-        sidebar: '16.5rem',
+        topbar: '4.75rem',
+        sidebar: '17rem',
         'sidebar-rail': '5rem',
       },
 
@@ -155,22 +155,24 @@ export default {
       },
 
       borderRadius: {
-        sm: '0.25rem',
-        DEFAULT: '0.5rem',
-        md: '0.625rem',
-        lg: '0.75rem',
-        xl: '1rem',
-        '2xl': '1.25rem',
-        '3xl': '1.5rem',
+        sm: '0.375rem',
+        DEFAULT: '0.75rem',
+        md: '0.875rem',
+        lg: '1rem',
+        xl: '1.25rem',
+        '2xl': '1.5rem',
+        '3xl': '2rem',
         full: '9999px',
       },
 
       boxShadow: {
-        resting: '0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06)',
-        hover: '0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 12px 24px -8px rgba(16, 24, 40, 0.10)',
-        raised: '0 12px 32px -12px rgba(16, 24, 40, 0.18)',
-        modal: '0 24px 64px -12px rgba(16, 24, 40, 0.24)',
-        inset: 'inset 0 1px 0 rgba(255, 255, 255, 0.16)',
+        resting: '0 1px 2px rgba(64, 45, 30, 0.04), 0 10px 28px -22px rgba(64, 45, 30, 0.22)',
+        hover: '0 2px 4px rgba(64, 45, 30, 0.05), 0 20px 40px -24px rgba(64, 45, 30, 0.28)',
+        raised: '0 28px 56px -30px rgba(64, 45, 30, 0.34)',
+        modal: '0 32px 80px -24px rgba(25, 21, 18, 0.34)',
+        inset: 'inset 0 1px 0 rgba(255, 255, 255, 0.18)',
+        pop: '5px 5px 0 #191512',
+        'pop-sm': '3px 3px 0 #191512',
       },
 
       transitionDuration: {
