@@ -100,7 +100,7 @@ export function CandidateApplicationsPage() {
 
       {isLoading ? (
         <SkeletonList label="Loading your applications" />
-      ) : applications.length === 0 ? (
+      ) : error ? null : applications.length === 0 ? (
         <EmptyState
           icon="assignment"
           title="No applications yet"

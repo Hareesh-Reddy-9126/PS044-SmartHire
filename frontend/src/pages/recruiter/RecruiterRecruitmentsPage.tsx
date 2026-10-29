@@ -66,9 +66,11 @@ export function RecruiterRecruitmentsPage() {
         eyebrow="Recruiter workspace"
         title="Recruitments"
         description={
-          isLoading
-            ? 'Loading recruitments…'
-            : `${totalElements} recruitment${totalElements === 1 ? '' : 's'} in your organization`
+          error
+            ? 'The record could not be loaded.'
+            : isLoading
+              ? 'Loading recruitments…'
+              : `${totalElements} recruitment${totalElements === 1 ? '' : 's'} in your organization`
         }
         action={
           <Link to="/recruiter/applications" className="btn btn-secondary btn-md">
@@ -93,7 +95,7 @@ export function RecruiterRecruitmentsPage() {
 
       {isLoading ? (
         <SkeletonCards count={6} label="Loading recruitments" />
-      ) : recruitments.length === 0 ? (
+      ) : error ? null : recruitments.length === 0 ? (
         <EmptyState
           icon="work_off"
           title="No recruitments yet"

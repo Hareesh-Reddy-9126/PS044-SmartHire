@@ -1,6 +1,5 @@
 import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { Reveal } from '../../components/ui/Reveal';
 import { authPath, type AccountRole } from '../../utils/roles';
 
 interface WorkspacePath {
@@ -22,7 +21,7 @@ const WORKSPACE_PATHS: WorkspacePath[] = [
       'Browse open roles and filter by location',
       'Apply with a résumé link',
       'Track application and interview status',
-      'Upload documents and read notifications',
+      'Keep documents and notifications in one place',
     ],
     primary: {
       label: 'Create candidate account',
@@ -34,7 +33,7 @@ const WORKSPACE_PATHS: WorkspacePath[] = [
     role: 'RECRUITER',
     title: 'For recruiters',
     copy:
-      'Publish roles for your organization, review applications and carry each shortlisted candidate through a recorded decision.',
+      'Publish roles for your organization, review applicants and carry each shortlisted candidate through a recorded decision.',
     bullets: [
       'Create and publish organization roles',
       'Look up applications and shortlist candidates',
@@ -65,7 +64,66 @@ const WORKSPACE_PATHS: WorkspacePath[] = [
       label: 'Administrator sign in',
       to: authPath('/login', 'ADMIN'),
     },
-    secondary: undefined,
+  },
+];
+
+const LIFECYCLE = [
+  {
+    code: 'APPLIED',
+    tone: 'blue',
+    title: 'Application received',
+    copy: 'A candidate submits a résumé link against a published role.',
+  },
+  {
+    code: 'UNDER_REVIEW',
+    tone: 'amber',
+    title: 'Recruiter review',
+    copy: 'The application enters a review state owned by the hiring team.',
+  },
+  {
+    code: 'SHORTLISTED',
+    tone: 'violet',
+    title: 'Shortlisted',
+    copy: 'A recruitment record begins and interview planning can start.',
+  },
+  {
+    code: 'SCHEDULED',
+    tone: 'amber',
+    title: 'Interview scheduled',
+    copy: 'Date, start time, interviewer and location are recorded.',
+  },
+  {
+    code: 'HIRED',
+    tone: 'green',
+    title: 'Decision recorded',
+    copy: 'A hire or rejection closes the recruitment’s final status.',
+  },
+] as const;
+
+const PIPELINE = [
+  {
+    title: 'Applied',
+    count: 12,
+    candidates: [
+      { initials: 'AR', name: 'Ananya R.', detail: 'Product designer · 6 yrs', tone: 'lavender' },
+      { initials: 'KM', name: 'Kiran M.', detail: 'UX lead · 8 yrs', tone: 'peach' },
+    ],
+  },
+  {
+    title: 'Interview',
+    count: 4,
+    candidates: [
+      { initials: 'MS', name: 'Meera S.', detail: 'Today, 10:30', tone: 'blue' },
+      { initials: 'ZK', name: 'Zoya K.', detail: 'Thu, 14:00', tone: 'mint' },
+    ],
+  },
+  {
+    title: 'Decision',
+    count: 2,
+    candidates: [
+      { initials: 'VP', name: 'Vikram P.', detail: 'Feedback in', tone: 'lime' },
+      { initials: 'AN', name: 'Arjun N.', detail: 'Review', tone: 'lavender' },
+    ],
   },
 ];
 
@@ -74,434 +132,507 @@ const WORKSPACE_PATHS: WorkspacePath[] = [
  *
  * Every claim maps to an implemented capability: job discovery, applications,
  * recruitment tracking, document ownership, notifications, and role-scoped
- * administration. The decision record in the hero illustrates the real
- * application lifecycle rather than showing invented metrics or live data.
+ * administration. The hero window illustrates the real application lifecycle
+ * rather than showing invented live metrics.
  */
 export function LandingPage() {
   const { user } = useAuth();
 
   return (
-    <div className="landing">
+    <div className="landing-page">
       {/* Hero */}
-      <section className="hero">
-        <div className="hero-ambient" aria-hidden="true">
-          <span className="hero-blob hero-blob-violet" />
-          <span className="hero-blob hero-blob-mint" />
-          <span className="hero-blob hero-blob-rose" />
-        </div>
-
-        <div className="hero-inner">
-          <div className="hero-copy">
-            <p className="hero-kicker">Employment decision architecture</p>
-            <h1 className="hero-title">
-              Every hiring decision should{' '}
-              <span className="hero-title-accent">leave a record.</span>
+      <section className="lp-hero">
+        <div className="lp-hero-glow" aria-hidden="true" />
+        <div className="lp-shell lp-hero-grid">
+          <div className="lp-hero-copy">
+            <p className="lp-eyebrow">
+              <span className="lp-eyebrow-dot" aria-hidden="true" />
+              Employment decision architecture
+            </p>
+            <h1 className="lp-hero-title">
+              Hire with a <span className="lp-mark">memory.</span>
             </h1>
-            <p className="hero-lede">
-              SmartHire keeps the role, the application, the interview and the
-              outcome on one accountable trail — for the people applying and the
-              people deciding.
+            <p className="lp-hero-lede">
+              Every role, application, interview and outcome on one accountable
+              record — so candidates always know where they stand, and recruiters
+              can defend every decision.
             </p>
 
-            <div className="hero-actions">
-              <Link to="/jobs" className="btn btn-primary btn-lg px-6">
+            <div className="lp-actions">
+              <Link to="/jobs" className="lp-btn lp-btn-ink">
                 Browse open roles
                 <span className="material-symbols-outlined text-[18px]" aria-hidden="true">
                   arrow_forward
                 </span>
               </Link>
               {user ? (
-                <Link to="/workspace" className="btn btn-secondary btn-lg px-6">
+                <Link to="/workspace" className="lp-btn lp-btn-light">
                   Open my workspace
                 </Link>
               ) : (
-                <Link to="/register" className="btn btn-secondary btn-lg px-6">
+                <Link to="/register" className="lp-btn lp-btn-light">
                   Create an account
                 </Link>
               )}
             </div>
 
-            <p className="hero-switch">
+            <p className="lp-hero-switch">
               Hiring or operating the platform?{' '}
               <Link to={authPath('/login', 'RECRUITER')}>Recruiter sign in</Link>
               <span aria-hidden="true"> · </span>
               <Link to={authPath('/login', 'ADMIN')}>Administrator sign in</Link>
             </p>
 
-            <div className="hero-proof" aria-label="Platform guarantees">
-              <span>Role-scoped access</span>
-              <span>Document ownership respected</span>
-              <span>Status changes stay visible</span>
-            </div>
+            <ul className="lp-hero-proof" aria-label="Platform guarantees">
+              <li>Role-scoped access</li>
+              <li>Candidate-owned documents</li>
+              <li>Every status change visible</li>
+            </ul>
           </div>
 
-          <aside className="hero-stage" aria-label="Illustration of the application lifecycle">
-            <div className="hero-stage-glow" aria-hidden="true" />
-            <div className="hero-ring" aria-hidden="true" />
-            <div className="hero-ring hero-ring-b" aria-hidden="true" />
+          <div className="lp-hero-visual">
+            <div className="lp-window">
+              <div className="lp-window-top">
+                <span className="lp-window-dots" aria-hidden="true">
+                  <i />
+                  <i />
+                  <i />
+                </span>
+                <span className="lp-window-path">SmartHire / Hiring record</span>
+                <span className="lp-live">
+                  <span aria-hidden="true" />
+                  Live
+                </span>
+              </div>
 
-            <div className="hero-float hero-float-applied" aria-hidden="true">
-              <span>APPLIED</span>
-              <strong>Application received</strong>
-            </div>
-            <div className="hero-float hero-float-review" aria-hidden="true">
-              <span>UNDER REVIEW</span>
-              <strong>Evidence in one place</strong>
-            </div>
-            <div className="hero-float hero-float-hired" aria-hidden="true">
-              <span>HIRED</span>
-              <strong>Decision recorded</strong>
-            </div>
-
-            <div className="hero-stack">
-              <div className="hero-stack-layer layer-1" aria-hidden="true" />
-              <div className="hero-stack-layer layer-2" aria-hidden="true" />
-
-              <div className="decision-card">
-                <span className="decision-tab">Decision record</span>
-                <div className="decision-card-inner">
-                  <div className="decision-head">
-                    <div>
-                      <p className="decision-kicker">Application record</p>
-                      <p className="decision-title">One role. One trail.</p>
-                    </div>
-                    <span className="decision-stamp">Role scoped</span>
+              <div className="lp-window-body">
+                <div className="lp-window-head">
+                  <div>
+                    <p className="lp-mini-label">Open role</p>
+                    <p className="lp-window-title">Senior Product Designer</p>
+                    <p className="lp-window-sub">Nova Labs · Bengaluru · Hybrid</p>
                   </div>
+                  <span className="lp-pill lp-pill-green">Open</span>
+                </div>
 
-                  <div className="decision-meta">
-                    <span>Candidate owned</span>
-                    <span>Recruiter reviewed</span>
-                    <span>Live status</span>
-                  </div>
-
-                  <div className="trail">
-                    {[
-                      { code: 'APPLIED', label: 'Application received', state: 'done' },
-                      { code: 'UNDER_REVIEW', label: 'Under review', state: 'done' },
-                      { code: 'SHORTLISTED', label: 'Shortlisted', state: 'current' },
-                      { code: 'SCHEDULED', label: 'Interview scheduled', state: 'pending' },
-                      { code: 'HIRED', label: 'Final decision', state: 'pending' },
-                    ].map(step => (
-                      <div key={step.code} className={`trail-step is-${step.state}`}>
-                        <span className="trail-dot" aria-hidden="true" />
-                        <span className="trail-label">{step.label}</span>
-                        <span className="trail-code">{step.code}</span>
+                <div className="lp-pipeline">
+                  {PIPELINE.map(column => (
+                    <div className="lp-column" key={column.title}>
+                      <div className="lp-column-head">
+                        <span>{column.title}</span>
+                        <span className="lp-column-count">{column.count}</span>
                       </div>
-                    ))}
-                  </div>
+                      {column.candidates.map(candidate => (
+                        <div className="lp-candidate" key={candidate.name}>
+                          <span className={`lp-avatar lp-avatar-${candidate.tone}`}>
+                            {candidate.initials}
+                          </span>
+                          <span className="lp-candidate-copy">
+                            <strong>{candidate.name}</strong>
+                            <span>{candidate.detail}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  ))}
+                </div>
 
-                  <div className="decision-foot">
-                    <span>
-                      Visible to <strong>one candidate</strong> and{' '}
-                      <strong>their recruiter</strong>.
-                    </span>
-                    <span className="tabular">05 stages</span>
-                  </div>
+                <div className="lp-window-foot">
+                  <span>
+                    <span className="lp-foot-dot" aria-hidden="true" />
+                    Every change is recorded
+                  </span>
+                  <span className="lp-foot-link">View record →</span>
                 </div>
               </div>
             </div>
 
-            <p className="hero-note">
-              An illustration of the implemented application lifecycle. No
-              candidate data is shown.
+            <div className="lp-float lp-float-a">
+              <span className="lp-float-icon lp-float-icon-green" aria-hidden="true">
+                <span className="material-symbols-outlined text-[18px]">check</span>
+              </span>
+              <span>
+                <strong>Decision recorded</strong>
+                <span>Hired · just now</span>
+              </span>
+            </div>
+
+            <div className="lp-float lp-float-b">
+              <span className="lp-float-icon lp-float-icon-blue" aria-hidden="true">
+                <span className="material-symbols-outlined text-[18px]">calendar_month</span>
+              </span>
+              <span>
+                <strong>Interview scheduled</strong>
+                <span>Thu, 14:00 · Google Meet</span>
+              </span>
+            </div>
+
+            <p className="lp-visual-note">
+              An illustration of the implemented lifecycle. No candidate data is shown.
             </p>
-          </aside>
+          </div>
+        </div>
+      </section>
+
+      {/* Trust strip */}
+      <section className="lp-trust" aria-label="Platform scope">
+        <div className="lp-shell lp-trust-inner">
+          <p className="lp-trust-label">Built for the whole hiring table</p>
+          <div className="lp-trust-roles">
+            <span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                person
+              </span>
+              Candidates
+            </span>
+            <span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                work
+              </span>
+              Recruiters
+            </span>
+            <span>
+              <span className="material-symbols-outlined text-[16px]" aria-hidden="true">
+                dashboard
+              </span>
+              Administrators
+            </span>
+          </div>
+          <p className="lp-trust-note">One record. Three scopes.</p>
         </div>
       </section>
 
       {/* Lifecycle */}
-      <section className="landing-section" id="lifecycle">
-        <div className="landing-inner">
-          <Reveal>
-            <p className="section-label">The lifecycle</p>
-            <h2 className="section-title">A role moves through one accountable path.</h2>
-            <p className="section-copy">
+      <section className="lp-section" id="lifecycle">
+        <div className="lp-shell">
+          <div className="lp-section-head">
+            <p className="lp-eyebrow">The lifecycle</p>
+            <h2 className="lp-section-title">One role. One trail. No guesswork.</h2>
+            <p className="lp-section-lede">
               The interface exposes the same states the services enforce. Nothing is
               skipped, collapsed or invented for display.
             </p>
-          </Reveal>
+          </div>
 
-          <Reveal delay={90}>
-          <div className="process-grid" role="list" aria-label="Application lifecycle">
-            {[
-              {
-                code: 'APPLIED',
-                title: 'Application received',
-                copy: 'A candidate submits a résumé link against a published role.',
-              },
-              {
-                code: 'UNDER_REVIEW',
-                title: 'Recruiter review',
-                copy: 'The application enters a review state owned by the hiring team.',
-              },
-              {
-                code: 'SHORTLISTED',
-                title: 'Shortlisted',
-                copy: 'A recruitment record begins and interview planning can start.',
-              },
-              {
-                code: 'SCHEDULED',
-                title: 'Interview scheduled',
-                copy: 'Date, start time, interviewer and location are recorded.',
-              },
-              {
-                code: 'COMPLETED',
-                title: 'Interview completed',
-                copy: 'The outcome is recorded, including an explicit no-show path.',
-              },
-              {
-                code: 'HIRED',
-                title: 'Decision recorded',
-                copy: 'A hire or rejection closes the recruitment’s final status.',
-              },
-            ].map((step, index) => (
-              <div className="process-step" role="listitem" key={step.code}>
-                <span className="process-index">0{index + 1}</span>
-                <p className="process-code">{step.code}</p>
-                <p className="process-title">{step.title}</p>
-                <p className="process-copy">{step.copy}</p>
-              </div>
+          <ol className="lp-lifecycle">
+            {LIFECYCLE.map((step, index) => (
+              <li className="lp-step" key={step.code}>
+                <div className="lp-step-top">
+                  <span className="lp-step-index">{String(index + 1).padStart(2, '0')}</span>
+                  <span className={`lp-pill lp-pill-${step.tone}`}>{step.code}</span>
+                </div>
+                <h3>{step.title}</h3>
+                <p>{step.copy}</p>
+              </li>
             ))}
-          </div>
-          </Reveal>
+          </ol>
         </div>
       </section>
 
-      {/* Capabilities */}
-      <section className="landing-section border-y border-c-border bg-c-surface">
-        <div className="landing-inner">
-          <Reveal>
-            <p className="section-label">Platform capability</p>
-            <h2 className="section-title">Run the decision, not just the posting.</h2>
-            <p className="section-copy">
-              Candidate, recruiter and administrator workspaces are shaped around
-              what each role is actually allowed to do.
+      {/* Product surface */}
+      <section className="lp-section lp-section-soft" id="workspace">
+        <div className="lp-shell">
+          <div className="lp-section-head lp-section-head-row">
+            <div>
+              <p className="lp-eyebrow">The workspace</p>
+              <h2 className="lp-section-title">
+                Built around the decision,
+                <br />
+                not the dashboard.
+              </h2>
+            </div>
+            <p className="lp-section-lede">
+              A calm surface for the work that matters: the record, the interview,
+              the documents and the scope. Every screen answers a question a hiring
+              team actually asks.
             </p>
-          </Reveal>
+          </div>
 
-          <Reveal delay={90}>
-          <div className="capability-layout">
-            <div className="capability-lede">
-              <p className="font-display text-[2.6rem] leading-[1.02] text-c-text">
-                One system of record for the whole hiring table.
+          <div className="lp-bento">
+            <article className="lp-bento-card lp-bento-wide lp-tone-ink">
+              <div className="lp-bento-head">
+                <span className="lp-bento-icon lp-bento-icon-light" aria-hidden="true">
+                  <span className="material-symbols-outlined text-[20px]">history</span>
+                </span>
+                <span className="lp-bento-tag">Application record</span>
+              </div>
+              <h3>The whole story, in one place.</h3>
+              <p>
+                Every status change, interview note and final decision stays attached
+                to the application — not scattered across inboxes and spreadsheets.
               </p>
-              <p className="section-copy">
-                Job discovery, applications, interviews, documents, notifications
-                and administration share the same identities and authorization
-                rules.
-              </p>
-              <Link
-                to="/jobs"
-                className="btn btn-secondary btn-md mt-7 inline-flex"
-              >
-                See the open roles
-              </Link>
 
-              <div className="capability-scope" aria-label="Role scopes">
-                <p className="capability-scope-title">Same record. Different scope.</p>
-                <div className="capability-scope-row">
-                  <span className="capability-scope-role">Candidate</span>
-                  <span className="capability-scope-detail">
-                    Own applications, documents and notifications
-                  </span>
+              <div className="lp-mini-trail" aria-hidden="true">
+                <div className="lp-mini-step is-done">
+                  <span className="lp-mini-dot" />
+                  <span>Application received</span>
+                  <span className="lp-mini-code">APPLIED</span>
                 </div>
-                <div className="capability-scope-row">
-                  <span className="capability-scope-role">Recruiter</span>
-                  <span className="capability-scope-detail">
-                    Organization roles, applicants and interview decisions
-                  </span>
+                <div className="lp-mini-step is-done">
+                  <span className="lp-mini-dot" />
+                  <span>Shortlisted by Nova Labs</span>
+                  <span className="lp-mini-code">SHORTLISTED</span>
                 </div>
-                <div className="capability-scope-row">
-                  <span className="capability-scope-role">Administrator</span>
-                  <span className="capability-scope-detail">
-                    Read-only operating view across both workspaces
+                <div className="lp-mini-step is-done">
+                  <span className="lp-mini-dot" />
+                  <span>Interview completed</span>
+                  <span className="lp-mini-code">COMPLETED</span>
+                </div>
+                <div className="lp-mini-step is-current">
+                  <span className="lp-mini-dot" />
+                  <span>Decision recorded</span>
+                  <span className="lp-mini-code">HIRED</span>
+                </div>
+              </div>
+            </article>
+
+            <article className="lp-bento-card lp-tone-lavender">
+              <div className="lp-bento-head">
+                <span className="lp-bento-icon" aria-hidden="true">
+                  <span className="material-symbols-outlined text-[20px]">calendar_month</span>
+                </span>
+                <span className="lp-bento-tag">Interviews</span>
+              </div>
+              <h3>A time, a place, a person.</h3>
+              <p>
+                Scheduling is a recorded event: date, start time, interviewer and
+                location all travel with the recruitment.
+              </p>
+              <div className="lp-meeting">
+                <div className="lp-meeting-top">
+                  <span>
+                    <strong>Thu, 14:00</strong>
+                    <span>45 min · Google Meet</span>
+                  </span>
+                  <span className="lp-pill lp-pill-violet">Scheduled</span>
+                </div>
+                <div className="lp-meeting-person">
+                  <span className="lp-avatar lp-avatar-blue">PN</span>
+                  <span>
+                    <strong>Priya Nair</strong>
+                    <span>Hiring manager</span>
                   </span>
                 </div>
               </div>
-            </div>
+            </article>
 
-            <div className="capability-list">
-              {[
-                {
-                  icon: 'search',
-                  title: 'Discover published roles',
-                  copy: 'Search by role, company and location. Only postings the backend considers visible are returned.',
-                  tag: 'CANDIDATE',
-                },
-                {
-                  icon: 'assignment',
-                  title: 'Apply with a résumé link',
-                  copy: 'An application is created against the role and stays owned by the signed-in candidate.',
-                  tag: 'CANDIDATE',
-                },
-                {
-                  icon: 'timeline',
-                  title: 'Follow application and interview progress',
-                  copy: 'Application status and interview status are shown as separate lifecycles, exactly as stored.',
-                  tag: 'CANDIDATE',
-                },
-                {
-                  icon: 'folder',
-                  title: 'Keep documents with the candidate',
-                  copy: 'Upload, download and delete résumé, cover letter, portfolio and certificate files within ownership rules.',
-                  tag: 'CANDIDATE',
-                },
-                {
-                  icon: 'work',
-                  title: 'Create, publish and close postings',
-                  copy: 'Drafts become visible only when opened. Edit and lifecycle actions are scoped to the owning organization.',
-                  tag: 'RECRUITER',
-                },
-                {
-                  icon: 'group_work',
-                  title: 'Shortlist, schedule and decide',
-                  copy: 'Review applications, record interview outcomes, and set a hire or reject decision with the service’s real transitions.',
-                  tag: 'RECRUITER',
-                },
-              ].map(item => (
-                <div className="capability-row" key={item.title}>
-                  <span className="capability-icon" aria-hidden="true">
-                    <span className="material-symbols-outlined text-[22px]">{item.icon}</span>
+            <article className="lp-bento-card lp-tone-peach">
+              <div className="lp-bento-head">
+                <span className="lp-bento-icon" aria-hidden="true">
+                  <span className="material-symbols-outlined text-[20px]">folder</span>
+                </span>
+                <span className="lp-bento-tag">Documents</span>
+              </div>
+              <h3>Files keep their owner.</h3>
+              <p>
+                Résumés, cover letters and portfolios stay candidate-owned. Access is
+                scoped by identity, not by link.
+              </p>
+              <div className="lp-files">
+                <div className="lp-file">
+                  <span className="lp-file-icon" aria-hidden="true">
+                    <span className="material-symbols-outlined text-[16px]">description</span>
                   </span>
-                  <div>
-                    <p className="capability-title">{item.title}</p>
-                    <p className="capability-copy">{item.copy}</p>
-                  </div>
-                  <span className="capability-tag">{item.tag}</span>
+                  <span>ananya-resume.pdf</span>
+                  <span className="lp-file-size">284 KB</span>
                 </div>
-              ))}
-            </div>
+                <div className="lp-file">
+                  <span className="lp-file-icon" aria-hidden="true">
+                    <span className="material-symbols-outlined text-[16px]">description</span>
+                  </span>
+                  <span>portfolio-2026.pdf</span>
+                  <span className="lp-file-size">1.8 MB</span>
+                </div>
+              </div>
+              <span className="lp-owner-chip">
+                <span className="material-symbols-outlined text-[14px]" aria-hidden="true">
+                  lock
+                </span>
+                Candidate-owned
+              </span>
+            </article>
+
+            <article className="lp-bento-card lp-bento-wide lp-tone-lime">
+              <div className="lp-bento-head">
+                <span className="lp-bento-icon" aria-hidden="true">
+                  <span className="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                </span>
+                <span className="lp-bento-tag">Role scopes</span>
+              </div>
+              <h3>The right view for every seat.</h3>
+              <p>
+                Navigation and routes derive from the roles returned by the identity
+                service. There is no preference switch to widen them.
+              </p>
+              <div className="lp-scopes">
+                <div className="lp-scope-row">
+                  <span className="lp-scope-role">Candidate</span>
+                  <span>Own applications, documents and notifications</span>
+                </div>
+                <div className="lp-scope-row">
+                  <span className="lp-scope-role">Recruiter</span>
+                  <span>Organization roles, applicants and interview decisions</span>
+                </div>
+                <div className="lp-scope-row">
+                  <span className="lp-scope-role">Administrator</span>
+                  <span>Read-only operating view across both workspaces</span>
+                </div>
+              </div>
+            </article>
           </div>
-          </Reveal>
         </div>
       </section>
 
-      {/* Three workspaces */}
-      <section className="landing-section paths-section" id="workspaces">
-        <div className="landing-inner">
-          <Reveal>
-            <p className="section-label">Three workspaces, one record</p>
-            <h2 className="section-title">The same record, seen from the right side.</h2>
-            <p className="section-copy">
+      {/* Workspaces */}
+      <section className="lp-section" id="workspaces">
+        <div className="lp-shell">
+          <div className="lp-section-head">
+            <p className="lp-eyebrow">Three workspaces, one record</p>
+            <h2 className="lp-section-title">The same record, seen from the right side.</h2>
+            <p className="lp-section-lede">
               Candidates see their own progress. Recruiters see the applications and
-              interviews they own. Administrators get a read-only operating view. Every
-              account enters through the same front door and lands in the workspace its
-              role is allowed to open.
+              interviews they own. Administrators get a read-only operating view.
             </p>
-          </Reveal>
+          </div>
 
-          <Reveal delay={90}>
-          <div className="paths-grid">
+          <div className="lp-roles">
             {WORKSPACE_PATHS.map(path => (
-              <div className="path-column" key={path.role}>
-                <p className="path-title">{path.title}</p>
-                <p className="path-copy">{path.copy}</p>
-                <ul className="path-list">
+              <article
+                className={`lp-role-card ${path.role === 'RECRUITER' ? 'is-featured' : ''}`}
+                key={path.role}
+              >
+                <div className="lp-role-head">
+                  <span className="lp-role-icon" aria-hidden="true">
+                    <span className="material-symbols-outlined text-[20px]">
+                      {path.role === 'CANDIDATE'
+                        ? 'person'
+                        : path.role === 'RECRUITER'
+                          ? 'work'
+                          : 'dashboard'}
+                    </span>
+                  </span>
+                  <span className="lp-role-label">{path.role.toLowerCase()}</span>
+                </div>
+                <h3>{path.title}</h3>
+                <p className="lp-role-copy">{path.copy}</p>
+                <ul className="lp-role-list">
                   {path.bullets.map(bullet => (
                     <li key={bullet}>{bullet}</li>
                   ))}
                 </ul>
-                <div className="path-actions">
-                  <Link to={path.primary.to} className="btn btn-primary btn-md">
+                <div className="lp-role-actions">
+                  <Link
+                    to={path.primary.to}
+                    className={`lp-btn lp-btn-sm ${
+                      path.role === 'RECRUITER' ? 'lp-btn-light' : 'lp-btn-ink'
+                    }`}
+                  >
                     {path.primary.label}
                   </Link>
                   {path.secondary && (
-                    <Link to={path.secondary.to} className="btn btn-secondary btn-md">
+                    <Link
+                      to={path.secondary.to}
+                      className={`lp-role-link ${
+                        path.role === 'RECRUITER' ? 'is-light' : ''
+                      }`}
+                    >
                       {path.secondary.label}
                     </Link>
                   )}
                 </div>
-                <p className="path-note">
-                  {path.role === 'ADMIN'
-                    ? 'Administrator views are read-only. Administrator accounts are provisioned by the platform operator.'
-                    : path.role === 'RECRUITER'
-                    ? 'Recruiter actions are limited to the organization carried in the signed-in identity.'
-                    : 'Your application record is visible to you and the recruiter reviewing that role.'}
-                </p>
-              </div>
+              </article>
             ))}
           </div>
-          </Reveal>
         </div>
       </section>
 
-      {/* Trust / architecture */}
-      <section className="landing-section">
-        <div className="landing-inner">
-          <Reveal>
-            <p className="section-label">Built on the record</p>
-            <h2 className="section-title">Trust is a property of the system, not a promise.</h2>
-          </Reveal>
-
-          <Reveal delay={90}>
-          <div className="trust-grid">
-            {[
-              {
-                title: 'Role-scoped by design',
-                copy: 'Navigation and routes derive from the roles returned by the identity service. There is no preference switch to widen them.',
-              },
-              {
-                title: 'Documents keep their owner',
-                copy: 'Candidate files stay candidate-owned. Recruiters cannot read them; administrators can inspect them within their scope.',
-              },
-              {
-                title: 'Notifications reflect real events',
-                copy: 'Delivery rows are created from actual application status changes, with recipient resolution against the identity directory.',
-              },
-            ].map((item, index) => (
-              <div className="trust-item" key={item.title}>
-                <p className="trust-number">0{index + 1}</p>
-                <p className="trust-title">{item.title}</p>
-                <p className="trust-copy">{item.copy}</p>
-              </div>
-            ))}
+      {/* Principle */}
+      <section className="lp-quote-section">
+        <div className="lp-shell lp-quote-grid">
+          <div>
+            <p className="lp-eyebrow lp-eyebrow-light">The principle</p>
+            <blockquote className="lp-quote">
+              “A hiring decision is only as good as the record behind it.”
+            </blockquote>
+            <p className="lp-quote-attr">The SmartHire design principle</p>
           </div>
-          </Reveal>
+          <div className="lp-quote-stats">
+            <div>
+              <span className="lp-stat-number">5</span>
+              <p>lifecycle stages, visible end to end</p>
+            </div>
+            <div>
+              <span className="lp-stat-number">3</span>
+              <p>role scopes, enforced by the system</p>
+            </div>
+            <div>
+              <span className="lp-stat-number">1</span>
+              <p>accountable record per application</p>
+            </div>
+          </div>
         </div>
       </section>
 
       {/* Closing */}
-      <section className="closing-section">
-        <Reveal>
-        <div className="closing-inner">
-          <div>
-            <h2 className="closing-title">Start with the role. Keep the record.</h2>
-            <p className="closing-copy">
-              Browse published roles, or create an account for the workspace you
-              need. Candidates, recruiters and administrators enter through the
-              same front door.
-            </p>
-          </div>
-          <div className="closing-actions">
-            <Link to="/jobs" className="btn btn-primary btn-lg">
-              Browse open roles
-            </Link>
-            {!user && (
-              <Link to="/register" className="btn btn-secondary btn-lg">
-                Create an account
+      <section className="lp-cta-section">
+        <div className="lp-shell">
+          <div className="lp-cta-card">
+            <div>
+              <p className="lp-eyebrow">Start here</p>
+              <h2>Start with the role. Keep the record.</h2>
+              <p>
+                Browse published roles, or create an account for the workspace you
+                need. Candidates, recruiters and administrators enter through the
+                same front door.
+              </p>
+            </div>
+            <div className="lp-cta-actions">
+              <Link to="/jobs" className="lp-btn lp-btn-ink">
+                Browse open roles
               </Link>
-            )}
+              {!user && (
+                <Link to="/register" className="lp-btn lp-btn-light">
+                  Create an account
+                </Link>
+              )}
+            </div>
           </div>
         </div>
-        </Reveal>
       </section>
 
-      <footer className="landing-footer">
-        <div className="landing-footer-inner">
-          <div>
-            <p className="font-serif text-lg text-c-bg">SmartHire</p>
-            <p className="mt-1">Employment decision architecture</p>
+      <footer className="lp-footer">
+        <div className="lp-shell">
+          <div className="lp-footer-grid">
+            <div className="lp-footer-brand">
+              <p className="lp-footer-word">SmartHire</p>
+              <p className="lp-footer-tag">Employment decision architecture.</p>
+              <p className="lp-footer-note">
+                One accountable trail from the first application to the final hire.
+              </p>
+            </div>
+            <nav className="lp-footer-col" aria-label="Product">
+              <p>Product</p>
+              <Link to="/jobs">Browse roles</Link>
+              <Link to="/register">Create account</Link>
+              <Link to={authPath('/login', 'CANDIDATE')}>Candidate sign in</Link>
+            </nav>
+            <nav className="lp-footer-col" aria-label="Workspaces">
+              <p>Workspaces</p>
+              <Link to={authPath('/login', 'RECRUITER')}>Recruiter sign in</Link>
+              <Link to={authPath('/login', 'ADMIN')}>Administrator sign in</Link>
+              <Link to="/workspace">My workspace</Link>
+            </nav>
+            <div className="lp-footer-col">
+              <p>Platform</p>
+              <span>Role-scoped access</span>
+              <span>Document ownership</span>
+              <span>Status history</span>
+            </div>
           </div>
-          <nav className="flex flex-wrap gap-5" aria-label="Footer">
-            <Link to="/jobs">Browse roles</Link>
-            <Link to={authPath('/login', 'CANDIDATE')}>Candidate sign in</Link>
-            <Link to={authPath('/login', 'RECRUITER')}>Recruiter sign in</Link>
-            <Link to={authPath('/login', 'ADMIN')}>Administrator sign in</Link>
-            {!user && <Link to="/register">Create account</Link>}
-          </nav>
-          <p className="font-mono text-[10px] tracking-wide text-c-primary-400">
-            ROLE-SCOPED ACCESS / REVIEW 1
-          </p>
+          <div className="lp-footer-bottom">
+            <span>© 2026 SmartHire</span>
+            <span className="lp-footer-mono">Role-scoped access / Review 1</span>
+          </div>
         </div>
       </footer>
     </div>

@@ -5,121 +5,121 @@ export default {
   theme: {
     extend: {
       /* ========================================================================
-         SmartHire visual system — "Midnight spectrum".
-         A deep-space glass interface: indigo ink, aurora violet, signal mint.
-         Every legacy token name is preserved so existing screens inherit the
-         new identity without a single behavioural change.
+         SmartHire visual system — "Paper & signal".
+         Cool paper surfaces, ink typography, cobalt actions, a lime highlight.
+         Legacy token names stay intact so every screen inherits the system.
          ======================================================================== */
       colors: {
         /* ---------- Neutral surfaces ---------- */
-        'c-bg': '#070A18',
-        'c-surface': '#0D1326',
-        'c-surface-sunken': '#090E1E',
-        'c-surface-raised': '#121A33',
-        'c-border': '#1E2745',
-        'c-border-strong': '#2C3860',
-        'c-text': '#EDF1FF',
-        'c-text-muted': '#9AA6C7',
-        'c-text-subtle': '#7C89AC',
-        'c-overlay': '#04060F',
-        'c-scrim': '#04060F',
+        'c-bg': '#F7F8FA',
+        'c-surface': '#FFFFFF',
+        'c-surface-sunken': '#F2F4F7',
+        'c-surface-raised': '#FFFFFF',
+        'c-border': '#E4E7EC',
+        'c-border-strong': '#D0D5DD',
+        'c-text': '#0B0D12',
+        'c-text-muted': '#5B6472',
+        'c-text-subtle': '#667085',
+        'c-overlay': 'rgba(11, 13, 18, 0.46)',
+        'c-scrim': 'rgba(11, 13, 18, 0.28)',
 
         /* on-surface aliases */
-        'on-surface': '#EDF1FF',
-        'on-surface-variant': '#9AA6C7',
+        'on-surface': '#0B0D12',
+        'on-surface-variant': '#5B6472',
 
-        /* ---------- Primary (aurora violet) ---------- */
-        'c-primary-50': '#171233',
-        'c-primary-100': '#211A4D',
-        'c-primary-200': '#3B2E7A',
-        'c-primary-300': '#A78BFA',
-        'c-primary-400': '#B9A7FF',
-        'c-primary-500': '#8B5CF6',
-        'c-primary-600': '#7C5CFF',
-        'c-primary-700': '#C4B5FD',
-        'c-primary-800': '#DDD6FE',
-        'c-primary-900': '#EDE9FE',
-        'c-primary-950': '#F5F3FF',
+        /* ---------- Primary (cobalt) ---------- */
+        'c-primary-50': '#EFF4FF',
+        'c-primary-100': '#DBE6FF',
+        'c-primary-200': '#C7D7FE',
+        'c-primary-300': '#A4BDFF',
+        'c-primary-400': '#7A9BFF',
+        'c-primary-500': '#4D77FF',
+        'c-primary-600': '#2457FF',
+        'c-primary-700': '#1B45D6',
+        'c-primary-800': '#1738A8',
+        'c-primary-900': '#122B7A',
+        'c-primary-950': '#0B1B4D',
 
         'on-primary': '#FFFFFF',
 
-        /* ---------- Accent (signal mint) ---------- */
-        'c-accent-50': '#0A2429',
-        'c-accent-100': '#0F3438',
-        'c-accent-200': '#155E5A',
-        'c-accent-300': '#5EEAD4',
-        'c-accent-400': '#2DD4BF',
-        'c-accent-500': '#3EE8D0',
-        'c-accent-600': '#2DD4BF',
-        'c-accent-700': '#99F6E4',
-        'c-accent-800': '#CCFBF1',
+        /* ---------- Accent (signal lime) ---------- */
+        'c-accent-50': '#F7FFE1',
+        'c-accent-100': '#EEFFC2',
+        'c-accent-200': '#E2FF9A',
+        'c-accent-300': '#D8FF4F',
+        'c-accent-400': '#C6F53A',
+        'c-accent-500': '#B2E62A',
+        'c-accent-600': '#93C51E',
+        'c-accent-700': '#6F9A16',
+        'c-accent-800': '#4E6D10',
 
         /* ---------- Semantic: success ---------- */
-        'success-50': '#0A201B',
-        'success-100': '#0E2E26',
-        'success-200': '#1F5C4A',
-        'success-500': '#34D399',
-        'success-600': '#10B981',
-        'success-700': '#6EE7B7',
-        'success-800': '#A7F3D0',
+        'success-50': '#ECFDF3',
+        'success-100': '#D1FADF',
+        'success-200': '#A6F4C5',
+        'success-500': '#12B76A',
+        'success-600': '#039855',
+        'success-700': '#027A48',
+        'success-800': '#05603A',
 
-        'on-success': '#04120D',
+        'on-success': '#FFFFFF',
 
         /* ---------- Semantic: warning ---------- */
-        'warning-50': '#231A08',
-        'warning-100': '#33260B',
-        'warning-200': '#6B4E12',
-        'warning-500': '#FBBF24',
-        'warning-600': '#F59E0B',
-        'warning-700': '#FCD34D',
-        'warning-800': '#FDE68A',
+        'warning-50': '#FFFAEB',
+        'warning-100': '#FEF0C7',
+        'warning-200': '#FEDF89',
+        'warning-500': '#F79009',
+        'warning-600': '#DC6803',
+        'warning-700': '#B54708',
+        'warning-800': '#93370D',
 
-        'on-warning': '#1A1203',
+        'on-warning': '#FFFFFF',
 
         /* ---------- Semantic: danger ---------- */
-        'danger-50': '#25101A',
-        'danger-100': '#351522',
-        'danger-200': '#6E2438',
-        'danger-500': '#FB7185',
-        'danger-600': '#F43F5E',
-        'danger-700': '#FDA4AF',
-        'danger-800': '#FECDD3',
+        'danger-50': '#FEF3F2',
+        'danger-100': '#FEE4E2',
+        'danger-200': '#FECDCA',
+        'danger-500': '#F04438',
+        'danger-600': '#D92D20',
+        'danger-700': '#B42318',
+        'danger-800': '#912018',
 
         'on-danger': '#FFFFFF',
 
         /* ---------- Semantic: info ---------- */
-        'info-50': '#08202E',
-        'info-100': '#0B2B3D',
-        'info-200': '#155A78',
-        'info-500': '#38BDF8',
-        'info-600': '#0EA5E9',
-        'info-700': '#7DD3FC',
-        'info-800': '#BAE6FD',
+        'info-50': '#EFF8FF',
+        'info-100': '#D1E9FF',
+        'info-200': '#B2DDFF',
+        'info-500': '#2E90FA',
+        'info-600': '#1570EF',
+        'info-700': '#175CD3',
+        'info-800': '#1849A9',
 
-        'on-info': '#04121A',
+        'on-info': '#FFFFFF',
 
         /* ---------- Natural aliases ---------- */
-        surface: '#0D1326',
-        'surface-sunken': '#090E1E',
-        background: '#070A18',
-        border: '#1E2745',
-        primary: '#7C5CFF',
-        secondary: '#3EE8D0',
+        surface: '#FFFFFF',
+        'surface-sunken': '#F2F4F7',
+        background: '#F7F8FA',
+        border: '#E4E7EC',
+        primary: '#0B0D12',
+        secondary: '#2457FF',
       },
 
       /* ---------- Typography ---------- */
       fontFamily: {
         sans: ['Instrument Sans', 'system-ui', '-apple-system', 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', 'sans-serif'],
+        display: ['Bricolage Grotesque', 'Instrument Sans', 'system-ui', 'sans-serif'],
         serif: ['Newsreader', 'Georgia', 'Cambria', 'Times New Roman', 'serif'],
         mono: ['IBM Plex Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
       },
       fontSize: {
-        'display-xl': ['72px', { lineHeight: '68px', fontWeight: '300', letterSpacing: '-0.035em' }],
-        display: ['44px', { lineHeight: '48px', fontWeight: '400', letterSpacing: '-0.03em' }],
-        'headline-lg': ['30px', { lineHeight: '38px', fontWeight: '500', letterSpacing: '-0.02em' }],
-        'headline-md': ['23px', { lineHeight: '31px', fontWeight: '500', letterSpacing: '-0.015em' }],
-        'headline-sm': ['19px', { lineHeight: '27px', fontWeight: '600', letterSpacing: '-0.01em' }],
-        'body-lg': ['18px', { lineHeight: '29px', fontWeight: '400' }],
+        'display-xl': ['76px', { lineHeight: '0.96', fontWeight: '600', letterSpacing: '-0.05em' }],
+        display: ['48px', { lineHeight: '1.02', fontWeight: '600', letterSpacing: '-0.04em' }],
+        'headline-lg': ['32px', { lineHeight: '1.18', fontWeight: '600', letterSpacing: '-0.03em' }],
+        'headline-md': ['24px', { lineHeight: '1.28', fontWeight: '600', letterSpacing: '-0.02em' }],
+        'headline-sm': ['20px', { lineHeight: '1.35', fontWeight: '600', letterSpacing: '-0.015em' }],
+        'body-lg': ['18px', { lineHeight: '30px', fontWeight: '400' }],
         'body-md': ['15px', { lineHeight: '24px', fontWeight: '400' }],
         'body-sm': ['14px', { lineHeight: '21px', fontWeight: '400' }],
         'body-strong': ['15px', { lineHeight: '24px', fontWeight: '600' }],
@@ -129,7 +129,7 @@ export default {
         'code-sm': ['12px', { lineHeight: '17px', fontWeight: '400' }],
       },
       letterSpacing: {
-        tightest: '-0.045em',
+        tightest: '-0.05em',
       },
 
       /* ---------- Spacing ---------- */
@@ -149,33 +149,28 @@ export default {
       },
 
       maxWidth: {
-        content: '86rem',
+        content: '84rem',
         prose: '68ch',
         narrow: '48rem',
       },
 
       borderRadius: {
         sm: '0.25rem',
-        DEFAULT: '0.375rem',
-        md: '0.5rem',
-        lg: '0.625rem',
-        xl: '0.875rem',
+        DEFAULT: '0.5rem',
+        md: '0.625rem',
+        lg: '0.75rem',
+        xl: '1rem',
         '2xl': '1.25rem',
+        '3xl': '1.5rem',
         full: '9999px',
       },
 
       boxShadow: {
-        resting:
-          'inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 22px 55px -36px rgba(0, 0, 0, 0.92)',
-        hover:
-          'inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 32px 70px -38px rgba(0, 0, 0, 0.96), 0 0 0 1px rgba(124, 92, 255, 0.16)',
-        raised:
-          'inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 30px 80px -30px rgba(0, 0, 0, 0.9)',
-        modal:
-          'inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 50px 120px -30px rgba(0, 0, 0, 0.95), 0 0 0 1px rgba(124, 92, 255, 0.2)',
+        resting: '0 1px 2px rgba(16, 24, 40, 0.04), 0 1px 3px rgba(16, 24, 40, 0.06)',
+        hover: '0 4px 8px -2px rgba(16, 24, 40, 0.08), 0 12px 24px -8px rgba(16, 24, 40, 0.10)',
+        raised: '0 12px 32px -12px rgba(16, 24, 40, 0.18)',
+        modal: '0 24px 64px -12px rgba(16, 24, 40, 0.24)',
         inset: 'inset 0 1px 0 rgba(255, 255, 255, 0.16)',
-        glow: '0 0 0 1px rgba(124, 92, 255, 0.28), 0 18px 55px -18px rgba(124, 92, 255, 0.55)',
-        mint: '0 0 0 1px rgba(62, 232, 208, 0.24), 0 18px 55px -18px rgba(62, 232, 208, 0.4)',
       },
 
       transitionDuration: {
@@ -218,40 +213,20 @@ export default {
           from: { opacity: '0', transform: 'translateY(18px)' },
           to: { opacity: '1', transform: 'translateY(0)' },
         },
-        shimmer: {
-          '100%': { transform: 'translateX(100%)' },
-        },
-        aurora: {
-          '0%, 100%': { transform: 'translate3d(0, 0, 0) scale(1)', opacity: '0.75' },
-          '33%': { transform: 'translate3d(4%, -3%, 0) scale(1.08)', opacity: '0.95' },
-          '66%': { transform: 'translate3d(-3%, 4%, 0) scale(0.96)', opacity: '0.65' },
+        marquee: {
+          from: { transform: 'translateX(0)' },
+          to: { transform: 'translateX(-50%)' },
         },
         float: {
           '0%, 100%': { transform: 'translateY(0)' },
-          '50%': { transform: 'translateY(-12px)' },
-        },
-        'float-soft': {
-          '0%, 100%': { transform: 'translateY(0) rotate(0deg)' },
-          '50%': { transform: 'translateY(-7px) rotate(0.6deg)' },
-        },
-        'spin-slow': {
-          to: { transform: 'rotate(360deg)' },
+          '50%': { transform: 'translateY(-8px)' },
         },
         'pulse-soft': {
-          '0%, 100%': { opacity: '0.45', transform: 'scale(1)' },
-          '50%': { opacity: '1', transform: 'scale(1.35)' },
+          '0%, 100%': { opacity: '0.55' },
+          '50%': { opacity: '1' },
         },
-        'gradient-pan': {
-          '0%, 100%': { backgroundPosition: '0% 50%' },
-          '50%': { backgroundPosition: '100% 50%' },
-        },
-        'reveal-up': {
-          from: { opacity: '0', transform: 'translateY(26px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
-        },
-        'page-enter': {
-          from: { opacity: '0', transform: 'translateY(10px)' },
-          to: { opacity: '1', transform: 'translateY(0)' },
+        shimmer: {
+          '100%': { transform: 'translateX(100%)' },
         },
       },
       animation: {
@@ -261,15 +236,9 @@ export default {
         'slide-in-left': 'slide-in-left 280ms cubic-bezier(.2,0,.2,1) forwards',
         'slide-in-up': 'slide-in-up 280ms cubic-bezier(.2,0,.2,1) forwards',
         rise: 'rise 620ms cubic-bezier(.16,1,.3,1) both',
-        aurora: 'aurora 18s ease-in-out infinite',
-        'aurora-slow': 'aurora 26s ease-in-out infinite reverse',
-        float: 'float 7s ease-in-out infinite',
-        'float-soft': 'float-soft 6s ease-in-out infinite',
-        'spin-slow': 'spin-slow 26s linear infinite',
+        marquee: 'marquee 32s linear infinite',
+        float: 'float 6s ease-in-out infinite',
         'pulse-soft': 'pulse-soft 2.8s ease-in-out infinite',
-        'gradient-pan': 'gradient-pan 8s ease infinite',
-        'reveal-up': 'reveal-up 760ms cubic-bezier(.16,1,.3,1) both',
-        'page-enter': 'page-enter 480ms cubic-bezier(.16,1,.3,1) both',
       },
     },
   },

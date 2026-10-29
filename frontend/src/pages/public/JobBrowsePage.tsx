@@ -119,9 +119,11 @@ export function JobBrowsePage() {
           <p className="page-eyebrow">Open roles</p>
           <h1 className="browse-title">Find the work that fits.</h1>
           <p className="browse-meta">
-            {isLoading
-              ? 'Loading postings…'
-              : `${totalElements} published role${totalElements === 1 ? '' : 's'} across the SmartHire record.`}
+            {error
+              ? 'The record could not be loaded.'
+              : isLoading
+                ? 'Loading postings…'
+                : `${totalElements} published role${totalElements === 1 ? '' : 's'} across the SmartHire record.`}
           </p>
         </div>
 
@@ -208,7 +210,7 @@ export function JobBrowsePage() {
 
       {isLoading ? (
         <SkeletonList rows={6} label="Loading job postings" />
-      ) : jobs.length === 0 ? (
+      ) : error ? null : jobs.length === 0 ? (
         <EmptyState
           icon="work_off"
           title={hasFilters ? 'No roles match these filters' : 'No open roles right now'}

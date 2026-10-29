@@ -217,7 +217,7 @@ export function DocumentsPage() {
 
       {isLoading ? (
         <SkeletonCards count={3} label="Loading documents" />
-      ) : documents.length === 0 ? (
+      ) : error ? null : documents.length === 0 ? (
         <EmptyState
           icon="folder_open"
           title="No documents yet"

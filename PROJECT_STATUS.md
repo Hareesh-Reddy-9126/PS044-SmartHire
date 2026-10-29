@@ -2225,3 +2225,37 @@ The whole SPA was reskinned without changing any backend contract, route, permis
 **Live verification.** `/`, `/login`, `/jobs` and `/actuator/health` all return `200`; the served HTML carries `theme-color #070A18` and the new assets `index-Ua9-0yNb.js` / `index-zUR9oDVF.css`. The landing page and all 12 published roles render with the new theme. A wrong password returns the redesigned `Invalid email or password` alert, and the Google button is absent as intended. A temporary candidate (`redesign.qa.1793245947302@example.com`) completed live register -> login -> candidate workspace -> empty applications state -> logout; its refresh tokens and user row were then deleted, returning the dataset to **2 ADMIN / 6 RECRUITER / 6 CANDIDATE**. The 13 demo accounts themselves were not re-swept with their shared password because that value is out-of-band (`SMARTHIRE_TEST_PASSWORD` unset, `/root/smarthire-demo-credentials.txt` absent); their rows and roles are intact.
 
 **Data after deploy.** 12 `OPEN` jobs, 17 applications, 9 recruitments, 23 notifications, 6 organizations; `demo.summary` unchanged apart from the removed temporary account.
+
+### 12.12 Frontend redesign - Paper & signal - 2026-10-29 [V]
+
+**This section supersedes 12.11.** The dark "Midnight Spectrum" direction was rejected after review. The SPA now uses a light editorial system called **Paper & signal**: cool paper `#F7F8FA`, white surfaces, ink `#0B0D12`, one cobalt action colour `#2457FF`, a signal-lime highlight `#D8FF4F`, and pastel lavender/peach/mint panels.
+
+**Direction.** Self-hosted **Bricolage Grotesque** for display and headings, **Instrument Sans** for UI, **IBM Plex Mono** for small data labels. Two Bricolage woff2 files live under `frontend/public/fonts/`. Layout: white app sidebar, cobalt auth panel, translucent public header, pill landing CTAs, a product mockup in the hero, a bento capability grid, three role cards, a dark quote band and a lime CTA panel.
+
+**Implementation.**
+
+- `frontend/tailwind.config.js` remaps the `c-*`, primary, accent and semantic scales to the light palette and adds display, radius, shadow and motion tokens.
+- `frontend/src/styles/index.css` restores the pre-redesign light component layer and appends one "Paper & signal" block covering the landing page, app shell, auth shell, public header, buttons, inputs, cards, page headers, tables, statuses, modals, empty states, pagination and responsive rules. The old dark override block is gone rather than stacked over.
+- `LandingPage.tsx` was rewritten; `Layout.tsx` rebuilt as a white sidebar, solid public header and cobalt auth panel.
+- `index.html` declares `theme-color #F7F8FA` and `color-scheme: light` and preloads Bricolage.
+- The unused `Reveal.tsx` introduced by the dark redesign was removed.
+
+**Defects fixed during QA.**
+
+| Issue | Fix |
+|---|---|
+| Status classes composed at runtime (`status-${value}`) were purged by Tailwind | Plain-CSS tones for every job, application, recruitment and notification status |
+| `UNDER_REVIEW` / `NOT_SCHEDULED` generated `status-under_review` | `StatusBadge` normalizes `_` to `-` before composing the class |
+| List pages rendered "no records" underneath a load error | Nine list pages now render only the error alert when the request fails; count captions read "The record could not be loaded." |
+| Admin overview icons were low-contrast on white | `text-c-primary-600` / `text-warning-600`, pending metric `text-warning-700` |
+| The lime bento card inherited dark-theme text | Explicit light-ink colours, verified by computed styles at 1440/768/390 |
+
+**Visual QA.** Playwright at 1440x1000, 768x1024 and 390x844 covered landing, login, register, public jobs, job detail, admin overview/recruitments, recruiter jobs/recruitments/new job/job detail, candidate applications/application detail/progress/notifications/documents, and the error state. Zero horizontal overflow at every width. Local console only showed the expected signed-out `401`s and the mocked API `500`s. Evidence: `C:\Users\HP\AppData\Local\Temp\opencode\qa2\` (local only, not committed).
+
+**Quality gates (all exit 0).** `npm run typecheck`, `npm run lint`, `npm run test:run` **74/74**, `npm run build` (328.10 kB JS / 128.24 kB CSS).
+
+**Deployment.** Frontend only, using the combined compose files (`deploy/docker-compose.yml` + `deploy/docker-compose.prod.yml`). The previous frontend sources were backed up on the VM to `/opt/smarthire/backups/frontend-pre-paper-signal-20261029.tgz`; the changed sources were synced, the deleted `Reveal.tsx` removed, and only the `frontend` image rebuilt and recreated. No backend service, database row, compose file or Caddy configuration changed.
+
+**Live verification.** `https://172.198.139.59.sslip.io` serves `index-BIelnf4e.js` / `index--mT9W_4g.css` with `theme-color #F7F8FA`; `/`, `/login`, `/jobs` and `/actuator/health` return `200`; the served CSS contains the cobalt/lime tokens, every status tone and the landing classes, and no dark-theme token. `verify-public.ps1 -SkipFlow` passed **18/18**. Live Playwright runs at 1440/768/390 showed zero overflow, Bricolage on headings and the paper background. A temporary candidate registered and signed in through the real UI, reached `/candidate/applications`, and rendered the sidebar, navigation and empty state correctly at desktop and mobile; its 3 refresh tokens and user row were deleted afterwards.
+
+**Data after deploy.** Back to **2 ADMIN / 6 RECRUITER / 6 CANDIDATE**; 12 `OPEN` jobs, 17 applications, 9 recruitments, 23 notifications, 6 organizations. The 13 demo accounts were not re-swept with their shared password because that value is out-of-band (`SMARTHIRE_TEST_PASSWORD` unset, `/root/smarthire-demo-credentials.txt` absent); their rows and roles are intact.

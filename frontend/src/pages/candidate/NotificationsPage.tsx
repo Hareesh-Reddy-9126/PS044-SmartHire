@@ -71,7 +71,7 @@ export function NotificationsPage() {
 
       {isLoading ? (
         <SkeletonList label="Loading notifications" />
-      ) : notifications.length === 0 ? (
+      ) : error ? null : notifications.length === 0 ? (
         <EmptyState
           icon="notifications_none"
           title="No notifications yet"

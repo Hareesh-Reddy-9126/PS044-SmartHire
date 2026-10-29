@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import type { ReactNode } from 'react';
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import { primaryRole } from '../../utils/roles';
+import { primaryRole, roleLabel } from '../../utils/roles';
 import { Alert, type AlertTone } from '../ui/Alert';
 import { RoleChip } from '../ui/RoleChip';
 import { Button } from '../ui/Button';
@@ -49,6 +49,14 @@ const WORKSPACE_LABEL: Record<string, string> = {
   ADMIN: 'Administration',
 };
 
+function initialsFor(email?: string) {
+  if (!email) return 'SH';
+  const [name] = email.split('@');
+  const parts = name.split(/[._-]+/).filter(Boolean);
+  if (parts.length >= 2) return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+  return name.slice(0, 2).toUpperCase();
+}
+
 function BrandMark({ className = '' }: { className?: string }) {
   return (
     <Link
@@ -61,25 +69,15 @@ function BrandMark({ className = '' }: { className?: string }) {
         className="brand-mark-tile h-8 w-8 shrink-0 rounded-lg"
         aria-hidden="true"
       >
-        <rect width="64" height="64" rx="15" fill="#7C5CFF" />
-        <rect
-          x="1"
-          y="1"
-          width="62"
-          height="62"
-          rx="14"
-          fill="none"
-          stroke="#C4B5FD"
-          strokeOpacity="0.55"
-        />
+        <rect width="64" height="64" rx="16" fill="#0B0D12" />
         <path
           d="M45 19H28a8 8 0 0 0 0 16h9a8 8 0 0 1 0 16H19"
-          stroke="#070A18"
+          stroke="#FFFFFF"
           strokeWidth="5"
           strokeLinecap="round"
           fill="none"
         />
-        <circle cx="45" cy="45" r="3.5" fill="#3EE8D0" />
+        <circle cx="45" cy="45" r="3.5" fill="#D8FF4F" />
       </svg>
       <span className="brand-word">SmartHire</span>
     </Link>
@@ -157,7 +155,11 @@ export function Layout({ children }: { children: ReactNode }) {
         className="app-sidebar fixed bottom-0 left-0 top-0 z-30 hidden w-sidebar flex-col lg:flex"
         aria-label="Main navigation"
       >
-        <SidebarContent navItems={navItems} role={role} />
+        <SidebarContent
+          navItems={navItems}
+          role={role}
+          email={user?.email}
+        />
       </aside>
 
       <TopBar
@@ -186,13 +188,14 @@ export function Layout({ children }: { children: ReactNode }) {
             <SidebarContent
               navItems={navItems}
               role={role}
+              email={user?.email}
               closeButton={
                 <button
                   ref={closeButtonRef}
                   type="button"
                   onClick={() => setDrawerOpen(false)}
                   aria-label="Close navigation"
-                  className="flex h-9 w-9 items-center justify-center rounded-md text-c-text-muted transition-colors duration-fast hover:bg-white/10 hover:text-white focus-ring"
+                  className="flex h-9 w-9 items-center justify-center rounded-md text-c-text-muted transition-colors duration-fast hover:bg-c-surface-sunken hover:text-on-surface focus-ring"
                 >
                   <span className="material-symbols-outlined text-[20px]" aria-hidden="true">
                     close
@@ -225,9 +228,7 @@ export function Layout({ children }: { children: ReactNode }) {
               </Alert>
             </div>
           )}
-          <div key={location.pathname} className="page-enter">
-            {children}
-          </div>
+          {children}
         </div>
       </main>
     </div>
@@ -301,26 +302,26 @@ function TopBar({
 function SidebarContent({
   navItems,
   role,
+  email,
   closeButton,
 }: {
   navItems: NavItem[];
   role: string;
+  email?: string;
   closeButton?: ReactNode;
 }) {
   return (
     <>
-      <div className="relative z-10 border-b border-white/10 px-5 pb-5 pt-5">
+      <div className="app-sidebar-head">
         <div className="flex items-center justify-between gap-3">
           <BrandMark />
           {closeButton}
         </div>
-        <p className="mt-4 text-[10px] font-medium uppercase tracking-[0.16em] text-c-primary-300">
-          Employment decisions
-        </p>
+        <p className="app-sidebar-kicker">Employment decisions</p>
       </div>
 
-      <nav className="relative z-10 grow overflow-y-auto px-3 py-5">
-        <p className="px-3 pb-2 app-sidebar-label">Workspace</p>
+      <nav className="app-sidebar-nav">
+        <p className="app-sidebar-label">Workspace</p>
         <div className="space-y-1">
           {navItems.map(item => (
             <NavLink
@@ -343,27 +344,35 @@ function SidebarContent({
         </div>
       </nav>
 
-      <div className="relative z-10 border-t border-white/10 p-4">
+      <div className="app-sidebar-foot">
         {(role === 'RECRUITER' || role === 'ADMIN') && (
           <a
             href="http://localhost:8080/swagger-ui.html"
             target="_blank"
             rel="noopener noreferrer"
-            className="app-nav-item app-nav-item-idle group mb-2 flex text-caption"
+            className="app-sidebar-link"
           >
-            <span className="material-symbols-outlined shrink-0 text-[18px]" aria-hidden="true">
+            <span className="material-symbols-outlined text-[17px]" aria-hidden="true">
               description
             </span>
             <span>API documentation</span>
-            <span
-              className="material-symbols-outlined ml-auto shrink-0 text-[14px] transition-colors duration-fast group-hover:text-c-accent-300"
-              aria-hidden="true"
-            >
+            <span className="material-symbols-outlined ml-auto text-[14px]" aria-hidden="true">
               open_in_new
             </span>
           </a>
         )}
-        <p className="px-3 text-[10px] leading-relaxed text-c-primary-300">
+
+        <div className="app-user-card">
+          <span className="app-avatar" aria-hidden="true">
+            {initialsFor(email)}
+          </span>
+          <span className="min-w-0">
+            <strong className="truncate">{email ?? 'Signed in'}</strong>
+            <span>{roleLabel(role)}</span>
+          </span>
+        </div>
+
+        <p className="app-sidebar-note">
           Role-scoped access
           <br />
           Every decision leaves a record.
@@ -378,21 +387,6 @@ export function PublicLayout({ children }: { children: ReactNode }) {
   const { user } = useAuth();
   const location = useLocation();
   const isLanding = location.pathname === '/';
-  const [scrolled, setScrolled] = useState(false);
-
-  useEffect(() => {
-    if (!isLanding) {
-      setScrolled(true);
-      return;
-    }
-
-    const onScroll = () => setScrolled(window.scrollY > 16);
-    onScroll();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    return () => window.removeEventListener('scroll', onScroll);
-  }, [isLanding]);
-
-  const overHero = isLanding && !scrolled;
 
   return (
     <div className={`min-h-screen ${isLanding ? '' : 'bg-c-bg'}`}>
@@ -400,7 +394,7 @@ export function PublicLayout({ children }: { children: ReactNode }) {
         Skip to content
       </a>
 
-      <header className={`public-header ${overHero ? 'is-over-hero' : 'is-solid'}`}>
+      <header className="public-header is-solid">
         <div className="public-header-inner">
           <BrandMark />
 
@@ -418,11 +412,11 @@ export function PublicLayout({ children }: { children: ReactNode }) {
                 <Link to="/login" className="public-link hidden sm:inline">
                   Sign in
                 </Link>
-                <Link to="/register" className="btn btn-primary btn-sm px-3.5 py-1.5">
-                  Create account
-                </Link>
                 <Link to="/login" className="btn btn-secondary btn-sm px-3.5 py-1.5 sm:hidden">
                   Sign in
+                </Link>
+                <Link to="/register" className="btn btn-primary btn-sm px-3.5 py-1.5">
+                  Create account
                 </Link>
               </>
             )}

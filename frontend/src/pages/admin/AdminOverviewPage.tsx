@@ -90,7 +90,7 @@ export function AdminOverviewPage() {
                   <p className="metric-label">Total recruitments</p>
                 </div>
                 <span
-                  className="material-symbols-outlined text-[38px] text-c-primary-300"
+                  className="material-symbols-outlined text-[38px] text-c-primary-600"
                   aria-hidden="true"
                 >
                   work
@@ -120,13 +120,13 @@ export function AdminOverviewPage() {
               <div className="flex items-start justify-between gap-4">
                 <div>
                   <p className="record-kicker">Record / 03</p>
-                  <p className="metric-value mt-3 text-c-accent-700">{pendingCount}</p>
+                  <p className="metric-value mt-3 text-warning-700">{pendingCount}</p>
                   <p className="metric-label">
                     Pending <span className="text-c-text-subtle">{sampleLabel}</span>
                   </p>
                 </div>
                 <span
-                  className="material-symbols-outlined text-[38px] text-c-accent-300"
+                  className="material-symbols-outlined text-[38px] text-warning-600"
                   aria-hidden="true"
                 >
                   pending

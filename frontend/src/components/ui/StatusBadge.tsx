@@ -14,7 +14,7 @@ export interface StatusBadgeProps {
  */
 export function StatusBadge({ status, size = 'md', className = '' }: StatusBadgeProps) {
   const known = isKnownStatus(status);
-  const tone = known ? `status-${status.toLowerCase()}` : 'status-pending';
+  const tone = known ? `status-${status.toLowerCase().replace(/_/g, '-')}` : 'status-pending';
 
   return (
     <span

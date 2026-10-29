@@ -75,7 +75,7 @@ export function RecruitmentsPage() {
             </li>
           ))}
         </ul>
-      ) : filteredApplications.length === 0 ? (
+      ) : error ? null : filteredApplications.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-16 text-center">
           <span className="material-symbols-outlined text-[48px] text-c-text-muted" aria-hidden="true">
             work_off

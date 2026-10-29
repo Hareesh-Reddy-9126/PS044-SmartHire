@@ -75,7 +75,7 @@ export function ProgressPage() {
 
       {isLoading ? (
         <SkeletonList label="Loading your recruitment progress" />
-      ) : recruitments.length === 0 ? (
+      ) : error ? null : recruitments.length === 0 ? (
         <EmptyState
           icon="timeline"
           title="No recruitment processes yet"
